@@ -1,0 +1,36 @@
+<Majesty>
+	<DataConfiguration name="Majesty">
+		<Dataset>
+			<Load>
+				<CAM>miscdata.cam</CAM>
+				<CAM>action.cam</CAM>
+				<CAM>cinedata1.cam</CAM>
+				<CAM>company.cam</CAM>
+				<CAM>gpltext.cam</CAM>
+				<CAM>interfacedata.cam</CAM>
+				<CAM>addinterface.cam</CAM>
+				<CAM>maindata.cam</CAM>
+				<CAM>sounddesc.cam</CAM>
+				<CAM>soundfx.cam</CAM>
+				<CAM>terrtype.cam</CAM>
+				<CAM>textdata.cam</CAM>
+				<CAM>tilesetdata.cam</CAM>
+				<CAM>unittype.cam</CAM>
+				<CAM>voices.cam</CAM>
+				<CAM>addinterface_se.cam</CAM>
+				<CAM>GPLDebuggerUI.cam</CAM>
+				<GPL>$(MajestyBytecodeDataPath)/Bytecode.bcd</GPL>
+				<GPL>$(MajestyExpansionBytecodeDataPath)/MX_Compatibility.bcd</GPL>
+				<GPLSource>$(MajestySDKPath)/OriginalQuests/Gpl</GPLSource>
+				<Constants>constants.rgs</Constants>
+				<Template></Template>
+				<Strings>InterfaceStrings.xml</Strings>
+			</Load>
+			<Unload>
+				<CAM></CAM>
+				<GPL></GPL>
+				<Constants></Constants>
+			</Unload>
+		</Dataset>
+	</DataConfiguration>
+</Majesty>

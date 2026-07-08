@@ -1,0 +1,15 @@
+<XmlDataRoot>
+	<DataGroups>
+		<LoadData>
+			<MajestyCommonData>
+				<LoadGPL>Bytecode.bcd</LoadGPL>
+			</MajestyCommonData>
+			<Rel0 ReleaseClassification="MajestyOriginal">
+				<LoadGPL>Bytecode.bcd</LoadGPL>
+			</Rel0>
+			<Rel2 ReleaseClassification="MajestyDownloadable">
+				<LoadGPL>Bytecode.bcd</LoadGPL>
+			</Rel2>
+		</LoadData>
+	</DataGroups>
+</XmlDataRoot>
