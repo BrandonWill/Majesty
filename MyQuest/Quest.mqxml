@@ -1,0 +1,30 @@
+<Majesty>
+	<Quest id="{AEA4F689-1B90-43F7-B390-4DBCD069CB23}">
+		<DataConfiguration>
+			<Dataset base="MajestyExpansion">
+				<Load>
+					<Template>Quest.q</Template>
+					<Constants>Quest.rgs</Constants>
+					<GPL>
+						<Target>MyAI\Data\MyAI.bcd</Target>
+						<Source>MyAI\GPL\custom_rules.gpl</Source>
+						<Source>MyAI\GPL\Game\mx_Building_Data.dat</Source>
+						<Source>MyAI\GPL\Game\mx_Globals.gpl</Source>
+						<Source>MyAI\GPL\Game\mx_Hero_Data.dat</Source>
+						<Source>MyAI\GPL\Game\mx_prototype.gpl</Source>
+						<Source>MyAI\GPL\Game\DecisionTrees\Modules\mx_defend_home.gpl</Source>
+					</GPL>
+					<Descriptions>MyAI\Data\M_Buildings.xml</Descriptions>
+					<Descriptions>MyAI\Data\MX_Buildings.xml</Descriptions>
+				</Load>
+			</Dataset>
+		</DataConfiguration>
+		<DisplayName lang="en_US">Autobuilding AI</DisplayName>
+		<Description lang="en_US">
+			<Short>Defeat the AI. Costs and rules are the same as multiplayer</Short>
+			<Long>Defeat the AI. Costs and rules are the same as multiplayer</Long>
+		</Description>
+		<Difficulty>Hard</Difficulty>
+		<Name>basicAI</Name>
+	</Quest>
+</Majesty>

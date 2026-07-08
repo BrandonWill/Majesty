@@ -1,0 +1,23 @@
+<Majesty>
+	<SteamWorkshop id="2317324093" visibility="Public">
+		<Title lang="en_US">Autobuilding AI</Title>
+		<Description lang="en_US">Most humanlike AI for Majesty yet. There aren't any build variances yet. This is still in testing phase.The AI functions are based off of The Siege map, but there are tons of differences.
+
+Current known AI bugs that may never be resolved:
+
+1. When the AI upgrades a building, it changes the building beforethe building upgrade is completed. This means heroes will poison before the rogues guild is level 2, construct things that require palace level 2/3 without the palace HP actually being upgraded, etc. These things happen on the engine side and I had to hack things together to get it working
+2. Building placement in AI fog of war. Besides hero exploration which isn't a viable way to determine if a spot is explored or not, I have not found anything that truly says if a coordinate is vissible or not. This is most noticable when the AI builds trading posts
+
+Known AI issues that may be resolved at some point:
+
+1. Research and recruitment times are based on a set interval thread and are not human like. I have some ideas to get this going, but they'd take a long time to setup to even test. 
+2. AI doesn't build an embassy and is potentially leaving tons of hero spots open. This is a little bit iffy to implement because I wouldn't want the way I currently recruit heroes to cause issues with the embassy. The above has to be implemented successfully before this will be.</Description>
+		<ContentPath>C:\Users\Brandon\Documents\My Games\MajestyHD\Quests\MyQuest</ContentPath>
+		<PreviewImagePath>C:\Users\Brandon\Documents\My Games\MajestyHD\Quests\MyQuest\majestyLogo.jpg</PreviewImagePath>
+		<IDTag>Mod</IDTag>
+		<IDTag>Quest</IDTag>
+		<IDTag>Building</IDTag>
+		<IDTag>Northern Expansion Rules</IDTag>
+		<IDTag>Original Rules</IDTag>
+	</SteamWorkshop>
+</Majesty>
