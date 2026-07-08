@@ -11,9 +11,11 @@ into Majesty Gold HD's `maindata.cam` binary data file.
 | IMAG blob parsing (image-set table)| ✅ Confirmed against 3 units (Adept, Barbarian, Warrior) |
 | Frame descriptor / direction blocks| ✅ Confirmed against 2 directional units |
 | TILE index resolution              | ✅ Confirmed - frame indices resolve to real, sensible TILE entries |
-| TILE pixel payload format          | ⬜ **UNSOLVED** - not raw RGBA, looks like per-row RLE |
-| PNG extractor                      | ⬜ Blocked on TILE payload format |
-| PNG injector                       | ⬜ Blocked on TILE payload format |
+| TILE pixel payload format          | ✅ **CRACKED** - 8-bit paletted, per-row RLE with absolute x-positioning |
+| Palette system                     | ✅ **SOLVED** - SPLT section holds 854 RGBA palettes, indexed by u32 at TILE byte 22 |
+| PNG extractor                      | ✅ Working with correct colors and transparency |
+| Palette identification             | ✅ Automatic - each TILE entry embeds its palette index |
+| PNG injector                       | ⬜ Not started |
 | GUI tool                           | ⬜ Stretch goal |
 
 ## Files
@@ -29,6 +31,8 @@ into Majesty Gold HD's `maindata.cam` binary data file.
 python sprite_extractor.py --cam maindata.cam --list
 python sprite_extractor.py --cam maindata.cam --dump-anim AVA1
 python sprite_extractor.py --cam maindata.cam --dump-frames AVA1 Walk
+python sprite_extractor.py --cam maindata.cam --extract AVA1 Walk
+python sprite_extractor.py --cam maindata.cam --extract-tile 3547
 ```
 
 ## What changed this session
@@ -61,21 +65,13 @@ checked against Barbarian's data).
 
 ## Next Steps (for next session)
 
-1. **Decode the TILE payload format.** This is now the only remaining
-   blocker. TILE entry sizes are never a multiple of 4, so it's not raw
-   RGBA. The header bytes look like they contain a per-scanline offset
-   table (monotonically increasing u16 values right after a small fixed
-   header) - classic for an RLE sprite format. See the "TILE section" part
-   of `RESEARCH_NOTES.md` for the specific byte evidence and a concrete
-   plan of attack.
-2. Once one frame decodes to a recognizable image, wire it into
-   `sprite_extractor.py` to produce actual PNGs.
-3. Confirm the frame-count-for-the-last-direction-slot heuristic (currently
-   unvalidated) once real pixel output makes it possible to sanity-check
-   visually.
-4. Investigate the small `SPLT` (854) and `CUT ` (20) sections properly -
-   they're probably icons/cursors/selection-markers, not sprite frames, but
-   this hasn't been directly confirmed by looking at their actual pixel
-   content.
-
-See `RESEARCH_NOTES.md` for all the details.
+1. **Build the PNG injector** — Encode a PNG back into the RLE format:
+   - Quantize colors to the target SPLT palette (or create a new one)
+   - Encode rows as `[u16 x_pos][u8 count][u8 flags][pixel bytes]` segments
+   - Build the u32 offset table and TILE header
+   - Replace the TILE entry in the CAM archive and repack
+2. **CAM repacker** — Port or integrate the m-architek  pack logic
+   to write modified TILE/SPLT entries back into maindata.cam.
+3. **Test full round-trip** — Extract → modify PNG → re-inject → verify in-game.
+4. **New unit creation** — Requires creating new IMAG blob, TILE entries,
+   SPLT palette, and hooking into `unittype.cam` definitions.

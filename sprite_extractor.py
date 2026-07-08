@@ -3,18 +3,25 @@ sprite_extractor.py - Majesty HD Sprite Extractor
 ===================================================
 Extracts sprites from maindata.cam as PNG files.
 
-STATUS: Container format (sections/files) is solid - built on cam_reader.py,
-a validated port of the real  unpacker. IMAG blob structure
-(image-set table, frame descriptors, per-direction geometry) is understood
-and validated against 3 different unit records. The TILE section is
-confirmed as the real home of per-frame pixel data, but ITS internal
-payload format (likely some per-row RLE) is NOT yet decoded - so PNG
-extraction for animated units doesn't work yet. See RESEARCH_NOTES.md.
+STATUS: TILE pixel format CRACKED! Container format, IMAG blob structure,
+and TILE RLE decoding are all working. Palette lookup is the remaining
+piece for correct colors (grayscale/raw-index output works now).
+
+TILE format (version 3):
+  [16B header] [6B zeros] [u32 mystery] [height × u32 offsets] [RLE row data]
+  - height = header word 1 (u16 at byte 2)
+  - offsets are relative to byte 26 of the TILE entry
+  - each row: repeated [u16 skip] [u16 count|flags] [count palette bytes]
+    - skip = transparent pixels from current position
+    - count = low byte of count_word (opaque pixel count)
+    - flags = high byte; 0x80 = last segment in row
+  - Pixel values are 8-bit palette indices
 
 Usage:
     python sprite_extractor.py --list                 # list all IMAG records
     python sprite_extractor.py --dump-anim AVA1        # dump image sets for a unit
     python sprite_extractor.py --dump-frames AVA1 Walk # dump frame descriptor detail
+    python sprite_extractor.py --extract AVA1 Walk 0   # extract frame as PNG
 
 Requirements:
     pip install Pillow
@@ -186,6 +193,149 @@ def parse_directional_frame_descriptor(blob, rel_off, debug=False):
     return {"type_flag": type_flag, "misc": misc, "directions": directions}
 
 
+# ── TILE decoder (CRACKED!) ─────────────────────────────────────────────────
+
+def decode_tile(tile_data):
+    """
+    Decode a version=3 TILE entry's RLE pixel data.
+
+    Format:
+      [16B header][6B zeros][u32 palette_index][height × u32 offsets][row data]
+      - height = u16 at byte 2 (header word 1)
+      - u32 at byte 22 = palette index into SPLT section
+      - offsets at byte 26, relative to byte 26 (self-referencing)
+      - row data: repeated [u16 x_pos][u8 count][u8 flags][count palette bytes]
+        - x_pos = absolute x column where opaque pixels start
+        - count = number of opaque pixels (palette indices follow)
+        - flags: 0x80 = last segment in row, 0x00 = more segments follow
+      - Palette index 0 = transparent
+
+    Returns dict with 'width', 'height', 'palette_id', 'rows' where rows is
+    a list of [(x_start, [pixel_indices]), ...] segments per row.
+    Returns None on failure.
+    """
+    if len(tile_data) < 26:
+        return None
+    if u16(tile_data, 0) != 3:
+        return None
+
+    height = u16(tile_data, 2)
+    palette_id = u32(tile_data, 22)
+    OFFSET_BASE = 26
+
+    if OFFSET_BASE + height * 4 > len(tile_data):
+        return None
+
+    offsets = [u32(tile_data, OFFSET_BASE + i * 4) for i in range(height)]
+
+    rows = []
+    max_x = 0
+
+    for r in range(height):
+        start = OFFSET_BASE + offsets[r]
+        if r + 1 < height:
+            end = OFFSET_BASE + offsets[r + 1]
+        else:
+            end = len(tile_data)
+
+        if start >= len(tile_data):
+            rows.append([])
+            continue
+
+        row_data = tile_data[start:end]
+        segments = []
+        pos = 0
+
+        while pos + 4 <= len(row_data):
+            x_pos = u16(row_data, pos)
+            count_word = u16(row_data, pos + 2)
+            pos += 4
+
+            count = count_word & 0xFF
+            flags = (count_word >> 8) & 0xFF
+            is_last = (flags & 0x80) != 0
+
+            if count > 0 and pos + count <= len(row_data):
+                pixels = list(row_data[pos:pos + count])
+                pos += count
+                segments.append((x_pos, pixels))
+                if x_pos + count > max_x:
+                    max_x = x_pos + count
+
+            if is_last:
+                break
+
+        rows.append(segments)
+
+    return {"width": max_x, "height": height, "palette_id": palette_id, "rows": rows}
+
+
+def load_splt_palette(cam_data, splt_section, palette_id):
+    """
+    Load a palette from the SPLT section.
+    Format: 8-byte header + 256 × 4-byte RGBA entries.
+    Returns list of 256 (R, G, B) tuples, or None.
+    """
+    if palette_id >= len(splt_section.files):
+        return None
+    f = splt_section.files[palette_id]
+    if f.data_size != 1032:
+        return None
+    data = cam_data[f.data_off:f.data_off + f.data_size]
+    palette = []
+    for i in range(256):
+        off = 8 + i * 4
+        r, g, b = data[off], data[off + 1], data[off + 2]
+        palette.append((r, g, b))
+    return palette
+
+
+def is_transparent_color(r, g, b):
+    """Check if a palette color is the 'magic pink' transparency key."""
+    return r > 150 and g < 80 and b > 150 and abs(r - b) < 60
+
+
+def tile_to_image(tile_data, palette=None, cam_data=None, splt_section=None):
+    """
+    Decode a TILE entry and produce a PIL Image (RGBA).
+
+    If palette is provided (list of 256 RGB tuples), uses it directly.
+    If cam_data and splt_section are provided, auto-loads the palette
+    from the SPLT section using the tile's embedded palette_id.
+    If neither, uses grayscale (index value = brightness).
+    """
+    from PIL import Image
+
+    decoded = decode_tile(tile_data)
+    if decoded is None:
+        return None
+
+    w, h = decoded["width"], decoded["height"]
+    if w == 0 or h == 0:
+        return None
+
+    # Auto-load palette if not provided
+    if palette is None and cam_data is not None and splt_section is not None:
+        palette = load_splt_palette(cam_data, splt_section, decoded["palette_id"])
+
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+
+    for y, segments in enumerate(decoded["rows"]):
+        for x_start, pixels in segments:
+            for dx, idx in enumerate(pixels):
+                if idx == 0:
+                    continue
+                if palette:
+                    r, g, b = palette[idx]
+                    if is_transparent_color(r, g, b):
+                        continue
+                    img.putpixel((x_start + dx, y), (r, g, b, 255))
+                else:
+                    img.putpixel((x_start + dx, y), (idx, idx, idx, 255))
+
+    return img
+
+
 # ── Reporting / debug commands ─────────────────────────────────────────────
 
 def list_records(imag_section):
@@ -246,6 +396,97 @@ def dump_frames(cam_data, imag_section, tile_section, record_id, set_name, debug
                 print(f"      TILE[{idx}]: OUT OF RANGE (only {len(tile_section.files)} tile files)")
 
 
+def extract_single_tile(cam_data, tile_section, tile_idx, splt_section=None):
+    """Extract a single TILE entry as a PNG with correct palette colors."""
+    from PIL import Image
+
+    if tile_idx >= len(tile_section.files):
+        print(f"TILE[{tile_idx}] out of range (max {len(tile_section.files)-1})")
+        return
+
+    tf = tile_section.files[tile_idx]
+    td = cam_data[tf.data_off:tf.data_off + tf.data_size]
+
+    img = tile_to_image(td, cam_data=cam_data, splt_section=splt_section)
+    if img is None:
+        print(f"Failed to decode TILE[{tile_idx}] (size={tf.data_size}, version={u16(td,0) if len(td)>=2 else '?'})")
+        return
+
+    # Crop to content
+    bbox = img.getbbox()
+    if bbox:
+        img = img.crop(bbox)
+
+    out_path = f"tile_{tile_idx}.png"
+    img.save(out_path)
+    print(f"Saved: {out_path} ({img.size[0]}x{img.size[1]})")
+
+
+def extract_frames(cam_data, imag_section, tile_section, extract_args, splt_section=None):
+    """Extract animation frames as PNGs with correct palette colors."""
+    from PIL import Image
+
+    if len(extract_args) < 2:
+        print("Usage: --extract RECORD_ID SET_NAME [dir_slot] [frame_idx]")
+        return
+
+    record_id = extract_args[0]
+    set_name = extract_args[1]
+    dir_filter = int(extract_args[2]) if len(extract_args) > 2 else None
+    frame_filter = int(extract_args[3]) if len(extract_args) > 3 else None
+
+    f = find_record(imag_section, record_id)
+    if f is None:
+        print(f"Record '{record_id}' not found.")
+        return
+
+    blob = cam_data[f.data_off:f.data_off + f.data_size]
+    n_dirs, image_sets = parse_anim_set(blob)
+
+    match = next((s for s in image_sets if s["setName"].lower() == set_name.lower()), None)
+    if match is None:
+        print(f"Image set '{set_name}' not found. Available: {[s['setName'] for s in image_sets]}")
+        return
+
+    fd = parse_directional_frame_descriptor(blob, match["relOff"])
+
+    out_dir = Path(f"{record_id}_{set_name}")
+    out_dir.mkdir(exist_ok=True)
+
+    count = 0
+    for d in fd["directions"]:
+        if dir_filter is not None and d["slot"] != dir_filter:
+            continue
+
+        for frame_idx, tile_idx in enumerate(d["tile_indices"]):
+            if frame_filter is not None and frame_idx != frame_filter:
+                continue
+
+            if tile_idx >= len(tile_section.files):
+                print(f"  TILE[{tile_idx}] out of range, skipping")
+                continue
+
+            tf = tile_section.files[tile_idx]
+            td = cam_data[tf.data_off:tf.data_off + tf.data_size]
+
+            img = tile_to_image(td, cam_data=cam_data, splt_section=splt_section)
+            if img is None:
+                print(f"  Failed to decode TILE[{tile_idx}]")
+                continue
+
+            # Crop to content
+            bbox = img.getbbox()
+            if bbox:
+                img = img.crop(bbox)
+
+            out_path = out_dir / f"dir{d['slot']}_frame{frame_idx:02d}_tile{tile_idx}.png"
+            img.save(str(out_path))
+            count += 1
+
+    print(f"Extracted {count} frames to {out_dir}/")
+
+
+
 # ── Entry point ─────────────────────────────────────────────────────────────
 
 def main():
@@ -255,6 +496,10 @@ def main():
     parser.add_argument("--dump-anim", metavar="ID", help="Dump image-set table for a record")
     parser.add_argument("--dump-frames", nargs=2, metavar=("ID", "SETNAME"),
                          help="Dump frame descriptor detail, e.g. --dump-frames AVA1 Walk")
+    parser.add_argument("--extract", nargs='+', metavar="ARG",
+                         help="Extract frames: --extract AVA1 Walk [dir_slot] [frame_idx]")
+    parser.add_argument("--extract-tile", type=int, metavar="IDX",
+                         help="Extract a single TILE entry by index as PNG")
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
@@ -276,6 +521,10 @@ def main():
     elif args.dump_frames:
         rid, set_name = args.dump_frames
         dump_frames(cam_data, imag, tile, rid, set_name, debug=args.debug)
+    elif args.extract:
+        extract_frames(cam_data, imag, tile, args.extract, splt_section=splt)
+    elif args.extract_tile is not None:
+        extract_single_tile(cam_data, tile, args.extract_tile, splt_section=splt)
     else:
         parser.print_help()
 

@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Output artifacts
+*.png
+*.gif
+
+# Large zip downloads
+*.zip
