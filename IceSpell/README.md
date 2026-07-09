@@ -24,23 +24,35 @@ A custom Ice/Freeze spell effect for Majesty Gold HD.
 3. Run `MakeGPL.bat`
 4. Verify `Data/IceSpell.bcd` was created
 
-### Step 2: Install as a Quest
-Copy the entire `IceSpell/` folder to your Majesty quests directory:
-```
-<Steam>\steamapps\common\Majesty HD\Quests\IceSpell\
-```
+### Step 2: Create a Quest with RGSEditor (or use an existing one)
+Since our mod doesn't include a map (`.q` file), you need to either:
 
-The folder structure inside should be:
+**Option A — Add to an existing quest:**
+1. Pick any existing quest that has an Ice Cave on its map
+2. Copy our `Data/` files into that quest's folder
+3. Edit that quest's `.mqxml` to add our files under `<Load>`:
+   ```xml
+   <Descriptions>Data/IceSpell_Actions.xml</Descriptions>
+   <Descriptions>Data/IceSpell_Characters.xml</Descriptions>
+   <Descriptions>Data/IceSpell_Overlays.xml</Descriptions>
+   <CAM>Data/Quest_maindata.cam</CAM>
+   <GPL>Data/IceSpell.bcd</GPL>
+   ```
+
+**Option B — Create a new quest with RGSEditor:**
+1. Open **RGSEditor** (in `SDK/`)
+2. Create a new quest, save it as `Quest.q` + `Quest.mqxml` inside the `IceSpell/` folder
+3. Place an Ice Cave lair, a Palace, and some heroes on the map
+4. Save — the `.mqxml` will already have `<Template>Quest.q</Template>`
+5. Open `IceSpell.mqxml` in a text editor and add the mod file references (see above)
+6. Re-open in RGSEditor — you should now see Ice Elemental available as a placeable unit
+
+**Option C — Use our standalone .mqxml (requires a map):**
+If you have a `.q` map file with Ice Caves, copy it into `IceSpell/` and add `<Template>YourMap.q</Template>` to the mqxml's `<Load>` section.
+
+The quest folder goes in the game's root directory:
 ```
-Quests/IceSpell/
-├── IceSpell.mqxml
-├── Data/
-│   ├── IceSpell_Actions.xml
-│   ├── IceSpell_Characters.xml
-│   ├── IceSpell_Overlays.xml
-│   ├── Quest_maindata.cam
-│   └── IceSpell.bcd          (compiled from MakeGPL.bat)
-└── GPL/                       (source files, not needed at runtime)
+<Steam>\steamapps\common\Majesty HD\IceSpell\
 ```
 
 ### Step 3: Play
@@ -50,15 +62,17 @@ Quests/IceSpell/
 4. Select **"Ice Spell Test"** from the quest list
 5. Start the quest — any Ice Cave on the map will spawn Ice Elementals
 
-### Alternative: Install as a Mod (no specific quest required)
-To use this as a mod that applies to ANY quest:
-1. Rename `IceSpell.mqxml` to `IceSpell.mmxml`
-2. Change the root XML tag from `<Quest>` to `<Mod>`
-3. Place in `<Steam>\steamapps\common\Majesty HD\Mods\IceSpell\`
-4. Activate the mod from the game's mod menu before starting any quest
+### Alternative: Install as a Mod (applies to all quests)
+To use as a Mod (`.mmxml`) instead of a Quest:
+1. Change `IceSpell.mqxml` — rename to `IceSpell.mmxml`, change `<Quest>` to `<Mod>`
+2. Place the folder in the game directory
+3. Use **RGSEditor** to configure the mod, or activate it from the in-game mod selection screen
 
-### Steam Workshop (optional)
-If publishing to Workshop, the game will auto-detect `.mqxml` files in subscribed workshop folders.
+The guide at [Steam Community - Modding Tutorial for Beginners](https://steamcommunity.com/sharedfiles/filedetails/?id=758391467) covers the RGSEditor workflow:
+- `.xml` files go in the "Game Object Definitions" field
+- `.bcd` file goes in the "GPL Bytecode" field
+
+**For our purposes, the Quest format (`.mqxml`) is simpler** — it's self-contained and the DataConfiguration handles all file loading automatically without needing RGSEditor.
 
 ## Testing Guide
 

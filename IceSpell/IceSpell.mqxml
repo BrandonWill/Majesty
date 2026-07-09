@@ -14,12 +14,7 @@
 					<Descriptions>Data/IceSpell_Characters.xml</Descriptions>
 					<Descriptions>Data/IceSpell_Overlays.xml</Descriptions>
 					<CAM>Data/Quest_maindata.cam</CAM>
-					<GPL>
-						<Target>Data\IceSpell.bcd</Target>
-						<Source>GPL\IceSpell.gpl</Source>
-						<Source>GPL\IceSpell_Globals.dat</Source>
-					</GPL>
-					<GPLSource>GPL</GPLSource>
+					<GPL>Data/IceSpell.bcd</GPL>
 				</Load>
 			</Dataset>
 		</DataConfiguration>
