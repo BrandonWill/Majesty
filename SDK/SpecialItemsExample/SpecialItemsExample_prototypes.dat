@@ -1,0 +1,30 @@
+[MagicBall]
+	{Special_Item
+		(type 		Special_Item)
+		(Title		MagicBall)
+		(BirthScript	MagicBall_Birth)
+	}
+[end]
+
+[DorgoTheDestroyer]
+	{Monster
+		(type monster)
+		(subtype Unique)
+		(title  DorgoTheDestroyer)
+		(original_type Monster)
+		(EnemyType Hero)
+		(idle_action Monster_idle)
+		(attack_action Basic_Attack)
+		(Friend xx)
+		(speed 1)
+		(resist_critical 1)
+		(attacktype 1)
+		(Guardian_Mod 5)
+		(activeScript					DorgsBasicScript)
+		(basicScript          			DorgsBasicScript)
+		(backscript 					DorgsBasicScript)
+		(evaluationScript				monster_eval_enemies)
+		(birthScript					DorgoTheDestroyer_Birth)
+		(IGdeathscript					DorgoTheDestroyer_Death)
+	}
+[end]

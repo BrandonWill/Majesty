@@ -1,0 +1,188 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Returning_Guardian (agent ThisAgent)
+
+Declare
+	integer		TargetRangeFromHome, Sightrange;
+	coordinate	Home;
+
+Begin
+	Home = ThisAgent's "Coord_Home";
+
+	if ($returning_guardian_eval_enemies_simple(thisagent) == FALSE)
+		begin
+			if ($ismoving(thisagent) == FALSE)
+				begin
+					TargetRangeFromHome = $DistanceBetweenCoords(Home, $LocationOf (ThisAgent));
+					If ((targetrangefromhome > 64))
+  						begin
+  							$DebugOut (911,"Moving home because there aren't any enemies, and I am not home!");
+  							$Move (ThisAgent, Home);
+  						end
+				end
+  		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function returning_guardian_eval_enemies_simple(agent thisagent) is boolean
+
+declare
+	list			Sighted, Enemies;
+	integer		TargetRangeFromHome, Sightrange;
+	agent 		new_target, dude;
+	coordinate	Home;
+
+begin
+	$cleanse_hostiles(thisagent);
+
+	SightRange = $getattribute (ThisAgent, #ATTRIB_SightRange);
+
+	// first make a list of potential enemies
+	sighted = $list_enemies_seen(thisagent,sightrange);
+
+	//make sure the targets Sighted are within range of home
+	Home = ThisAgent's "Coord_Home";
+	Foreach dude in Sighted do
+		begin
+			If ($DistanceBetweenCoords ($LocationOf (Dude), Home) > Sightrange)
+				Sighted -= Dude;
+		end
+
+	Enemies = $AddLists (Sighted, ThisAgent's "Hostiles");
+
+	If ($ListSize (Enemies) > 0)
+		begin
+			new_target = $Pick_Closest (ThisAgent, Enemies);
+
+			if (new_target != thisagent's "target")
+				begin
+
+					If ($AgentInList (New_Target, ThisAgent's "Hostiles"))
+						//Set Sightrange to ThisAgent's sightrange * a mod
+						SightRange *= #Guardian_Atck_Hostiles_Pursuit_Range_Mod;
+
+					ThisAgent's "Target" = new_target;
+
+					TargetRangeFromHome = $DistanceBetweenCoords(Home, $LocationOf (ThisAgent's "Target"));
+
+					if (TargetRangeFromHome <= (SightRange + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange)))
+						begin
+							ThisAgent's "ActiveScript" = $Returning_Guardian_Attack_Object;
+						end
+				end
+			$clearlist(thisagent's "hostiles");
+
+			return TRUE;
+		end
+	
+	return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Returning_Guardian_Attack_Object(agent ThisAgent)
+
+Declare
+	integer HP;
+	integer maxHP;
+	integer TargetRangeFromMe;
+	integer TargetRangeFromHome,targetattackrange;
+	agent   target;
+	integer SightRange;
+
+begin
+	target = thisagent's "target";
+
+	// is target alive?
+	if ($notvalid(target))
+		begin
+			$Reset_Tasks (ThisAgent);
+			$Move (ThisAgent, ThisAgent's "coord_home");
+		end
+	else
+		begin
+			// is target out of pursuit range?
+
+			SightRange = $GetAttribute (ThisAgent, #ATTRIB_SightRange);
+
+			//Set Sightrange to ThisAgent's sightrange * a mod
+			SightRange *= ThisAgent's "Guardian_Mod";
+
+			//What is My Range to the Target?
+			TargetRangeFromMe = $distanceBetweenAgents(thisagent,target);
+
+			//How far is the target from my Home?
+			TargetRangeFromHome = $DistanceBetweenCoords(ThisAgent's "coord_home", $LocationOf (Target));
+
+			//Check to see if target is too far from me or Home
+			targetattackrange = $Egetattackrange(target) + 85;
+
+			//CHeck to see if target is too far from me or Home
+			if ((TargetRangeFromMe > targetattackrange) && (TargetRangeFromHome > ((SightRange) + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange))))
+				begin
+					//go back to regular functioning
+
+					$Reset_Tasks (ThisAgent);
+
+					//Move to the center of ThisAgent's movement radius, so that it isn't a sitting duck
+					ThisAgent's "Target" = $NullAgent ();
+
+					$Move (ThisAgent, ThisAgent's "coord_home");
+				end
+			else
+				begin
+					// is thiaagent in attackrange of target?
+					if (TargetRangeFromMe > $getattribute(thisagent,#ATTRIB_maxattackrange))
+						begin
+							If ($IsMoving (ThisAgent) == False)
+								begin
+									// move towards target
+									$move(thisagent,target);
+								end
+							else
+								$returning_guardian_eval_enemies(ThisAgent);
+						end
+					else
+						begin
+							// make attack on object
+							$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function returning_guardian_eval_enemies(agent thisagent)
+
+declare
+	list in_sight;
+	agent tempagent;
+
+begin
+	$cleanse_hostiles(thisagent);
+
+	in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+
+	If (ThisAgent's "Friend" != "xx")
+		$Cull_Titles (In_Sight, ThisAgent's "Friend");
+
+	// add hostiles to in_sight;
+	in_sight = $addlists(in_sight,thisagent's "Hostiles");
+
+	in_sight = $possibly_remove_target(thisagent,in_sight);
+
+ 	if ($listsize(in_sight) > 0)
+		begin
+			// pick the closest guy to attack
+			tempagent = $pick_closest(thisagent,in_sight);
+			if (tempagent != thisagent's "target")
+				begin
+					thisagent's "Target" = $pick_closest(thisagent,in_sight);
+					thisagent's "ActiveScript" = $Returning_guardian_Attack_object;
+				end
+			$Clearlist (ThisAgent's "Hostiles");
+		end
+end

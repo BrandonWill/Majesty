@@ -1,0 +1,60 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+Function Eval_For_Healing (agent ThisAgent, integer Distance) is Agent
+Declare
+	list  Heroes;
+	agent Hero;
+	list 	Injured_Heroes;
+	integer	Percent_HP;
+	integer	Temp_Distance;
+	integer	Temp_Score;
+	integer	Best_Score;
+	agent		BestAgent;
+
+
+Begin
+	//Check the whole map for Heroes who might need healing
+	$ListObjects (ThisAgent, "Hero", Distance, Heroes );
+
+	If ($ListSize (Heroes) > 0)
+		begin
+			//Build a list that incorporates only heroes who are injured
+			Foreach Hero in Heroes do
+				begin
+					If ($getattribute(Hero,#ATTRIB_HP) < $getattribute(Hero,#ATTRIB_MaxHP))
+						if ($getplayerteamnumber(hero) == $getplayerteamnumber(thisagent))
+							Injured_Heroes << Hero;
+						else
+							if ($randomnumber(100) > thisagent's "loyalty")
+								Injured_Heroes << Hero;
+				end
+			//If there are injured Heroes, pick the most attractive one, and return TRUE
+			If ($ListSize (Injured_Heroes) > 0)
+				begin
+					Best_Score = 5000000;
+					Foreach Hero in Injured_Heroes do
+						begin
+							Temp_Distance = $DistanceBetweenAgents (ThisAgent, Hero);
+							Percent_HP = (($getattribute(Hero,#ATTRIB_HP)) * 100) / ($getattribute(Hero,#ATTRIB_MaxHP));
+							Temp_Score = (Temp_Distance / 10) * Percent_HP;
+							If (Temp_Score < Best_Score)
+								begin
+									Best_Score = Temp_Score;
+									BestAgent = Hero;
+								end
+						end
+					if (best_score < ($getattribute(thisagent,#ATTRIB_intelligence) * 150))
+						begin
+							Return BestAgent;
+						end
+				end
+			Else
+				Return $NullAgent ();
+		end
+	Else
+		Return $NullAgent ();
+End

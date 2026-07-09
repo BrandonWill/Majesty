@@ -1,0 +1,44 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+Function Seed_Resource (agent ThisAgent)
+Declare
+	string Resource;
+	string Resource_Type;
+	list   Resources;
+
+Begin
+	// Resource_type is used for searching, whereas Resource is used for spawning the correct resource
+
+	If (thisagent's "title" == "Healer")
+		begin
+			Resource = "Resource_Healplant";
+			Resource_Type = "Healing_Herbs";
+		end
+	Else
+		begin
+			Resource = "Resource_Poisonplant";
+			Resource_type = "Poison_Plants";
+		end
+
+	$ListObjects (ThisAgent, Resource_Type, $GetAttribute (ThisAgent, #ATTRIB_SightRange), Resources );
+
+  //	$DebugOut (911, $GetAttribute (ThisAgent, #ATTRIB_SightRange));
+
+ //	$DebugOut (911, $ListSize (Resources));
+
+	If ($ListSize (Resources) == 0)
+		begin
+			$SpawnUnit (ThisAgent, Resource);
+
+			$give_exp(thisagent,#resource_exp);
+		end
+
+  //	Else
+	 //	$DebugOut (911, "I can see another resource, so I am not going to seed.");
+
+	$Reset_Tasks (ThisAgent);
+End

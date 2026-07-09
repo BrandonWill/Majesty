@@ -1,0 +1,65 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Hall_Champs_Check (agent ThisAgent, integer Chance) is boolean
+Declare
+	list 		Potentials;
+	list 		NewList;
+	integer	Counter, Search_Dist;
+	agent		Farthest;
+	agent 	Target;
+
+Begin
+	//See is I am interested enough
+	If ($RandomNumber (100) + 1 > Chance)
+		begin
+			$DebugOut ("No, not interested.");
+			return False;
+		end
+
+	//Don't go if you already have the icon on you
+	If ($CheckEffector (ThisAgent, "Champions_Vigor_Icon"))
+		begin
+
+			return False;
+
+		end
+
+
+	Search_Dist = $GetAttribute (ThisAgent, #ATTRIB_SightRange) * 2;
+
+	//Find all buildings on my team
+	//$ListObjects (ThisAgent, "Building", Search_Dist, Potentials);
+
+	//Find all guardhouses on potentials list
+	//Potentials = $ListTitles (Potentials, "HallOfChampions");
+
+	$ListObjects (ThisAgent, "Building", Search_Dist, Potentials, #CheckTitles, "HallOfChampions", #ATTRIB_FirstStageBuilt, 1  );
+
+	//Find all completed buildings
+	//Potentials = $ListCompleted (Potentials);
+
+	If ($ListSize (Potentials) > 0)
+		begin
+			//This picks a random target from NewList
+			ThisAgent's "Target" = $Loyalty_Mod_Pick_Closest (ThisAgent, Potentials);
+
+			Target = ThisAgent's "Target";
+
+			//This may get overwritten if they are visiting a Marketplace or a Trading_post - as that means they are up
+			//to something different (ie, entertaining)
+			ThisAgent's "Taskname" = "Visiting";
+
+			$SpecifyIntent ( ThisAgent, #intent_visiting_hall_of_champions );
+
+			ThisAgent's "ActiveScript" = $Use_Building;
+
+
+			return True;
+		end
+
+	return False;
+End

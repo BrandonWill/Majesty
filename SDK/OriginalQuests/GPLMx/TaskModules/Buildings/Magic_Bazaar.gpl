@@ -1,0 +1,400 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar ( agent ThisAgent, integer bazaar_chance ) is boolean
+Declare
+	boolean 	Flag, wants_bazaar_item;
+	list bazaars, shops, Item_list, Bazaars_Researched;
+	integer search_dist, Item, Item_Cost;
+
+Begin
+	Flag = FALSE;
+	//See if the hero wants to buy bazaar items
+	If ( bazaar_chance > $RandomNumber ( 100 ) + 1 )
+		Wants_bazaar_item = TRUE;
+
+
+	// construct some lists here, and pass them as parameters,
+	// instead of over and over again in the lower level subroutines.
+
+	Search_Dist = $GetAttribute (ThisAgent, #ATTRIB_SightRange ) * ( $GetAttribute ( ThisAgent, #ATTRIB_Intelligence ) / 2 );
+
+	$listobjects ( thisagent, "building", search_Dist, bazaars, #CheckTitles, "Magic_Bazaar", #ATTRIB_FirstStageBuilt, 1 );
+	//bazaars = $ListTitles ( bazaars, "Magic_Bazaar" );
+	//bazaars = $listcompleted ( bazaars );
+
+	Item_list << #Bazaar_Item_One;
+ 	Item_list << #Bazaar_Item_Two;
+ 	Item_list << #Bazaar_Item_Three;
+	Item_list << #Bazaar_Item_Four;
+ 	Item_list << #Bazaar_Item_Five;
+ 	Item_list << #Bazaar_Item_Six;
+
+	foreach Item in Item_list do
+		begin
+			$Clearlist ( Bazaars_Researched );
+			Bazaars_Researched = $Researched_Item ( bazaars, Item );
+			if ( $ListSize ( Bazaars_Researched ) > 0 )
+				begin
+					Item_Cost = $Get_Bazaar_Cost ( Item );
+					if ( $Bazaar_Item_Check ( ThisAgent, Item, Bazaars_Researched, Item_Cost ))
+						Flag = TRUE;
+				end
+		end
+
+	If ( Flag )
+		begin
+			ThisAgent's "ActiveScript" = $Use_Building;
+			return TRUE;
+		end
+
+	return False;
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Bazaar_Item_Check ( agent ThisAgent, integer item, list potentials, integer Item_cost ) is boolean
+Declare
+//	list Potentials;
+	integer	Intel_Roll;
+//	integer Search_Dist;
+
+Begin
+	$DebugOut ( "Should I buy item#", item, "?" );
+
+	// Don't let cultists buy shapechange potions.
+	if (( thisagent's "title" == "cultist" ) && ( item == #Bazaar_Item_Six ))
+		return False;
+
+	// Only rangers, rogues and elves use fire balm.
+	if ( item == #Bazaar_Item_Two )
+		if (( thisagent's "title" != "ranger"  ) && ( thisagent's "title" != "rogue" ) && ( thisagent's "title" != "elf" ))
+			return False;
+
+	// See if ThisAgent already has the item on them
+	If ( $AgentHasInventoryItem ( item, thisagent ))
+		begin
+			$DebugOut ( "I already have item #", item, ", so I dont need one." );
+			return False;
+		end
+
+	If ( $Total_Gold ( ThisAgent ) < Item_Cost )
+		begin
+			$DebugOut ("I don't have enough money for item #", item, "!");
+			return False;
+		end
+
+	Intel_Roll = $RandomNumber ( 30 ) + 1;
+
+	If ( $GetAttribute ( ThisAgent, #ATTRIB_Intelligence ) > Intel_Roll )
+		begin
+			ThisAgent's "TaskName" = $Get_Bazaar_Task_Name ( item );
+			ThisAgent's "Target" = $Loyalty_Mod_Pick_Closest ( ThisAgent, Potentials );
+			$DebugOut ( "Yes!" );
+			$SetBuyerIntent ( ThisAgent, Item );
+			return True;
+		end
+
+	$DebugOut ("No!");
+	return False;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Bazaar_Visited (agent ThisAgent)
+Declare
+	agent Target;
+	integer sleeptime;
+
+Begin
+	Target = ThisAgent's "Target";
+
+	$Enter_Building ( ThisAgent, Target );
+	$DebugOut ( thisagent's "title", "is entering a Bazaar." );
+
+	ThisAgent's "ActiveScript" = $Purchasing_at_Bazaar;
+	$SetThreadInterval ( ThisAgent's "ActiveScript", target's "sleep_for" );
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchasing_at_Bazaar (agent ThisAgent)
+// TODO: This function and its attached subfunctions should be compacted.
+// Unfortunately, it will gain little from compaction, and the time to modify
+// it is not warranted (min. 1/2 day) unless I end up with extra time at some point.
+Declare
+	agent		target;
+
+Begin
+
+	Target = ThisAgent's "Target";
+
+	If (ThisAgent's "TaskName" == "Bazaar_Item_One")
+		begin
+
+			//Buy Bazaar_Item_One
+			$Purchase_Bazaar_Item_One (ThisAgent, Target);
+
+		end
+	Else If (ThisAgent's "TaskName" == "Bazaar_Item_Two")
+		begin
+
+			//Buy Bazaar_Item_Two
+			$Purchase_Bazaar_Item_Two (ThisAgent, Target);
+
+		end
+	Else If (ThisAgent's "TaskName" == "Bazaar_Item_Three")
+		begin
+
+			//Buy Bazaar_Item_Three
+			$Purchase_Bazaar_Item_Three (ThisAgent, Target);
+
+		end
+	Else If (ThisAgent's "TaskName" == "Bazaar_Item_Four")
+		begin
+
+			//Buy Bazaar_Item_Four
+			$Purchase_Bazaar_Item_Four (ThisAgent, Target);
+
+		end
+	Else If (ThisAgent's "TaskName" == "Bazaar_Item_Five")
+		begin
+
+			//Buy Bazaar_Item_Five
+			$Purchase_Bazaar_Item_Five (ThisAgent, Target);
+
+		end
+	Else If (ThisAgent's "TaskName" == "Bazaar_Item_Six")
+		begin
+
+			//Buy Bazaar_Item_Six
+			$Purchase_Bazaar_Item_Six (ThisAgent, Target);
+
+		end
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+
+	ThisAgent's "TaskName" = "";
+
+	$Exit_Building (ThisAgent, Target);
+End
+
+//////////////////////////////////////////////////////////////////////
+// Each of the functions below actually handles the purchase routine
+// for a single item.  Alas, there doesn't seem to be a nicer way
+// to do this.
+// REMEMBER TO PROPOGATE ANY CHANGES THROUGH ALL OF THEM.
+//////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_One ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_One_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_One, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_One );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_Two ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_Two_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_Two, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_Two );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_Three ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_Three_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_Three, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_Three );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_Four ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_Four_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_Four, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_Four );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_Five ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_Five_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_Five, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_Five );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Purchase_Bazaar_Item_Six ( agent ThisAgent, agent Target )
+Declare
+
+Begin
+	$SetThreadInterval ( ThisAgent's "ActiveScript", #Normal_Cycle );
+
+	$Spend_Gold ( ThisAgent, target, #Bazaar_Item_Six_Price );
+
+	$CreateNewInventoryItem ( #Bazaar_Item_Six, ThisAgent, #Allow_Cloned_Quest_Item);
+
+	$QItem_Stat_Boost ( ThisAgent, #Bazaar_Item_Six );
+
+	ThisAgent's "ActiveScript" = $Done_Purchasing_Market_Stuff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Get_Bazaar_Cost ( integer Item ) is integer
+declare
+begin
+
+	if ( Item == #Bazaar_Item_One )
+		Return #Bazaar_Item_One_Price;
+
+	else if ( Item == #Bazaar_Item_Two )
+		Return #Bazaar_Item_Two_Price;
+
+	else if ( Item == #Bazaar_Item_Three )
+		Return #Bazaar_Item_Three_Price;
+
+	else if ( Item == #Bazaar_Item_Four )
+		Return #Bazaar_Item_Four_Price;
+
+	else if ( Item == #Bazaar_Item_Five )
+		Return #Bazaar_Item_Five_Price;
+
+	else if ( Item == #Bazaar_Item_Six )
+		Return #Bazaar_Item_Six_Price;
+
+	else Begin
+			$DebugOut ( 911, "Bad Item ID #", Item, " passed to function $Get_Bazaar_Cost!" );
+			Return 0;  // This is a faliure condition in case it falls all the way through.
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Get_Bazaar_Task_Name ( integer Item ) is string
+declare
+begin
+
+	if ( Item == #Bazaar_Item_One )
+		Return "Bazaar_Item_One";
+
+	else if ( Item == #Bazaar_Item_Two )
+		Return "Bazaar_Item_Two";
+
+	else if ( Item == #Bazaar_Item_Three )
+		Return "Bazaar_Item_Three";
+
+	else if ( Item == #Bazaar_Item_Four )
+		Return "Bazaar_Item_Four";
+
+	else if ( Item == #Bazaar_Item_Five )
+		Return "Bazaar_Item_Five";
+
+	else if ( Item == #Bazaar_Item_Six )
+		Return "Bazaar_Item_Six";
+
+	else Begin
+			$DebugOut ( 911, "Bad Item ID #", Item, " passed to function $Get_Bazaar_Task_Name!" );
+			Return "!!!Failed!!!";  // This is a faliure condition in case it falls all the way through.
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function SetBuyerIntent ( agent ThisAgent, integer Item )
+declare
+begin
+
+	if ( Item == #Bazaar_Item_One )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_One );
+
+	else if ( Item == #Bazaar_Item_Two )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_Two );
+
+	else if ( Item == #Bazaar_Item_Three )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_Three );
+
+	else if ( Item == #Bazaar_Item_Four )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_Four );
+
+	else if ( Item == #Bazaar_Item_Five )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_Five );
+
+	else if ( Item == #Bazaar_Item_Six )
+		$SpecifyIntent ( ThisAgent, #Intent_purchasing_Bazaar_Item_Six );
+
+	else Begin
+			$DebugOut ( 911, "Bad Item ID #", Item, " passed to function $SetBuyerIntent!" );
+			// This is a faliure condition in case it falls all the way through.
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Researched_Item ( list bazaars, integer Item ) is list
+declare
+	list potentials;
+
+begin
+	$ClearList ( potentials );
+
+	if ( item == #Bazaar_Item_One )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_One );
+
+	else if ( item == #Bazaar_Item_Two )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_Two );
+
+	else if ( item == #Bazaar_Item_Three )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_Three );
+
+	else if ( item == #Bazaar_Item_Four )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_Four );
+
+	else if ( item == #Bazaar_Item_Five )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_Five );
+
+	else if ( item == #Bazaar_Item_Six )
+		potentials = $List_Attribs ( Bazaars, #ATTRIB_ResearchBazaar_Item_Six );
+
+		return Potentials;
+end

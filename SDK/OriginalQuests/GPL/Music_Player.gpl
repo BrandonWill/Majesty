@@ -1,0 +1,136 @@
+//	---------------------------------------------------------------------------
+//	Music handling for Quests and freestyle games.
+//
+//	Author(s): Ken Grey, Bart Simon
+//
+//  (c) 1999-2000 Cyberlore Studios, Inc.  All Rights Reserved
+//  CONFIDENTIAL MATERIAL
+//	---------------------------------------------------------------------------
+
+//	---------------------------------------------------------------------------
+// This is called in $Freestyle. It plays track and then hooks up the Freestyle music stopped callback
+//	---------------------------------------------------------------------------
+Function Setup_Freestyle_Music (agent ThisAgent)
+Declare
+
+Begin
+
+	// Set the function that will be called when the music stops
+	$SetMusicStoppedCallback("FreeStyle_Music_Stopped");
+
+	// Play this track now
+	$PlayMusic ( #Early_Theme );
+
+End
+
+
+//	---------------------------------------------------------------------------
+// This funciton gets called when the music stops.
+// This plays all the way up to the Endgame_Theme, and then keeps playing that track
+// WARNING: This cannot change game state because this may not get called on some players machines.
+//          i.e. they have music turnd off.
+//	---------------------------------------------------------------------------
+Function FreeStyle_Music_Stopped(integer lastTrack)
+Declare
+
+Begin
+
+	// The input track is the track that just finished, this may not be what gpl had requested
+	// Get the last track gpl requested.
+	lastTrack = $LastMusicTrack();
+
+	//Increment track number for next execution. Max tracknumber is 5.
+	If (lastTrack < #Endgame_Theme)
+		lastTrack ++;
+	Else
+		lastTrack = #Early_Theme;
+
+	// Play current track number
+	$PlayMusic (lastTrack);
+End
+
+
+//	---------------------------------------------------------------------------
+// This kicks off Track, and hooks up the Quest_Music_Stopped callback
+//	---------------------------------------------------------------------------
+Function Setup_Quest_Music (agent ThisAgent)
+Declare
+
+Begin
+	
+	// Set the function that will be called when the music stops
+	$SetMusicStoppedCallback("Quest_Music_Stopped");
+
+	// Play this now
+	$PlayMusic(#Early_Theme);
+
+End
+
+
+//	---------------------------------------------------------------------------
+// Increments track number to midgame theme and loops
+// on midgame. Endgame music is just for the end of a quest, and is handled 
+// by $Play_Endgame_Music 
+// WARNING: This cannot change game state because this may not get called on some players machines.
+//          i.e. they have music turnd off.
+//	---------------------------------------------------------------------------
+function Quest_Music_Stopped(integer lastTrack)
+Declare
+
+Begin
+
+	// The input track is the track that just finished, this may not be what gpl had requested
+	// Get the last track gpl requested.
+	lastTrack = $LastMusicTrack();
+
+	//Increment track number for next execution. Don't play past the Midgame_theme - endgame is special-cased
+	If (lastTrack < #Midgame_Theme)
+		lastTrack ++;
+
+	Else if (lastTrack == #MidGame_Theme)
+		lastTrack --;
+
+	// Play current track number
+	$PlayMusic (lastTrack);
+End
+
+
+//	---------------------------------------------------------------------------
+// Plays the End Game Track
+//	---------------------------------------------------------------------------
+Function Play_Endgame_Music (agent ThisAgent)
+Declare
+
+begin
+
+	$PlayMusic (#Endgame_Theme);
+
+End
+
+
+//	---------------------------------------------------------------------------
+// This function is called when a player wins a quest.
+//	---------------------------------------------------------------------------
+Function Reset_Quest_Music (agent ThisAgent)
+Declare
+
+Begin
+
+	$Setup_Quest_Music(ThisAgent);
+
+End
+
+
+//	---------------------------------------------------------------------------
+// Reset the free style music.  This is done when a player wins and wants
+// to keep playing.
+//	---------------------------------------------------------------------------
+Function Reset_Freestyle_Music (agent ThisAgent)
+Declare
+
+Begin
+
+	$Setup_Freestyle_Music(ThisAgent);
+
+End
+

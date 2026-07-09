@@ -1,0 +1,556 @@
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SpecialItemExample()
+// The entry point form the SpecialItemExample GPL.
+declare
+	agent	AIRootAgent, specialItemSite, palace;
+	list 	specialItemSiteList, palaceList;
+
+begin
+
+	// Get the list of palaces
+	palaceList = $ListPalaces ();
+	// Get the first one (should only be one)
+	palace = $listmember ( palaceList, 1 );
+			
+	// Find the Dark_Castle we placed with the Quest layout and give it the special item.
+	$ListObjects (palace, "Lair", -1, specialItemSiteList, #NoHiddenMap, #NotMyPlayer, #CheckTitles, "Dark_Castle");
+	
+	specialItemSite = $ListMember (specialItemSiteList, 1);
+	$CreateNewInventoryItem("MagicBall", specialItemSite);	
+
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	// Stick a custom attribute on the root object, we will use that to track if the Magic Ball has been found
+	$AddAttribute(AIRootAgent, "FoundMagicBall", "boolean", false);
+	// And if Dorgo has been dispatched
+	$AddAttribute(AIRootAgent, "DorgoIsDead", "boolean", false);
+	
+	// Set up the victory condition thread
+	
+	AIRootAgent's "VictoryCondition" = $SpecialItemExampleVictory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );	
+
+	// Setup a timer to make the quest harder if the player takes too long to find the Magic Ball
+	
+	// This will count the number of times the timer has hit.
+	$AddAttribute(AIRootAgent, "TimeLimitCheckCount", "integer", 0);	
+	// Start the timer script
+	AIRootAgent's "UtilityScript" = $SpecialItemExampleTimeLimit;
+	$RunThread (AIRootAgent's "UtilityScript", 900000);			// Give them 15 minutes, before ramping up the attacks.
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SpecialItemExampleVictory()
+declare
+	agent AIRootAgent, palace;
+	list palaces;
+begin
+
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	if (AIRootAgent's "DorgoIsDead" == true)
+	begin
+		palaces = $ListPalaces();
+		palace = $listmember(palaces,1);
+	
+		$DeclareVictory(palace, AIRootAgent's "End_coord");	
+		
+		$KillThread( AIRootAgent's "VictoryCondition" );	
+	end
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SpecialItemExampleTimeLimit()
+declare
+	agent ownerAgent, AIRootAgent;
+	coordinate location;
+begin
+
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	// Kill the thread, it will be restarted below, if needed.
+	$KillThread(AIRootAgent's "UtilityScript");
+
+	if (AIRootAgent's "FoundMagicBall" == false)
+	begin
+
+		$DebugOut ( 911, "Time limit reached!" );		
+	
+		ownerAgent = $FindInventoryItem("MagicBall");
+		if (ownerAgent != $NullAgent())
+		begin
+	
+			if (AIRootAgent's "TimeLimitCheckCount" >= 0)
+			begin		
+				$DebugOut ( 911, "Spawning monsters are Magic Ball site." );		
+				// Spawn some monsters at the Magic Ball site.
+				location = $LocationOf(ownerAgent);
+				$SpawnUnit (ownerAgent, "GreaterGorgon", location, #Monster_Player, "override", $concatenate(#ATTRIB_Artifice,#Force_PC_Hunter));
+				$SpawnUnit (ownerAgent, "GreaterGorgon", location, #Monster_Player, "override", $concatenate(#ATTRIB_Artifice,#Force_PC_Hunter));
+				$SpawnUnit (ownerAgent, "GreaterGorgon", location, #Monster_Player, "override", $concatenate(#ATTRIB_Artifice,#Force_PC_Hunter));
+
+				$SpawnUnit (ownerAgent, "Medusa", location, #Monster_Player, "override", $concatenate(#ATTRIB_Artifice,#Force_PC_Hunter));
+				$SpawnUnit (ownerAgent, "Medusa", location, #Monster_Player, "override", $concatenate(#ATTRIB_Artifice,#Force_PC_Hunter));
+
+			end
+		
+			if (AIRootAgent's "TimeLimitCheckCount" >= 1)
+			begin
+				$DebugOut ( 911, "Spawning monsters at map edges." );
+				//Spawn a horde of PC hunting Goblins off the edge of the map
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Archer", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "GoblinOverlord", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "GoblinOverlord", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Archer", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "GoblinOverlord", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "GoblinOverlord", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Fighter", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Champion", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Archer", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+				$SpawnUnit (ownerAgent, "Goblin_Priest", $RandomEdgeCoord ($RandomNumber (4)), #Monster_Player, "override", $Concatenate (#ATTRIB_Artifice, #Force_PC_Hunter) );
+			end
+			
+			AIRootAgent's "TimeLimitCheckCount" += 1;
+			
+			$RunThread(AIRootAgent's "UtilityScript", 600000);			// Give them 10 more minutes
+		end
+	end
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Find the edge that is furthest away
+function GetFurthestMapEdge(agent thisAgent) is integer
+
+declare
+	coordinate boardSize;
+	coordinate agentLoc;
+	integer xSize, ySize;
+	integer x, y;
+	integer furthestEdge, furthestDistance, num;
+
+begin
+	boardSize = $GetBoardExtents();
+	xSize = $getX(boardSize);
+	ySize = $getY(boardSize);
+
+	agentLoc = $locationof(thisAgent);
+
+	x = $getX(agentLoc);
+	y = $getY(agentLoc);
+
+	// Assume Borth is the furthest
+	furthestEdge = #North;
+	furthestDistance = y;
+	
+	num = ySize - y;
+	if (num > furthestDistance)
+		begin
+			furthestDistance = num;
+			furthestEdge = #South;
+		end
+
+	if (x > furthestDistance)
+		begin
+			furthestDistance = x;
+			furthestEdge = #West;
+		end
+		
+	num = xSize - x;
+	if (num > furthestDistance)
+		begin
+			furthestDistance = num;
+			furthestEdge = #East;
+		end
+		
+	return furthestEdge;
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function MagicBall_Birth(agent thisAgent)
+// This will be called with the special item is dropped on the map.  When the item is in someones inventory, no agent for the item exists.
+declare
+	agent AIRootAgent;
+	list palaces;
+	agent palace;
+begin
+	// Is this the first time it was dropped?  If so, then it was "discovered" by destroying its hiding place.
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	if (AIRootAgent's "FoundMagicBall" == false)
+	begin
+		AIRootAgent's "FoundMagicBall" = true;
+
+		$DebugOut ( 911, "The Magic Ball has been found!" );		
+
+		palaces = $ListPalaces();
+		palace = $listmember(palaces,1);
+		
+		// Spawn DorgoTheDestroyer and have him start looking for his toy
+		// We will spawn him at a random map edge
+		$spawnunit(thisAgent, "DorgoTheDestroyer", $RandomedgeCoord($GetFurthestMapEdge(palace)), #Monster_player);
+	end
+	
+	// Set a transfer script
+	$AddAttribute(thisAgent, "TransferScript", "function", $MagicBall_Transfer);
+		
+	// Set a timer that will have the item do something while it is sitting on the ground.	
+	$AddAttribute(thisAgent, "DangerTimer", "function", $SpecialItemDangerTimer);
+	$NewThread(thisAgent's "DangerTimer", 10000, thisAgent );
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function MagicBall_Transfer(agent oldOwnerAgent, agent newOwnerAgent, integer attributeID)
+// This will get called with someone has picked up the special item and put it in their inventory.
+declare
+	integer ownerExperience;
+begin
+	
+	if (newOwnerAgent != $NullAgent ())
+		begin
+		
+		// Did the ball find its way back to Dorgo?
+		if (newOwnerAgent's "Title" == "DorgoTheDestroyer")
+			begin
+				// Yes
+				$DebugOut ( 911, "Dorgo has picked up the Magic Ball!" );						
+				$AddAttribute(newOwnerAgent, "MagicBallPossesionTimer", "function", $DorgoSpecialItemPossesionTimer);
+				$NewThread(newOwnerAgent's "MagicBallPossesionTimer", 10000, newOwnerAgent );
+			end
+		else
+			begin
+				// Bump their experience level, but not too much.
+				ownerExperience = $GetAttribute(newOwnerAgent, #ATTRIB_ExperienceLevel);
+				if (ownerExperience < 10)
+					begin
+						$DebugOut ( 911, "Bumping agent's experience level", newOwnerAgent );		
+						$Advance_To_Level(newOwnerAgent, 10);
+						$SetAttribute(newOwnerAgent, #ATTRIB_Experience, 0);
+					end
+
+				// Heal them as well
+				$CreateEffector(newOwnerAgent,"potion_healing_effector", 0);	// Put the healing potion effector on them to show what we are doing.
+				$Heal(newOwnerAgent, newOwnerAgent, $getattribute(newOwnerAgent,#ATTRIB_MaxHP));
+					
+				// Attach a timer on our owner
+				$AddAttribute(newOwnerAgent, "MagicBallPossesionTimer", "function", $SpecialItemPossesionTimer);
+				$NewThread(newOwnerAgent's "MagicBallPossesionTimer", 10000, newOwnerAgent );
+				$DebugOut ( 911, "The Magic Ball has picked up by ", newOwnerAgent );		
+			end
+		end
+	else
+		begin
+			$DebugOut ( 911, "Did not find Magic Ball Owner!" );		
+		end
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SpecialItemDangerTimer(agent thisAgent)
+declare
+	integer doThis, index, heroTargetListSize;
+	list heroTargetList, searchList;
+	agent heroTarget, dorgoAgent;
+begin
+	// The item will either spawn a couple of monsters, or shoot off a spell.
+	
+	doThis = $RandomNumber(99);
+
+	$DebugOut ( 911, "Magic Ball event roll = ", doThis );		
+
+	if (doThis < 10)
+	begin
+		$spawnunit(thisAgent,"vampire", #Monster_player);
+		$spawnunit(thisAgent,"vampire", #Monster_player);
+		return;
+	end
+	
+	if (doThis < 20)
+	begin
+		$spawnunit(thisAgent,"Minotaur", #Monster_player);
+		return;
+	end
+
+	if (doThis < 40)
+	begin
+		$spawnunit(thisAgent,"Rust_Spitter", #Monster_player);
+		$spawnunit(thisAgent,"Rust_Spitter", #Monster_player);
+		return;
+	end
+	
+	if (doThis < 60)
+	begin
+		heroTargetListSize = $ListObjects(thisAgent, "Heroes", 10, heroTargetList);
+		if ( heroTargetListSize > 0 )
+			begin
+				index = 1;
+				while (index <= heroTargetListSize) do
+				begin
+					heroTarget = $ListMember( heroTargetList, index);
+					if ($IsValidGamePiece(heroTarget))
+					begin
+						// Calling PerformAction to cast the spell, which skips the check if the agent has learned the spell and skips any cooldown.
+						$PerformAction(thisAgent, "fire_blast", heroTarget);
+					end
+				end
+			end
+		else
+			begin
+				// No targets, spawn something.
+				$spawnunit(thisAgent,"Skeleton", #Monster_player);
+				$spawnunit(thisAgent,"Rust_Spitter", #Monster_player);
+			end			
+		return;
+	end
+	
+	if (doThis < 80)
+	begin
+		// Teleport closer to Dorgo
+		$ListObjects (thisAgent, "monster", -1, searchList, #NoHiddenMap, #CheckTitles, "DorgoTheDestroyer");
+		if ($ListSize(searchList) > 0)
+		begin
+			dorgoAgent = $ListMember (searchList, 1);
+			
+			if ($DistanceBetweenAgents(thisAgent, dorgoAgent) > 320)
+			begin
+				$CreateEffector( thisAgent, "teleport_effector", $GetSpellAttribute( "teleport", "effector_duration" ) );
+				$TeleportToUnit( thisAgent, 160, dorgoAgent, 0 );
+			end				
+		end
+		
+		return;
+	end
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function SpecialItemPossesionTimer(agent thisAgent)
+declare
+	integer doThis;
+begin
+
+	if ($isdead(thisAgent))
+		begin
+			// The agent is dead, remove the timer and exit
+			$KillThread(thisAgent's "MagicBallPossesionTimer");
+			$RemoveAttribute(thisAgent, "MagicBallPossesionTimer");
+			return;
+		end			
+	
+	// While we are in the inventory of our new owner, there is a chance that it will fall out of their pocket.
+	
+	doThis = $RandomNumber(99);
+	
+	$DebugOut ( 911, "Magic Ball possesion roll = ", doThis );		
+	
+	if (doThis < 10)
+	begin
+		if ($AgentHasInventoryItem ("MagicBall", thisAgent) )
+		begin	
+			// Whoops, it dropped!
+			// Make an instance of the item
+			$SpawnUnit (thisAgent, "MagicBall" );
+			// Remove the item from the source agent
+			$DeleteInventoryItem ("MagicBall", thisAgent);
+			
+			if ($HasAttribute("MagicBallPossesionTimer", thisAgent))
+			begin
+				$KillThread(thisAgent's "MagicBallPossesionTimer");
+				$RemoveAttribute(thisAgent, "MagicBallPossesionTimer");
+			end
+		end			
+	end
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function DorgoSpecialItemPossesionTimer(agent thisAgent)
+declare
+	integer doThis, healAmount;
+	float minHP;
+begin
+	
+	// Dorgo has the Magic Ball
+
+	if ($isdead(thisAgent))
+		begin
+			// The agent is dead, remove the timer and exit
+			$KillThread(thisAgent's "MagicBallPossesionTimer");
+			$RemoveAttribute(thisAgent, "MagicBallPossesionTimer");
+			return;
+		end			
+		
+	$DebugOut ( 911, "Checking if Dorgo needs healing" );				
+	// Heal Dorgo.
+	minHP = $GetAttribute(thisAgent, #ATTRIB_MaxHP) * 0.75;
+	if ($GetAttribute(thisAgent,#ATTRIB_HP) < minHP)
+	begin
+		
+		$CreateEffector(thisAgent,"potion_healing_effector", 0);	// Put the healing potion effector to show what we are doing.
+		// Heal him a random amount
+		healAmount = $RandomNumber(50) + 25;
+		$Heal(thisAgent, thisAgent, healAmount);
+		
+		$DebugOut( 911, "Healing Dorgo ", healAmount);	
+	end
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dorgo's Birth script
+function DorgoTheDestroyer_Birth (agent thisAgent)
+
+declare
+
+begin
+	$boss_monster_birth(thisAgent);
+	$Monster_Birth(thisAgent);
+	
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dorgo's Death script
+function DorgoTheDestroyer_Death(agent thisAgent)
+
+declare
+	agent	AIRootAgent;
+begin
+	$DeleteInventoryItem ("MagicBall", thisAgent);
+	
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	// Set that Dorgo is dead, the victory function will check this
+	AIRootAgent's "DorgoIsDead" = true;
+	// Save where he died
+	AIRootAgent's "End_coord" = $LocationOf( thisAgent ); 
+	
+	$Monster_Gravestone(thisAgent);
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dorgo's basic script.
+// Modified Item_Hunter script
+Function DorgsBasicScript(agent thisAgent)
+Declare
+	agent holdingAgent, magicBallAgent;
+	list heroes, resources, searchList;
+	coordinate destination;    
+	boolean validHoldingAgent;
+	integer sightRange;
+
+begin
+
+	// Anyone holding it?
+	holdingAgent = $FindInventoryItem ("MagicBall");
+	
+	if (holdingAgent != $NullAgent() && $isdead(holdingAgent) == false)
+		begin
+			validHoldingAgent = true;
+			// Are they hiding inside a building?
+			if ($InsideBuilding(holdingAgent))
+				begin
+					// Switch our target to the building
+					holdingAgent = $GetBuildingContainer(holdingAgent);
+				end
+		end
+				
+	if (validHoldingAgent)
+		begin
+			// Is it just the Magic Ball on the map?
+			if (holdingAgent's "Type" == "Special_Item")
+				begin
+					validHoldingAgent = false;
+					magicBallAgent = holdingAgent;
+				end
+		end
+		
+	sightRange = $GetAttribute(thisAgent, #ATTRIB_SightRange);
+	
+	if (validHoldingAgent == true)
+		begin
+			// Yes, are they close by?
+			if ($DistanceBetweenAgents(thisAgent, holdingAgent) <= sightRange)
+				begin
+					$DebugOut ( 911, "Dorgo is attacking hero who has the Magic Ball" );
+					thisagent's "Target" = holdingAgent;
+					thisagent's "activeScript" = $monster_attack_object;
+					return;
+				end
+			else
+				destination = $locationof(holdingAgent);
+		end
+
+	// Find the MagicBall on the map
+	if (magicBallAgent != $NullAgent())						
+		begin
+			// If Dorgo is adjacent to it, automatically pick it up.
+			if ($isadjacent(thisAgent, magicBallAgent))
+				begin
+					$DebugOut ( 911, "Dorgo has found his toy!" );
+						
+  					$TransferInventoryItem("MagicBall", magicBallAgent, thisAgent);
+					// The C++ transfer function just transfers the item attribute ID to the agent's inventory, call the optional tranfer script as well.
+					if ($HasAttribute("TransferScript", magicBallAgent))
+						begin
+							if ($ValidFunction(magicBallAgent's "TransferScript") == TRUE)
+								(magicBallAgent's "TransferScript")(magicBallAgent, thisAgent, $MakeInventoryAttribute("MagicBall"));
+						end
+					// Then remove the magic ball container agent from the map.
+					$DeleteGamePiece(magicBallAgent);
+						
+					// Switch Dorgo to attack the player's palace.					
+					thisAgent's "Relentless" = true;
+					thisAgent's "Raider_Respond" = true;
+					thisAgent's "ActiveScript" = $Raider;
+					thisAgent's "BasicScript" = $Raider;
+					thisAgent's "BackScript" = $Raider;					
+					$reset_tasks(thisAgent);
+					
+					return;
+				end						
+		end								
+		
+	// Look for nearby heroes
+	$ListObjects(thisAgent, "hero", sightRange, heroes);
+
+	if ($ListSize(heroes) > 0)
+		begin
+			thisAgent's "Target" = $ListMember(heroes, 1);
+			thisagent's "activeScript" = $monster_attack_object;
+		end
+	else
+		begin
+			// Go toward the desired item
+			if ($IsMoving(thisAgent) == false)
+				begin
+					if (validHoldingAgent == true)
+						begin
+							$DebugOut ( 911, "Moving toward the hero who has the Magic Ball." );
+							$Move(thisAgent, $locationof(holdingAgent));
+						end
+					else
+						begin
+							if (magicBallAgent != $NullAgent())
+								begin
+									$DebugOut ( 911, "Moving toward the Magic Ball." );
+									$Move(thisAgent, $locationof(magicBallAgent));
+								end
+						end
+				end
+		end
+end
+

@@ -1,0 +1,408 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Deduct #extortion_percent_deduction of the gold
+function ExtortCalc_Common( float Extorted_Gold ) is float
+declare
+	float		extorted;
+begin
+	extorted = Extorted_Gold * ((100. - #extortion_percent_deduction) / 100.);
+	return extorted;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function DoExtortion(agent thisAgent)
+declare
+	list		Buildings, Taxables, Taxers, Heroes;
+	agent		Building, Hero, Palace, Taxman;
+	float		Extorted_Gold, Hero_Gold, Gold_Given, Gold_Kept;
+	integer		i_Gold_Kept, i_Extorted_Gold;
+
+begin
+	//$DebugOut( 911, "Extortion" );
+
+	Palace = $GetTruePalace (ThisAgent);
+
+	$ListObjects (ThisAgent, "Building", -1, Buildings, #MyPlayer);
+
+	$ListObjects (ThisAgent, "Hero", -1, Heroes, #MyPlayer);
+
+	//Add the rogues guild to the list
+	Buildings += ThisAgent;
+
+	Foreach Hero in Heroes do
+		begin
+			Hero_Gold = $GetAttribute (Hero, #ATTRIB_Gold);
+
+			//Give Extortion_hero_percent percent of the hero's gold to extorted gold
+			if ( hero's "title" == "Tax_Collector" )
+				Gold_Given = Hero_Gold;
+			else
+				Gold_Given = Hero_Gold * (#Extortion_Hero_Percent / 100.);
+
+			//This is Gold that is going to go into Stored_Gold
+			Gold_Kept = Hero_Gold - Gold_Given;
+
+			//This increments Extorted gold, if there is gold_given
+			if (gold_given > 0)
+				Extorted_Gold += Gold_Given;
+
+			//The hero keeps the rest of the gold
+			i_Gold_Kept = Gold_Kept;
+			$AdjustAttribute (Hero, #ATTRIB_StoredGold, i_Gold_Kept);
+
+			$SetAttribute (Hero, #ATTRIB_Gold, 0);
+		end
+
+	//Build a list of all buildings that have gold
+	Foreach Building in Buildings do
+		begin
+			If ($GetAttribute (Building, #ATTRIB_Gold) > 0)
+				Taxables << Building;
+		end
+
+	//Take all the gold from taxable buildings with gold
+	If ($ListSize (Taxables) > 0)
+		begin
+			Foreach Building in Taxables do
+				begin
+					Extorted_Gold += $GetAttribute (Building, #ATTRIB_Gold);
+					$SetAttribute (Building, #ATTRIB_Gold, 0);
+				end
+		end
+
+	$DebugOut ("Before Rogue's Cut:",Extorted_Gold);
+
+	//Deduct #extortion_percent_deduction of the gold
+	// i_Extorted_Gold is the integer portion of Extorted_Gold
+	i_Extorted_Gold = $ExtortCalc_Common( Extorted_Gold );
+
+	$DebugOut ("After Rogue's Cut:", i_Extorted_Gold );
+
+	//Give the remainder to the player
+	$AdjustPlayerData (ThisAgent, "gold", i_Extorted_Gold );
+
+	//blow away taxable building list - 2 lists
+	$ClearList (Palace's "Tax_Route");
+	$ClearList (Palace's "Tax_Targets");
+
+
+	//reset taxmen
+	$ListObjects (ThisAgent, "hero", -1, taxers, #MyPlayer, #CheckTitles, "Tax_Collector");
+
+	//Taxers = $ListTitles (Taxers, "Tax_Collector");
+
+	Foreach Taxman in Taxers do
+		begin
+			$Reset_Tasks (Taxman);
+		end
+
+	If (i_Extorted_Gold > 0)
+		//PerformAction (Palace, "Got_Gold_Bldg", Palace);
+		$createeffector (Palace ,"got_gold_bldg", 0, i_Extorted_Gold );
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This is called by the engine. It updates the Total Gold extortion field in the Rogue's guild.
+Function ShowExtortionTotal (agent ThisAgent) is integer
+declare
+	list		Buildings, Taxables, Heroes;
+	agent		Building, Hero;
+	float		Extorted_Gold, Hero_Gold, Gold_Given;
+
+begin
+	//List buildings
+	$ListObjects (ThisAgent, "Building", -1, Buildings, #MyPlayer);
+
+	//Add the rogues guild to the list
+	Buildings += ThisAgent;
+
+	//List heroes
+	$ListObjects (ThisAgent, "Hero", -1, Heroes, #MyPlayer);
+
+	Foreach Hero in Heroes do
+		begin
+			Hero_Gold = $GetAttribute (Hero, #ATTRIB_Gold);
+
+			//Give Extortion_hero_percent percent of the hero's gold to extorted gold
+			if ( hero's "title" == "Tax_Collector" )
+				Gold_Given = Hero_Gold;
+			else
+				Gold_Given = Hero_Gold * (#Extortion_Hero_Percent / 100.);
+
+			//This increments Extorted gold, if there is gold_given
+			if (gold_given > 0)
+				Extorted_Gold += Gold_Given;
+		end
+
+	//Build a list of all buildings that have gold
+	Foreach Building in Buildings do
+		begin
+			If ($GetAttribute (Building, #ATTRIB_Gold) > 0)
+				Taxables << Building;
+		end
+
+	//Take all the gold from taxable buildings with gold
+	If ($ListSize (Taxables) > 0)
+		begin
+			Foreach Building in Taxables do
+				begin
+					Extorted_Gold += $GetAttribute (Building, #ATTRIB_Gold);
+				end
+		end
+
+	//$DebugOut ("Before Rogue's Cut:",Extorted_Gold);
+
+	//Extorted_Gold is now the total amount of gold in the kingdom
+	return Extorted_Gold;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This is called by the engine. It updates the extortion field in the Rogue's 
+// guild, informing it as to how much the Rogues will take.
+Function ShowExtortionCut (agent ThisAgent) is integer
+declare
+	list		Buildings, Taxables, Heroes;
+	agent		Building, Hero;
+	float		Extorted_Gold, Hero_Gold, Gold_Given, Rogue_Gold;
+begin
+	//List buildings
+	$ListObjects (ThisAgent, "Building", -1, Buildings, #MyPlayer);
+
+	//Add the rogues guild to the list
+	Buildings += ThisAgent;
+
+	//List heroes
+	$ListObjects (ThisAgent, "Hero", -1, Heroes, #MyPlayer);
+
+	Foreach Hero in Heroes do
+		begin
+			Hero_Gold = $GetAttribute (Hero, #ATTRIB_Gold);
+
+			//Give Extortion_hero_percent percent of the hero's gold to extorted gold
+			if ( hero's "title" == "Tax_Collector" )
+				Gold_Given = Hero_Gold;
+			else
+				Gold_Given = Hero_Gold * (#Extortion_Hero_Percent / 100.);
+
+			//This increments Extorted gold, if there is gold_given
+			if (gold_given > 0)
+				Extorted_Gold += Gold_Given;
+		end
+
+	//Build a list of all buildings that have gold
+	Foreach Building in Buildings do
+		begin
+			If ($GetAttribute (Building, #ATTRIB_Gold) > 0)
+				Taxables << Building;
+		end
+
+	//Take all the gold from taxable buildings with gold
+	If ($ListSize (Taxables) > 0)
+		begin
+			Foreach Building in Taxables do
+				begin
+					Extorted_Gold += $GetAttribute (Building, #ATTRIB_Gold);
+				end
+		end
+
+	//Figure out how much the rogues will steal from the total pot of gold
+	Rogue_Gold = Extorted_Gold;
+
+	// Extorted_Gold = (Extorted_Gold * (100 - #extortion_percent_deduction)) / 100;
+	Extorted_Gold = $ExtortCalc_Common( Extorted_Gold );
+
+//$DebugOut( 911, "Rogue_Gold:", Rogue_Gold );
+//$DebugOut( 911, "Extorted_Gold:", Extorted_Gold );
+
+	//Rogues took the difference between Rogue_GOld (Total), and Modified Extorted_Gold
+	Rogue_Gold = Rogue_Gold - Extorted_Gold;
+
+//$DebugOut( 911, "Rogue-Extorted:", Rogue_Gold );
+
+	return Rogue_Gold;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function DoAssembly(agent thisAgent)
+declare
+	agent 	Member;
+	integer  Range;
+
+begin
+	//Establish range within which Members will go berserk
+	//Range = #Assembly_Go_Berserk_Mod * $GetAttribute (ThisAgent, #ATTRIB_SightRange);
+
+
+	Foreach Member in ThisAgent's "Members" do
+		begin
+			//Make sure the member is alive (we don't want to teleport gravestones around)
+			If (Member's "Type" != "Dead" && $IsFrozen (Member) == False)
+				begin
+
+					//If the Member is inside of a building, then release them
+					If ($InsideBuilding (Member))
+						begin
+							$Exit_Building (Member, Member's "Target");
+						end
+
+					//Otherwise, just reset their tasks
+					Else
+						$Reset_Tasks (Member);
+
+
+					//If they are far away, then teleport them home
+					//If ($DistanceBetweenAgents (ThisAgent, Member) > Range)
+						//begin
+						$createeffector( Member, "teleport_effector", $GetSpellAttribute( "teleport", "effector_duration" ) );
+						$TeleportToUnit( Member, 50000, ThisAgent, 0 );
+						//end
+
+
+
+					//Make all Members go berserk
+					Member's "ActiveScript" = $Berserk;
+
+				end
+		end
+
+	$playsound(thisagent,"Call_to_arms","begin");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function DoRageOfKrolm( agent thisAgent )
+declare
+	list	Heroes;
+	list  Hidddens;
+	agent	Hero;
+	agent	Palace, AIRootAgent;
+	integer	HeroCount;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	//Build a list of all myplayer's heroes
+	$ListObjects (ThisAgent, "hero", -1, Heroes, #MyPlayer, #InsideOtherUnits, #NoHiddenMap, #CheckSubtypes, "Hero");
+	//$ListObjects (ThisAgent, "hidden", -1, Hiddens, #MyPlayer, #InsideOtherUnits, #NoHiddenMap);
+
+	//Hiddens = $ListSubtypes (Hiddens, "Hero");
+	//Heroes = $AddLists (Hiddens, Heroes);
+
+	//$DebugOut (911,Heroes);
+
+	//Heroes = $ListSubtypes (Heroes, "Hero");
+
+	//$DebugOut (911, "Listsize of heroes:" , $ListSize (Heroes));
+
+	HeroCount = 0;
+
+	//Boost all heroes on list's stats
+	Foreach Hero in Heroes do
+	  	begin
+			if ( $IsDead ( hero ) == FALSE )
+				begin
+					//Create icon that will stay over their heads and callback in awhile
+					if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+						if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+							begin
+								$CreateEffector ( Hero, "Rage_Icon", #Deathmatch_Rage_Krolm_Duration );
+								if ( hero's "title" == "barbarian" )
+									$adjustattribute ( hero, #ATTRIB_Armor_Basic_Damage, #Deathmatch_Rage_Armor_Bonus );
+							end
+						else
+							$CreateEffector (Hero, "Rage_Icon", #Rage_Krolm_Duration);
+					else
+						$CreateEffector (Hero, "Rage_Icon", #Rage_Krolm_Duration);
+
+					//Magically adjust attribs so that they appear a diff color on the stats window
+					$MagicalAdjustAttribute (Hero, #ATTRIB_Strength, #Rage_Strength_Boost);
+		  			$MagicalAdjustAttribute (Hero, #ATTRIB_HtoH, #Rage_HtoH_Boost);
+		  			$MagicalAdjustAttribute (Hero, #ATTRIB_Dodge, #Rage_Dodge_Boost);
+		  			$MagicalAdjustAttribute (Hero, #ATTRIB_Parry, #Rage_Parry_Boost);
+
+					$AdjustAttribute (Hero, #ATTRIB_MaxHP, #Rage_MaxHP_Boost);
+		  			$AdjustAttribute (Hero, #ATTRIB_HP, #Rage_MaxHP_Boost);
+		  			Hero's "Self_Estimation" += #Rage_Self_Est_Boost;
+
+					//Make them go fast.
+					$adjustattribute(Hero,#ATTRIB_MovementRateModifier, -200 );
+
+					//This is commented out because in Maj Gold, it was decrementing ThisAgent's ActionRateMod,
+					//And not the Heros! We just took it out, as implementing it right would be too much
+					//of a balance change
+					//$adjustattribute(ThisAgent,#ATTRIB_ActionRateModifier, -300);
+					//If we did implement, it shold be:
+					//
+					//$adjustattribute(Hero,#ATTRIB_ActionRateModifier, -300);
+					//
+
+
+					$turnonSPeedTrail(Hero,4);
+
+					// keep track of how many
+					HeroCount += 1;
+			   end
+		end
+
+	// set a flag on the palace indicating that rage of Krolm has begun
+	Palace = $GetTruePalace( thisAgent );
+	$SetAttribute( Palace, #ATTRIB_RageOfKrolmCount, HeroCount );
+	//$DebugOut( 911, "Rage of Krolm count is ", HeroCount );
+
+	$playsound(thisagent,"Rage_of_Krolm","begin");
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// The effector icon callsback to this function
+Function Rage_end (agent ThisAgent)
+
+Declare
+	agent	Palace, AIRootAgent;
+
+Begin
+	// decrease palace reference count
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	Palace = $GetTruePalace( thisAgent );
+
+	if ($isvalidgamepiece(palace))
+		begin
+
+			$AdjustAttribute( Palace, #ATTRIB_RageOfKrolmCount, -1 );
+
+		end
+	//$DebugOut( 911, "-- Krolm count" );
+
+	if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+		if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+			if ( ThisAgent's "title" == "barbarian" )
+				$adjustattribute ( ThisAgent, #ATTRIB_Armor_Basic_Damage, - #Deathmatch_Rage_Armor_Bonus );
+
+
+	//Use MagicalAdjustAttrib so that the color-changing stats window deltas are accurate
+	$MagicalAdjustAttribute (ThisAgent, #ATTRIB_Strength,  - #Rage_Strength_Boost);
+	$MagicalAdjustAttribute (ThisAgent, #ATTRIB_HtoH, - #Rage_HtoH_Boost);
+	$MagicalAdjustAttribute (ThisAgent, #ATTRIB_Dodge, - #Rage_Dodge_Boost);
+	$MagicalAdjustAttribute (ThisAgent, #ATTRIB_Parry, - #Rage_Parry_Boost);
+
+
+   $AdjustAttribute (ThisAgent, #ATTRIB_MaxHP, - #Rage_MaxHP_Boost);
+	ThisAgent's "Self_Estimation" -= #Rage_Self_Est_Boost;
+
+	//Return hero to normal speed
+	$adjustattribute(thisagent,#ATTRIB_MovementRateModifier, 200 );
+
+	//Commented out because now it is never decremented in DoRageOfKrolm
+	//$adjustattribute(thisagent,#ATTRIB_ActionRateModifier, 300);
+
+	$turnoffSpeedTrail(thisagent);
+
+	If ($GetAttribute (ThisAgent, #ATTRIB_HP) > $GetAttribute (ThisAgent, #ATTRIB_MaxHP))
+		$SetAttribute (ThisAgent, #ATTRIB_HP, $GetAttribute (ThisAGent, #ATTRIB_MaxHP));
+End

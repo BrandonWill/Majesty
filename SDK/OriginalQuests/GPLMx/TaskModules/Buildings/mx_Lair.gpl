@@ -1,0 +1,193 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This is the basic ActiveScript for Monster Lairs. It checks proximity
+// to player buildings, and generates monsters accordingly, using ThisAgent's "Spawn_Function".
+
+// Uses a two phase approach -- the first is a linear algorithim that linearly increases the Lair's Spawn Rate in
+// response to proximity to player buildings. The second is a fixed interval Spawn Rate that kicks in when Players
+// build within a "too close for comfort" buffer layer around the lair.
+
+// The number of lairs on a map also increases the spawn rate of ALL lairs on the map, by
+// one second per lair total.
+
+expression #Min_Freestyle_Lair_Spawn_Delay  5000
+
+Function Lair_Brains (agent ThisAgent)
+Declare
+	list		Player_Buildings,other_lairs;
+	agent		Closest_Building;
+	integer	Current_Spawn_Rate;
+	integer	Time_To_Spawn;
+	integer	History_Modifier;
+	integer 	Base_Spawn_Rate;
+	integer	Distance_To_Closest;
+	integer	other_lair_delay;
+	agent		AIRootAgent;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	//If there are no player buildings to guage against, then guage against enemy lairs
+	//ie. treat them as player buildings...
+	If ( $ListObjects ( ThisAgent, "building", -1, Player_Buildings, #NotMyTeam ) == 0)
+		begin
+
+			$ListObjects ( ThisAgent, "lair", -1, Player_Buildings, #NotMyTeam );
+
+		end
+
+	$ListObjects(thisagent,"lair",-1, other_lairs );
+	other_lair_delay = AIRootAgent's "Lair_Extra_Delay" * $listsize(other_lairs);
+
+	//This is TRUE if the player is playing freestyle, in which case
+	//there is a min. time that lairs HAVE to delay
+	if ( $HasAttribute ( "Lair_Delay_Override", AIRootAgent ))
+		if ( AIRootAgent's "Lair_Delay_Override" )
+			begin
+				If (Other_Lair_Delay < #Min_Freestyle_Lair_Spawn_Delay)
+					Other_Lair_Delay = #Min_Freestyle_Lair_Spawn_Delay;
+			end
+
+	If ($ListSize (Player_Buildings) > 0)
+		begin
+			Closest_Building = $ListMember (Player_Buildings, 1);
+
+			//Closest_Building = $Pick_Closest (ThisAgent, Player_Buildings);
+			Base_Spawn_Rate = $GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate);
+			History_Modifier = ThisAgent's "History_Modifier";
+
+			//This is here so Lairs get really PO'd when buildings are real closeby
+//			If ($DistanceBetweenAgents (ThisAgent, Closest_Building) < #Lair_Annoyed_Distance)
+//				begin
+//					Time_To_Spawn = #Lair_Annoyed_Spawn_Rate;
+//					ThisAgent's "Annoyed" = True;
+
+//					//This is so that this Lair's spawned creatures can get a target quickly
+//					ThisAgent's "Target" = Closest_Building;
+//				end
+
+	//		Else
+	//			begin
+  //					ThisAgent's "Annoyed" = False;
+
+ 			//If ThisAgent's "History_Modifier" is greater than Base_Spawn_Rate, then this is going to be a negative number
+			Current_Spawn_Rate = (Base_Spawn_Rate - (ThisAgent's "History_Modifier"));
+
+			If (Current_Spawn_Rate <= 0)
+				begin
+					Current_Spawn_Rate = 1;
+				end
+
+			Distance_To_Closest = $DistanceBetweenAgents (ThisAgent, Closest_Building);
+			Time_To_Spawn = ((Distance_To_Closest * 20) + Current_Spawn_Rate) + other_lair_delay;
+
+//			Time_To_Spawn = ((Distance_To_Closest * 20) + Current_Spawn_Rate);
+
+			If (Time_To_Spawn < #Max_Lair_Spawn_Time)
+				begin
+
+					Time_To_Spawn = #Max_Lair_Spawn_Time;
+
+				end
+
+		end
+	Else
+		begin
+
+			//This is just here so we can test when there are no Player Buildings
+			Time_To_Spawn = #Max_Lair_Spawn_Time;
+
+		end
+	//$DebugOut (Time_To_Spawn);
+	$SetThreadInterval (ThisAgent's "Spawn_Function", Time_To_Spawn);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Spawn (agent ThisAgent)
+Declare
+	list		Monsters;
+	integer  History_Mod;
+
+Begin
+	$ListObjects (ThisAgent, "Monster", -1, Monsters );
+
+	// if a lair has a spawn list from the editor, the spawn call is interrupted
+	// and the type is picked from the list.
+
+	if ( $HasAttribute ( "Spawn_Type", ThisAgent ) == FALSE )
+		return;
+
+	If (( ThisAgent's "Spawn_Type" != "XX" ) && (Thisagent's "Spawn_Type" != "" ))
+		begin
+			//If there are already the max number of monsters on the map, then don't spawn
+			If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+				$SpawnUnit (ThisAgent, ThisAgent's "Spawn_Type");
+		end
+
+
+	//Adjust ThisAgent's "History_Modifier"
+	ThisAgent's "History_Modifier" += $GetAttribute (ThisAgent, #ATTRIB_Lair_History_Mod);
+
+	//Give ThisAgent a little more gold
+	$adjustattribute(thisagent,#ATTRIB_gold,$randomnumber(#lair_gold_regen) + 1);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function hideout_active(agent thisagent)
+
+declare
+	list bungalows;
+	agent bldg;
+	integer new_elfs;
+
+begin
+	// search for elven bungalows of the same player
+	// see if they are low on members.
+	// if so, spawn enough elves to fill them up
+	new_elfs = 0;
+	$debugout(911,"hideout active");
+
+	if ($listobjects(thisagent,"building",-1,bungalows,#MyPlayer) > 0)
+		begin
+			$debugout(911," - in loop");
+			bungalows = $listtitles(bungalows,"Elven_bungalow");
+			foreach bldg in bungalows do
+				begin
+					$debugout(911,$listsize(bldg's "members"),"-",$getattribute(bldg,#ATTRIB_MaxGuildMembers));
+					if ($listsize(bldg's "members") < $getattribute(bldg,#ATTRIB_MaxGuildMembers))
+						begin
+							new_elfs = $getattribute(bldg,#ATTRIB_MaxGuildMembers) - $listsize(bldg's "members");
+
+							while (new_elfs > 0) do
+								begin
+									$spawnunit(bldg,"Elf",#Monster_player);
+
+									new_elfs -= 1;
+									$debugout(911,"new Elf!");
+								end
+						end
+				end
+		end
+
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function will spawn heroes for guilds if all their slots aren't full already
+Function Hero_Generator (agent ThisAgent)
+Declare
+	agent thisspawn;
+
+Begin
+	If ($ListSize (ThisAgent's "Members") < $getattribute(thisagent,#ATTRIB_MaxGuildMembers))
+		begin
+			thisspawn = $SpawnUnit (ThisAgent, ThisAgent's "Member_Title");
+			$Generate_Character_Attributes(thisspawn);
+		end
+End

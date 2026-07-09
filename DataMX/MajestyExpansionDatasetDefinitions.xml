@@ -1,0 +1,37 @@
+<Majesty>
+	<DataConfiguration name="MajestyExpansion">
+		<Dataset base="Majesty">
+			<Load>
+				<CAM>mx_miscdata.cam</CAM>
+				<CAM>mx_action.cam</CAM>
+				<CAM>mx_btdata.cam</CAM>
+				<CAM>mx_gpltext.cam</CAM>
+				<CAM>mx_interfacedata.cam</CAM>
+				<CAM>mx_maindata.cam</CAM>
+				<CAM>mx_sounddesc.cam</CAM>
+				<CAM>mx_soundfx.cam</CAM>
+				<CAM>mx_terrtype.cam</CAM>
+				<CAM>mx_textdata.cam</CAM>
+				<CAM>mx_tilesetdata.cam</CAM>
+				<CAM>mx_unittype.cam</CAM>
+				<CAM>mx_voices.cam</CAM>
+				<CAM>mx_RgsText.cam</CAM>
+				<CAM>mx_cinedata1.cam</CAM>
+				<CAM>XQD1_intro.cam</CAM>
+				<CAM>$(MajestyDataPath)/GPLDebuggerUI.cam</CAM>
+				<GPL>$(MajestyExpansionBytecodeDataPath)/MX_Build.bcd</GPL>
+				<GPL>$(MajestyExpansionBytecodeDataPath)/MX_Data.bcd</GPL>
+				<GPL>$(MajestyExpansionBytecodeDataPath)/MX_Decision.bcd</GPL>
+				<GPL>$(MajestyExpansionBytecodeDataPath)/MX_Task.bcd</GPL>
+				<GPLSource>$(MajestySDKPath)/OriginalQuests/GplMx</GPLSource>
+				<Constants>mx_constants.rgs</Constants>
+				<Template></Template>
+			</Load>
+			<Unload>
+				<CAM></CAM>
+				<GPL></GPL>
+				<Constants>$(MajestyDataPath)/constants.rgs</Constants>
+			</Unload>
+		</Dataset>
+	</DataConfiguration>
+</Majesty>

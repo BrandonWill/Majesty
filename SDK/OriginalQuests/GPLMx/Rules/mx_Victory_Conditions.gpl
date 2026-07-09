@@ -1,0 +1,315 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+// Evaluate victory conditions once every 2 seconds:
+expression #VictoryCondition_callback_frequency		4000
+
+///////////////////////////////////////////////////////////////////////////////
+function SetVictoryCondition()
+// This will set a victory condition script to run on  a periodic timer.  The script is responsible
+//		for calling the $DeclareVictory() function with the palace of the winning player.  This function
+//		calls $GetVictoryConditionIndex() to determine which of the victory conditions was selected from the drop-down
+//		list in the setup menus, zero being the first item in the list, one the second, etc.  This function
+//		must be maintained in parallel with that list, so that if the order of that list or the number of
+//		selections changes, it should be reflected in the logic of this function.
+//
+declare
+	agent AIRootAgent,palace1,p2;
+	integer index, Time;
+	list all_palaces;
+
+
+begin
+	index = $GetVictoryConditionIndex();
+	$debugout(911,"victory condition index:",index);
+
+	// Set up victory condition script:
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	if (index == 2)
+		begin
+			//Survive specified time. Set Quest_Number so units can querry it
+			AIRootAgent's "Quest_Number" = #QNumber_Survive_Time;
+
+			AIRootAgent's "VictoryCondition" = $VictoryCondition_One;
+			// This victory condition is time-based, so we will only call it once, after the
+			// designated time has elapsed:
+
+			AIRootAgent's "Survive_Limit" = $GetVictoryConditionModifier ();
+
+			//Break up the time limit into smaller chunks otherwise we overflow the runthread with too
+			//large a number
+			If (AIRootAgent's "Survive_Limit" > 20)
+				begin
+
+					Time = 20;
+
+					AIRootAgent's "Survive_Limit" = (AIRootAgent's "Survive_Limit" - 20);
+
+				end
+
+			//Unless the time limit is smaller than 20 days
+			Else
+				begin
+					Time = AIRootAgent's "Survive_Limit";
+
+					AIRootAgent's "Survive_Limit" = 0;
+				end
+
+			$RunThread( AIRootAgent's "VictoryCondition", Time * 60 * 1000 );
+
+			$DebugOut( 911, "Duration Victory of : ", $GetVictoryConditionModifier() );
+		end
+	else if (index == 1)
+		begin
+			//Gather gold. Set Quest_Number so units can querry it
+			AIRootAgent's "Quest_Number" = #QNumber_Gather_Gold;
+
+			  AIRootAgent's "VictoryCondition" = $VictoryCondition_Two;
+			$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+			$DebugOut( 911, "Gold victory of : ", $GetVictoryConditionModifier() );
+		end
+	else if (index == 0)
+		begin
+			//Eliminate enemies. Set Quest_Number so units can querry it
+			AIRootAgent's "Quest_Number" = #QNumber_Eliminate_Enemies;
+
+			AIRootAgent's "VictoryCondition" = $VictoryCondition_Three;
+			$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+			$DebugOut( 911, "Eliminate enemies Victory" );
+		end
+	else if (index == 3)
+		begin
+			//Last palace standing. Set Quest_Number so units can querry it
+			AIRootAgent's "Quest_Number" = #QNumber_Last_Palace;
+
+			AIRootAgent's "VictoryCondition" = $VictoryCondition_four;
+			$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+			if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+				begin
+					AIRootAgent's "Permanent_Hostility" = TRUE;
+					AIRootAgent's "Deathmatch_Rules" = TRUE;
+				end
+
+			all_palaces = $ListPalaces();
+
+			palace1 = $listmember(all_palaces,1);
+			all_palaces -= palace1;
+
+			foreach p2 in all_palaces do
+				if ($getplayerteamnumber(p2) == $getplayerteamnumber(palace1))
+					begin
+						$setplayerteamnumber(p2,$newteamnumber());
+					end
+
+			$DebugOut( 911, "Last Palace Standing!" );
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function VictoryCondition_One()
+// last a duration
+declare
+	list 		all_palaces;
+	agent 	AIRootAgent;
+	integer	Time, Current_Limit;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	all_palaces = $ListPalaces();
+
+	// the player(s) lasted for the set duration
+//	$declarevictory($ListMember( all_palaces, 1 ));
+
+	Current_Limit = AIRootAgent's "Survive_Limit";
+
+	If (Current_Limit > 0)
+		begin
+
+			//Break up time limit into chunks of 20
+			If (Current_Limit > 20)
+				begin
+
+					Time = 20;
+
+					AIRootAgent's "Survive_Limit" = (AIRootAgent's "Survive_Limit" - 20);
+
+				end
+
+			//Unless the time limit is smaller than 20 days
+			Else
+				begin
+
+					Time = AIRootAgent's "Survive_Limit";
+
+					AIRootAgent's "Survive_Limit" = 0;
+
+				end
+
+			$RunThread (AIRootAgent's "VictoryCondition", Time * 60 * 1000);
+
+		end
+
+	//The players win
+	Else
+		begin
+
+			//Set freestyle music back to the Freestyle music player
+			$Reset_Freestyle_Music (AIRootAgent);
+
+			$victoryforall();
+
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function VictoryCondition_Two()
+// Player accrues some set amount of money - first one in multi-Player wins
+declare
+	list all_palaces;
+	agent richest_player, palace;
+	agent AIRootAgent;
+	integer gold_goal;
+
+begin
+	gold_goal = $GetVictoryConditionModifier();
+	$debugout(911,"checking for gold limit victory.",gold_goal);
+
+	all_palaces = $ListPalaces();
+
+ 	// Iterate through the list of palaces and find the richest one
+	richest_player = $ListMember( all_palaces, 1 );
+	foreach palace in all_palaces do
+		begin
+			if ( $GetPlayerData( palace, "gold" ) > $GetPlayerData( richest_player, "gold" ) )
+			begin
+				richest_player = palace;
+ 			end
+		end
+
+	// see if the richest player has gone over the goal
+	if ( $GetPlayerData( richest_player, "gold" ) > gold_goal )
+		begin
+			AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+			//Set freestyle music back to the Freestyle music player
+			$Reset_Freestyle_Music (AIRootAgent);
+
+			$DeclareVictory( richest_player );
+			// declare loss to everyone else, after removing the winner from the list
+			all_palaces -= richest_player;
+			$multiple_loss(all_palaces);
+
+			$DebugOut( 911, "The winner is", richest_player );
+			$KillThread( AIRootAgent's "VictoryCondition" );
+		end
+	else
+		$DebugOut( 911, "No winner yet" );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function VictoryCondition_Three()
+// All enemies are destroyed
+declare
+	list all_palaces,lairs,monsters,eheroes,ebuildings,l4,l5;
+	agent palace1;
+	agent AIRootAgent;
+
+begin
+	$debugout(911,"checking for all enemies destroyed.");
+	all_palaces = $ListPalaces();
+	palace1 = $ListMember( all_palaces, 1 );
+	while (($isvalidgamepiece(palace1) == FALSE) && ($listsize(all_palaces) > 0)) do
+		begin
+			$removelistmember(all_palaces,1);
+			if ($listsize(all_palaces) > 0)
+				palace1 = $ListMember( all_palaces, 1 );
+		end
+
+	if ($isvalidgamepiece(palace1) == FALSE)
+		begin
+			// everyone died?!?
+			return;
+		end
+
+
+	$ListObjects(palace1,"lair",-1,lairs,#NotMyTeam, #NoHiddenMap);
+	//$ListObjects(palace1,"monster",-1,monsters,#NotMyTeam, #NoHiddenMap);
+	$ListObjects(palace1,"building",-1,ebuildings,#NotMyTeam, #NoHiddenMap);
+	$ListObjects(palace1,"hero",-1,eheroes,#NotMyTeam, #NoHiddenMap,#InsideOtherUnits);
+
+	$listobjects(palace1,"Invisible",-1,l4,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(palace1,"camouflaged",-1,l5,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+
+	l4 = $addlists(l4,l5);
+	if ($listsize(lairs) == 0)
+		//if ($listsize(monsters) == 0)
+			if ($listsize(ebuildings) == 0)
+				if ($listsize(eheroes) == 0)
+					if ($listsize(l4) == 0)
+						begin
+							AIRootAgent = $RetrieveAgent("GplAIRoot");
+							$KillThread( AIRootAgent's "VictoryCondition" );
+
+							//Set freestyle music back to the Freestyle music player
+							$Reset_Freestyle_Music (AIRootAgent);
+
+							//$declarevictory(Palace1);
+							$victoryforall();
+						end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+function VictoryCondition_four()
+// Only one palace left? They win!
+declare
+	list all_palaces;
+	agent palace1,p2;
+	agent AIRootAgent;
+
+begin
+	$debugout(911,"checking for only one palace.");
+	all_palaces = $ListPalaces();
+
+	if ($listsize(all_palaces) == 1)
+		begin
+			AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+			//Set freestyle music back to the Freestyle music player
+			$Reset_Freestyle_Music (AIRootAgent);
+
+			$declarevictory($listmember(all_palaces,1));
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function victoryforall()
+
+declare
+	list all_palaces;
+	agent palace;
+
+begin
+	all_palaces = $ListPalaces();
+
+	foreach palace in all_palaces do
+		$declarevictory(palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function multiple_loss(list losers)
+
+declare
+	agent loser;
+
+begin
+	foreach loser in losers do
+		$declareloss(loser);
+end

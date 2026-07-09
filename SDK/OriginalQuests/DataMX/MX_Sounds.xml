@@ -1,0 +1,3629 @@
+<Majesty>
+	<Description type="Sound" subType="Standard" ID="BP10" Name="General_Housing">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="100"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG09"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED20" Name="EpicQuest_Darkness_Falls_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN20"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP20" Name="Rangers_Guild">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="GetHit">
+				<Wave value="HG35"/>
+				<FrequencyVariation up="1000" down="22"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP20"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM19"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG15"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ20" Name="EpicQuest_Darkness_Falls_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ20"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA30" Name="Advisor_Expansion_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA30"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED30" Name="EpicQuest_Vigil_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN30"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP30" Name="Temple_Solarus_Level2">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="GetHit">
+				<Wave value="ST04"/>
+				<FrequencyVariation up="888" down="222"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP29"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM42"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG33"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ30" Name="EpicQuest_Vigil_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ30"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO40" Name="Goblin_Overlord">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD28"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="MA28"/>
+				<FrequencyVariation up="100" down="500"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH12"/>
+				<FrequencyVariation up="100" down="2000"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP40" Name="Statue">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP40"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG38"/>
+				<FrequencyVariation up="100" down="1500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG17"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="AM50" Name="AMBIANT_WIND_BLOWING">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="AM50"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO50" Name="Stones">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Attack">
+				<Wave value="MA50"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG16"/>
+			</Phase>
+			<Phase ID="VFX_APPEARS">
+				<Wave value="UX01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="UX06"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="UX03"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="UX02"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="UX22"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="UX05"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Taunt">
+				<Wave value="UX04"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP50" Name="Ice_Cave">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP50"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="500" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM50"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Inactive1">
+				<Wave value="AM50"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="HG60" Name="Gorgon_Missile_hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="HG01"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL60" Name="Gate">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL60"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP60" Name="Fortress_Ixmil">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP56"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="142" down="989"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL70" Name="Vigor_Spell">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL70"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL80" Name="Medusa_Paralize">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL80"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="WD01" Name="Warrior_of_Discord">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_FLEE_COMBAT">
+				<Wave value="WDFT"/>
+				<Group value="Flee_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_DECIDING">
+				<Wave value="WDDO"/>
+				<Group value="Deciding_Group"/>
+			</Phase>
+			<Phase ID="VFX_FIND_COOL">
+				<Wave value="WDFL"/>
+				<Group value="Find_Cool_Group"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="WDSS"/>
+				<Group value="Voice_Special_1_Group"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="WDDH"/>
+				<Group value="Death_Group"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="VFX_GAIN_LEVEL">
+				<Wave value="WDGL"/>
+				<Group value="Up-Level_Group"/>
+			</Phase>
+			<Phase ID="VFX_SEE_HOSTILE">
+				<Wave value="WDSE"/>
+				<Group value="See_hostile_Group"/>
+			</Phase>
+			<Phase ID="VFX_JIHAD">
+				<Wave value="WDJD"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG12"/>
+				<Group value="GetHit_Group"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU11"/>
+				<Group value="Attack_Group"/>
+				<VolumeVariation up="1000" down="100"/>
+				<FrequencyVariation up="1000" down="3000"/>
+			</Phase>
+			<Phase ID="VFX_GO_COMBAT">
+				<Wave value="WDGT"/>
+				<Group value="Enter_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_GO_REWARD">
+				<Wave value="WDDG"/>
+				<Group value="GoReward_Group"/>
+			</Phase>
+			<Phase ID="VFX_LEVEL_10">
+				<Wave value="WDTL"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="WDE1"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="WDCT"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL3">
+				<Wave value="WH01"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU11"/>
+				<FrequencyVariation up="0" down="6000"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MK01" Name="Monk">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_GO_COMBAT">
+				<Wave value="MKGT"/>
+				<Group value="Enter_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_FLEE_COMBAT">
+				<Wave value="MKFT"/>
+				<Group value="Flee_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_DECIDING">
+				<Wave value="MKDO"/>
+				<Group value="Deciding_Group"/>
+			</Phase>
+			<Phase ID="VFX_GO_REWARD">
+				<Wave value="MKDG"/>
+				<Group value="GoReward_Group"/>
+			</Phase>
+			<Phase ID="VFX_FIND_COOL">
+				<Wave value="MKFL"/>
+				<Group value="Find_Cool_Group"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="MKSS"/>
+				<Group value="Voice_Special_1_Group"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="MKCL"/>
+				<Group value="Hero_Cast_Voice_Group"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="MKE1"/>
+				<Group value="Death_Group"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="VFX_GAIN_LEVEL">
+				<Wave value="MKGL"/>
+				<Group value="Up-Level_Group"/>
+			</Phase>
+			<Phase ID="VFX_SEE_HOSTILE">
+				<Wave value="MKSE"/>
+				<Group value="See_hostile_Group"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="MKAK"/>
+				<Group value="Attack_Group"/>
+				<VolumeVariation up="1000" down="100"/>
+				<FrequencyVariation up="2000" down="2000"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG04"/>
+				<Group value="GetHit_Group"/>
+			</Phase>
+			<Phase ID="VFX_LEVEL_10">
+				<Wave value="MKTL"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="HG06"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="MKCT"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BN01" Name="Barbarian">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_GO_COMBAT">
+				<Wave value="BNGT"/>
+				<Group value="Enter_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_FLEE_COMBAT">
+				<Wave value="BNFT"/>
+				<Group value="Flee_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_DECIDING">
+				<Wave value="BNDO"/>
+				<Group value="Deciding_Group"/>
+			</Phase>
+			<Phase ID="VFX_GO_REWARD">
+				<Wave value="BNDG"/>
+				<Group value="GoReward_Group"/>
+			</Phase>
+			<Phase ID="VFX_FIND_COOL">
+				<Wave value="BNFL"/>
+				<Group value="Find_Cool_Group"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="BNSS"/>
+				<Group value="Voice_Special_1_Group"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="BNDH"/>
+				<Group value="Death_Group"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="VFX_GAIN_LEVEL">
+				<Wave value="BNGL"/>
+				<Group value="Up-Level_Group"/>
+			</Phase>
+			<Phase ID="VFX_SEE_HOSTILE">
+				<Wave value="BNSE"/>
+				<Group value="See_hostile_Group"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="HG13"/>
+				<Group value="Attack_Group"/>
+				<VolumeVariation up="1000" down="100"/>
+				<FrequencyVariation up="1500" down="1000"/>
+			</Phase>
+			<Phase ID="VFX_JIHAD"/>
+			<Phase ID="VFX_LEVEL_10">
+				<Wave value="BNTL"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BNE1"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="BNCT"/>
+			</Phase>
+			<Phase ID="GetHit2">
+				<Wave value="HG32"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MR01" Name="Magic_Resist">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="MR01"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="AT01" Name="Adept">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_GAIN_LEVEL">
+				<Wave value="ATGL"/>
+				<Group value="Up-Level_Group"/>
+				<Flags value="4"/>
+				<FrequencyOverride value="0"/>
+			</Phase>
+			<Phase ID="VFX_GO_COMBAT">
+				<Wave value="ATGT"/>
+				<Group value="Enter_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_FLEE_COMBAT">
+				<Wave value="ATFT"/>
+				<Group value="Flee_Combat_Group"/>
+			</Phase>
+			<Phase ID="VFX_DECIDING">
+				<Wave value="ATDO"/>
+				<Group value="Deciding_Group"/>
+			</Phase>
+			<Phase ID="VFX_FIND_COOL">
+				<Wave value="ATFL"/>
+				<Group value="Find_Cool_Group"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="ATSS"/>
+				<Group value="Voice_Special_1_Group"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="ATCL"/>
+				<Group value="Hero_Cast_Voice_Group"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="ATDH"/>
+				<Group value="Death_Group"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="VFX_SEE_HOSTILE">
+				<Wave value="ATSE"/>
+				<Group value="See_hostile_Group"/>
+			</Phase>
+			<Phase ID="VFX_JIHAD">
+				<Wave value="ATJD"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG15"/>
+				<Group value="GetHit_Group"/>
+				<FrequencyVariation up="1000" down="0"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU22"/>
+				<Group value="Attack_Group"/>
+				<VolumeVariation up="1000" down="100"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="VFX_GO_REWARD">
+				<Wave value="ATDG"/>
+				<Group value="GoReward_Group"/>
+			</Phase>
+			<Phase ID="VFX_LEVEL_10">
+				<Wave value="ATTL"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="ATE1"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU31"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT01" Name="FervisTemple">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG36"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM27"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG26"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="OW01" Name="Sage">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="OW01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="OW03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL3">
+				<Wave value="OW02"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="IX01" Name="Ixmil_Fortress_Teleport">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="IX01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Effector Begin">
+				<Wave value="IX01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP11" Name="Gnome_Camp">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP30"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="2000" down="100"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM32"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG30"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED21" Name="EpicQuest_Ixmil_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN21"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP21" Name="Warriors_Guild">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP21"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM22"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG19"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ21" Name="EpicQuest_Ixmil_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ21"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA31" Name="Advisor_Sorcerer_Joins">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA31"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED31" Name="EpicQuest_Twilight_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN31"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP31" Name="Trading_Post">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP31"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="500" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG18"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ31" Name="EpicQuest_Twilight_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ31"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO41" Name="Goblin_Priest">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD29"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH12"/>
+				<FrequencyVariation up="1000" down="100"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="HG51" Name="Ratapult_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="HG51"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO51" Name="Abomonation">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="UX20"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU05"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG50"/>
+			</Phase>
+			<Phase ID="Taunt">
+				<Wave value="UX12"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Taunt2">
+				<Wave value="UX13"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="UX21"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP51" Name="Hall_of_Champions">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP51"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG39"/>
+				<FrequencyVariation up="500" down="600"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG21"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM52"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL61" Name="Dirgo_Strength">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL61"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP61" Name="Evil_Castle">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP60"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="666" down="666"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL71" Name="Horrify_Spell">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL71"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="Sl81" Name="Ixmil_Blast">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL81"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL91" Name="Howl_Discord_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL91"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SA02" Name="Solari_Special_attack">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SA02"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP02" Name="Ballista_Tower">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP22"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="1000" down="2000"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="BP02"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG11"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT02" Name="Agrella Temple">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT06"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG35"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM30"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG32"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP12" Name="Graveyard">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP12"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="SL02"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED22" Name="EpicQuest_Legend_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN22"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ22" Name="EpicQuest_Legend_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ22"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA32" Name="Advisor_Abode_Upgraded">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA32"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP32" Name="Copy of Wizards_Tower">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Attack">
+				<Wave value="SL41"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP32"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG38"/>
+				<FrequencyVariation up="1000" down="200"/>
+			</Phase>
+			<Phase ID="Ambient_Build2">
+				<Wave value="AM02"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Build3">
+				<Wave value="AM02"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Buildup">
+				<Wave value="AM17"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG20"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO42" Name="Greater_Gorgon">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD42"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU30"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG15"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP42" Name="Royal_Gardens">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP42"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<Group value="GetHit_Group"/>
+				<FrequencyVariation up="500" down="555"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG16"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO52" Name="Ice_dragon">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD52"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="MA51"/>
+				<FrequencyVariation up="50" down="1411"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG03"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP52" Name="Magic_Bazzar">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP52"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG23"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM03"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL62" Name="Mind-Warp">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL62"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP62" Name="Wight_Tomb">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP62"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG08"/>
+				<FrequencyVariation up="250" down="1000"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL72" Name="Spire_Shot">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL51"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL82" Name="Stoneback_Shield">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL82"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL92" Name="Stoneback_Shield_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL92"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP03" Name="Blacksmith">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM11"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG12"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT03" Name="Krolm_Temple">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT09"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG38"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM39"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP13" Name="Guard_House">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP13"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU27"/>
+				<VolumeVariation up="100" down="100"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG13"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED23" Name="EpicQuest_Ratman_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN23"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP23" Name="Rogues_Guild">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP23"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG39"/>
+				<FrequencyVariation up="2000" down="252"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM28"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG05"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ23" Name="EpicQuest_Ratman_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ23"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA33" Name="Advisor_Bazzar_open">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA33"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO43" Name="Ratapult">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Attack">
+				<Wave value="MA43"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="200" down="254"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="MD43"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO53" Name="Windigo">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Attack">
+				<Wave value="WU25"/>
+				<FrequencyVariation up="252" down="2000"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU03"/>
+				<FrequencyVariation up="250" down="1000"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH49"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="MD53"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP53" Name="Masoleum">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="DS01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="666" down="666"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG24"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL63" Name="Earthquake">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Ambient_Idle1">
+				<Wave value="SL63"/>
+				<Flags value="Looped"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP63" Name="Ancient_Barrow">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP63"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG08"/>
+				<FrequencyVariation up="1000" down="125"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL73" Name="Turn_Undead">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL72"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL83" Name="Frost_Field_blast">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL83"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL93" Name="Damage_Shield_Endowed">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL93"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP04" Name="Brothel">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP04"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM25"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT04" Name="Daros Temple">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM23"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="WU21"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP14" Name="Inn">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP18"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1111" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM18"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED24" Name="EpicQuest_Scions_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN24"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP24" Name="Wizards_Guild">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP24"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="1000" down="200"/>
+			</Phase>
+			<Phase ID="Ambient_Build1">
+				<Wave value="AM02"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6"/>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM20"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG06"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ24" Name="EpicQuest_Scions_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ24"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA34" Name="Advisor_New_Elixer">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA34"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO44" Name="Ratman_Champion">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD44"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU11"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH21"/>
+				<FrequencyVariation up="100" down="2000"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP44" Name="Fountain">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Ambient_Inactive1">
+				<Wave value="AM07"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<Group value="GetHit_Group"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG08"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP54" Name="Outpost">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="CK06"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="508" down="698"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG25"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL64" Name="Fire_Balm">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL64"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL74" Name="Fire_Hammer">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL74"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL84" Name="Regeneration">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL84"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL94" Name="Frost_Field_hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL94"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT05" Name="Krypta Temple">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT07"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG39"/>
+				<FrequencyVariation up="666" down="666"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM29"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="AM03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP15" Name="Library">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP15"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="100"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG04"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED25" Name="EpicQuest_TheSeige_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN25"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP25" Name="Dragons_Lair">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP25"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="54"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ25" Name="EpicQuest_TheSeige_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ25"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA35" Name="Advisor_Bazzar_Upgraded">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="RA35"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA35"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO45" Name="Ratman_Shaman">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD45"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH21"/>
+				<FrequencyVariation up="1000" down="100"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="IE03"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="IE03"/>
+				<FrequencyVariation up="100" down="654"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP55" Name="Sorcerers_Abode">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP55"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="500" down="524"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG28"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Build1">
+				<Wave value="AM10"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Build2">
+				<Wave value="AM02"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Build3">
+				<Wave value="AM02"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL65" Name="Frost_Field">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL65"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL75" Name="Chain_Lightning">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL75"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP75" Name="Shrine_of_Light">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="AL02"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit2">
+				<Wave value="HG07"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Begin">
+				<Wave value="AL01"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL85" Name="Roden_Pestilence">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL85"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL95" Name="Pestilence_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL95"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP06" Name="Dwarf_Settlement">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG39"/>
+				<FrequencyVariation up="500" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM38"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG11"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP16" Name="Marketplace">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP16"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG39"/>
+				<FrequencyVariation up="1000" down="100"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM24"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG14"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED26" Name="EpicQuest_Spires_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN26"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP26" Name="Animal_Den">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="GetHit">
+				<Wave value="HG12"/>
+				<FrequencyVariation up="1000" down="123"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP26"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ26" Name="EpicQuest_Spires_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ26"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA36" Name="Advisor_Masoleum_Built">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA36"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO46" Name="Ratman_King">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="UX11"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU24"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH21"/>
+				<FrequencyVariation up="101" down="2500"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="UX10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Taunt">
+				<Wave value="UX08"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Taunt2">
+				<Wave value="UX07"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_GO_COMBAT">
+				<Wave value="UX09"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP46" Name="Fortifed_Goblin_Camp">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP46"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG35"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP56" Name="Spires_of_Death">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP61"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+				<FrequencyVariation up="250" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="PF66" Name="Planet_fargo">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="PF66"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL66" Name="Change_of_Heart">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL66"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL76" Name="Medusa_Stare">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL76"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP76" Name="Shrine_Of_Darkness">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="AL03"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL86" Name="Supernove_hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="ST04"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL96" Name="Turn_Undead_hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL96"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP07" Name="Elven_Bungalow">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP07"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="500" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG31"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP17" Name="Sewer">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP17"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Inactive1">
+				<Wave value="AM06"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED27" Name="EpicQuest_Northern_Trade_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN27"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ27" Name="EpicQuest_Northern_Trade_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ27"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT27" Name="Temple_Lunord">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP27"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="555"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM33"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG27"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA37" Name="Advisor_Outpost_Raised">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA37"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO47" Name="Shadobeast">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD47"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU15"/>
+				<FrequencyVariation up="1000" down="500"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG03"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU25"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP47" Name="Goblin_Watchtower">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP47"/>
+				<LoopCount value="10000"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP57" Name="Ancient_Graveyard">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP57"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="666" down="666"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL67" Name="Terrify">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL67"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL77" Name="Dismiss">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL77"/>
+				<DistanceModifier value="10001.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL87" Name="Chain_lightning_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="ST06"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP08" Name="Fairground">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP08"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<Group value="GetHit_Group"/>
+				<FrequencyVariation up="500" down="2000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM26"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG29"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED28" Name="EpicQuest_Urban_Renewel_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN28"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ28" Name="EpicQuest_Urban_Renewel_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ28"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA38" Name="Advisor_Hall_Of_Champions_Built">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA38"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO48" Name="Yeti">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Death">
+				<Wave value="MD48"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="MA48"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="MH48"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU11"/>
+				<FrequencyVariation up="100" down="1010"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP48" Name="Rats_Nest">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP48"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP58" Name="Snake_Pit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP58"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="505" down="509"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL68" Name="Summon_Medusa">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL68"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL78" Name="Infectious_Cloud">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL78"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL88" Name="Damage_Shield_Reflect">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="ST02"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP09" Name="Gambling_Hall">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP09"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="500" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM14"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM40"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG02"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BT09" Name="Temple_to Krolm">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BT09"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+				<FrequencyVariation up="1000" down="1000"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM39"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG03"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED19" Name="EpicQuest_Empire_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN19"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ19" Name="EpicQuest_Empire_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ19"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="ED29" Name="EpicQuest_Serpents_Debrief">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EN29"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP29" Name="Temple_Solarus">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="GetHit">
+				<Wave value="ST04"/>
+				<FrequencyVariation up="888" down="222"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP29"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die7">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die8">
+				<Wave value="AM01"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="AM31"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG33"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="EQ29" Name="EpicQuest_Serpents_Intro">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="EQ29"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="RA39" Name="Advisor_Hero_Arrived">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_ADVISOR">
+				<Wave value="RA39"/>
+				<Group value="Advisor_Group"/>
+				<Flags value="CanQueue"/>
+				<DistanceModifier value="10002.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP39" Name="gazebo">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP39"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG33"/>
+				<FrequencyVariation up="2000" down="22"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="AM04"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="MO49" Name="Styx">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Attack">
+				<Wave value="MA49"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG15"/>
+			</Phase>
+			<Phase ID="VFX_APPEARS">
+				<Wave value="UX14"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="UX18"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL1">
+				<Wave value="UX16"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="UX23"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="UX19"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_SPECIAL2">
+				<Wave value="UX15"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Attack2">
+				<Wave value="WU02"/>
+			</Phase>
+			<Phase ID="Taunt">
+				<Wave value="UX17"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP49" Name="Destructable_Sewer">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="GetHit">
+				<Wave value="HG34"/>
+				<FrequencyVariation up="500" down="500"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die6">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Select">
+				<Wave value="BP17"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="BP59" Name="Embassy">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="BP59"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die4">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die5">
+				<Wave value="AM15"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG40"/>
+			</Phase>
+			<Phase ID="Easter_Egg">
+				<Wave value="BG22"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL69" Name="Speed_Monster">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL69"/>
+			</Phase>
+			<Phase ID="Peak">
+				<Wave value="SL69"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL79" Name="Supernova">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="SL73"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="SL89" Name="Fire_Balm_Hit">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Effector Begin">
+				<Wave value="ST05"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="xxxx" Name="Temp" Description="Temp">
+		<Engine version="1">
+			<Category value="0"/>
+		</Engine>
+	</Description>
+</Majesty>

@@ -1,0 +1,26 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function rest(agent thisagent) is Boolean
+
+declare
+	integer HP;
+	integer maxHP;
+
+begin
+	HP = $getattribute(thisagent,#ATTRIB_HP);
+	maxHP = $getattribute(thisagent,#ATTRIB_MaxHP);
+
+	if (((HP * 100) / maxHP) <= thisagent's "PercentageHPretreat")
+		begin
+			// heal self task
+			$heal_self(thisagent);
+			return TRUE;
+		end
+
+	return FALSE;
+
+end

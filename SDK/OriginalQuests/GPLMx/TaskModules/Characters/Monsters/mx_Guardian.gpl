@@ -1,0 +1,250 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Guardian	(agent ThisAgent)
+
+Declare
+	integer		SightRange;
+
+Begin
+	SightRange = $getattribute (ThisAgent, #ATTRIB_SightRange);
+
+	If ($IsMoving (ThisAgent) == FALSE)
+		begin
+			if ($randomNumber(100) > 98)
+				$performaction(thisagent,thisAgent's "Idle_action",$locationof(thisagent));
+			else
+				$Move (ThisAgent, $RandomCoord (ThisAgent's "coord_home", (SightRange * ThisAgent's "Guardian_Mod")));
+		end
+	else
+		begin
+			$Guardian_Eval_Enemies (ThisAgent);
+			$monster_cast_travel(thisagent);
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function	monster_cast_travel(agent thisagent) is boolean
+
+declare
+	string spell_name;
+
+begin
+	spell_name = $getbestspell(thisagent,#list_travel);
+
+	if (spell_name != "nothing")
+		begin
+			$castspell(thisagent,spell_name,thisagent,"");
+			return TRUE;
+		end
+			
+	return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Guardian_Eval_Enemies (agent ThisAgent)
+
+declare
+	list in_sight;
+	agent new_target;
+
+begin
+	$cleanse_hostiles(thisagent);
+
+	If ($MBuff_Check (ThisAgent) == False)
+
+		begin
+			in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+
+			//add hostiles to in_sight;
+			in_sight = $addlists(thisagent's "hostiles",in_sight);
+
+			in_sight = $possibly_remove_target(thisagent,in_sight);
+
+			// if there is anyone in sight, pick the closest one to attack
+ 			if ($listsize (in_sight) > 0)
+				begin
+					new_target = $pick_closest(thisagent,in_sight);//$listmember (in_sight, 1);
+
+					if (new_target != thisagent's "target")
+						begin
+							thisagent's "Target" = new_target;
+							thisagent's "ActiveScript" = $Guardian_Attack_object;
+						end
+				end
+
+			$ClearList (ThisAgent's "Hostiles");
+
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Guardian_Attack_Object(agent ThisAgent)
+
+declare
+	integer HP,maxHP;
+	integer TargetRangeFromMe,TargetRangeFromHome,attackrange,targetattackrange;
+	integer Speed,targetspeed;
+	agent target;
+	integer SightRange;
+	string spell_name;
+	boolean casting;
+
+begin
+	target = thisagent's "target";
+
+	// is target alive?
+	if ($notvalid(target))
+		begin
+			$reset_tasks(thisagent);
+		end
+	else
+		begin
+			// is target out of pursuit range?
+			SightRange = $getattribute (ThisAgent, #ATTRIB_SightRange);
+
+			//What is My Range to the Target?
+			TargetRangeFromMe = $distanceBetweenAgents(thisagent,target);
+
+			//How far is the target from my Home?
+			TargetRangeFromHome = $DistanceBetweenCoords(ThisAgent's "coord_home", $LocationOf (Target));
+
+			targetattackrange = $Egetattackrange(target) + 85;
+
+			//CHeck to see if target is too far from me or Home
+			if ((TargetRangeFromMe > targetattackrange) && (TargetRangeFromHome > ((SightRange * ThisAgent's "Guardian_Mod") + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange))))
+//			if ((TargetRangeFromMe > SightRange) && (TargetRangeFromHome > ((SightRange * ThisAgent's "Guardian_Mod") + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange))))
+//			if ((TargetRangeFromHome > ((SightRange * ThisAgent's "Guardian_Mod") + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange))))
+				begin
+					// go back to regular functioning
+					thisagent's "activeScript" = thisagent's "basicscript";
+					thisagent's "backscript" = thisagent's "basicscript";
+					$DebugOut (ThisAgent's "Type","thinks that the target is too far away.");
+					//Move to the center of ThisAgent's movement radius, so that it isn't a sitting duck
+					$Move (ThisAgent, ThisAgent's "coord_home");
+				end
+			else
+				begin
+					// is thiaagent in attackrange of target
+					spell_name = $getbestspell(thisagent,#list_attack);
+					$debugout(spell_name);
+
+					if (spell_name == "nothing")
+						begin
+							attackrange = $getattribute(thisagent,#ATTRIB_maxattackrange);
+							casting = FALSE;
+						end
+					else
+						begin
+							attackrange = thisagent's "castingrange";
+							casting = TRUE;
+						end
+
+					if (TargetRangeFromMe > attackrange)
+						begin
+							// move towards target
+							thisagent's "destination" = $locationof(target);
+							thisagent's "activeScript" = $guardian_travel_to;
+							thisagent's "backScript" = $Guardian_attack_object;
+							$move(thisagent,target);
+						end
+					else
+						begin
+							// make attack on object
+							if (casting)
+								$castspell(thisagent,spell_name,target, "");
+							else
+								$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This is special because it uses the Guardians' parent to find a Dispersion range
+// and also sets coord_home, which is a coordinate
+Function Guardian_Birth	(agent ThisAgent)
+
+Declare
+	agent Parent;
+
+Begin
+	$find_guardian_home(thisagent);
+
+	($Monster_Birth)(ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function find_guardian_home(agent thisagent)
+
+declare
+	agent parent;
+
+begin
+	If ($IsValidGamePiece ($Parent (ThisAgent)))
+		begin
+			Parent = $Parent (ThisAgent);
+
+			if (parent's "type" == "lair")
+
+				begin
+					if ($unitisoffmaplair(Parent) == FALSE)
+						begin
+							If ($GetAttribute (Parent, #ATTRIB_Lair_Dispersion) == 0)
+								$SetAttribute (Parent, #ATTRIB_Lair_Dispersion, Parent's "Dispersion_Range");
+
+							ThisAgent's "coord_home" = $RandomCoord (Parent, $GetAttribute (Parent, #ATTRIB_Lair_Dispersion));
+
+						end
+					else
+						ThisAgent's "coord_home" = $LocationOf (ThisAgent);
+				end
+			else
+				ThisAgent's "coord_home" = $LocationOf (parent);
+
+		end
+
+	Else
+		ThisAgent's "coord_home" = $LocationOf (ThisAgent);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Guardian_travel_to(agent thisagent)
+
+declare
+	integer	TargetRangeFromHome;
+	integer	SightRange;
+
+begin
+	SightRange = $GetAttribute (ThisAgent, #ATTRIB_SightRAnge);
+
+	//How far is the target from my Home?
+	if ($isdead(thisagent's "target") == FALSE)
+		TargetRangeFromHome = $DistanceBetweenCoords(ThisAgent's "coord_home", $LocationOf (ThisAgent's "Target"));
+	else
+		TargetrangeFromHome = 10000;
+
+	If (TargetRangeFromHome > ((SightRange * ThisAgent's "Guardian_Mod") + $getattribute (ThisAgent, #ATTRIB_MaxAttackRange)))
+		begin
+			// go back to regular functioning
+			thisagent's "activeScript" = thisagent's "basicscript";
+			thisagent's "backscript" = thisagent's "basicscript";
+			$DebugOut (ThisAgent's "Type","thinks that the target is too far away.");
+			//Move to the center of ThisAgent's movement radius, so that it isn't a sitting duck
+			ThisAgent's "Target" = $NullAgent ();
+
+			$Move (ThisAgent, ThisAgent's "coord_home");
+		end
+	Else
+		begin
+			If ($has_arrived(thisagent,false) == FALSE)
+				begin
+					$monster_cast_travel(thisagent);
+					$Guardian_Eval_Enemies (ThisAgent);
+				end
+		end
+end

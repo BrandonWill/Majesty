@@ -1,0 +1,57 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Monk_tree (agent thisagent)
+
+declare
+
+begin
+
+//	$debugout("I'm deciding what to do!");
+	$createeffector(thisagent,"thought_bubble_think",#think_bubble_time);
+	$SpecifyIntent (ThisAgent, #Intent_Thinking);
+
+	if ($check_nearby(thisagent) == False)
+
+	if ($Check_rewards(thisagent,FALSE) == False)
+
+	if ($Defend_home(thisagent) == False)
+
+	if ($defend_building(thisagent,"Marketplace") == FALSE)
+
+	if ($rest(thisagent) == False)
+
+//	if ($Guard_check(thisagent,"hero","Healer",95) == False)
+
+//	if ($Guard_check(ThisAgent,"hero","caravan",75) == False)
+
+	if ($Combat_wandering(thisagent,75) == False)
+
+	if ($Raid_Lair(ThisAgent,50) == False)
+
+	if ($Visit_Building(ThisAgent, "Inn", 50) == False)
+
+	if ($Visit_Building(ThisAgent, "Royal_gardens", 40) == False)
+
+	if ($check_library(thisagent,45, "Train_magic_resist") == FALSE)
+
+	if ($check_library(thisagent,55, "Learn_generic_spell") == FALSE)
+
+	if ($collect_special_item (ThisAgent, 70) == False)
+
+	if ($Purchase_bazaar(thisagent, 70) == False)
+
+	if ($Hall_Champs_Check(thisagent, 50) == False)
+
+	if ($Go_home(thisagent,60) == False)
+
+		begin
+			$SpecifyIntent (ThisAgent, #intent_wandering);
+			thisagent's "counter" = 0;
+			thisagent's "activescript" = $hero_wander;
+		end
+
+end

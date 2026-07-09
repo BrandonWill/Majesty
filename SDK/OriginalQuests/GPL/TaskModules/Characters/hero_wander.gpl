@@ -1,0 +1,30 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function hero_wander(agent thisagent)
+
+declare
+
+begin
+	if ($ismoving(thisagent) == FALSE)
+		if (thisagent's "counter" < #wander_limit)
+			begin
+				thisagent's "target" = thisagent;
+				ThisAgent's "Destination" = $randomcoord(thisagent,#wander_dist);
+				ThisAgent's "ActiveScript" = $Travel_To;
+				thisagent's "backscript" = $hero_wander;
+				$move(thisagent,thisagent's "destination");
+				(thisagent's "counter")++;
+			end
+		else
+			begin
+				$createeffector(thisagent,"thought_bubble_talk",#talk_bubble_time);
+				$performaction(thisagent,thisAgent's "Idle_action",thisagent);
+
+				thisagent's "counter" = 0;
+				thisagent's "activescript" = thisagent's "basicscript";
+			end
+end

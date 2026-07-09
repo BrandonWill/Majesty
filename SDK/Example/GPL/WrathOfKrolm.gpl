@@ -1,0 +1,851 @@
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function WrathOfKrolm ()
+// The entry point to the script.  The function name must match the Name field in the Quest definition file (the .mqxml file)
+declare
+	agent	AIRootAgent,palace, Temple;
+	list 	palaces, Temples, Skeletons;
+
+begin
+	palaces = $ListPalaces ();
+	palace = $listmember ( palaces, 1 );
+
+	// Set up the victory condition
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	// This is user DLC, set the base game Quest ID to 0
+	AIRootAgent's "Quest_Number" = 0;
+
+	//Start playing music
+	$Setup_Quest_Music ( AIRootAgent );
+
+	//No player-built economy in this quest
+	$disableunittype ( "Fairgrounds" );
+	$disableunittype ( "Inn" );
+	$disableunittype ( "Marketplace1" );
+	$disableunittype ( "Marketplace2" );
+	$disableunittype ( "Marketplace3" );
+	$disableunittype ( "Royal_Gardens" );
+	$disableunittype ( "Trading_Post" );
+	$disableunittype ( "Temple_Krolm" );
+
+	// Set the victory test script. Normally a quest would launch a thread to call this now
+	// but this quest triggers victory based on the deaths of some explict units so the victory test
+	// can be done in their death scripts (Krolm and the Altars)
+	AIRootAgent's "VictoryCondition" = $Krolm_victory;
+
+	// Attach the enemy spawn script.  The script will fire
+	// in 120 seconds + a random amount up to 30 seconds.
+	AIRootAgent's "SpecialSpawnScript" = $Enemy_Barbarian_Generator;
+	$NewThread ( AIRootAgent's "SpecialSpawnScript", ( 120000 + $RandomNumber ( 30000 )));
+
+	// Call the support script to setup some treasure for us.  20 pieces, 3000+ units away from the Palace.  
+	// Each terrain tile is 32 units, so a little over 93 tiles away.
+	$setup_random_treasure ( 20, 3000 );
+
+	// When a Victory happens, move the camera here.
+	AIRootAgent's "end_coord" = $locationof ( palace );
+
+	//This spawns raged-barbarians from offmap
+	AIRootAgent's "Quest_Flag_1" = False;
+
+	//This spawns Barbarians from out of the sewers
+	AIRootAgent's "Quest_Flag_2" = False;
+
+	// Quest flag 8 is true whenever Krolm is on the map. It is set to false when he leaves
+	// or dies.
+	AIRootAgent's "Quest_Flag_8" = FALSE;
+
+	// Quest flag 9 is set to true when the quest is won, to keep krolm from appearing
+	// again incorrectly should the player continue.
+	AIRootAgent's "Quest_Flag_9" = FALSE;
+
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Enemy_Barbarian_Generator ()
+// This function will spawn Enemy Barbarians from the Altars to Krolm on the map.
+// It also changes thread interval to random intervals.
+Declare
+	list temples, palaces;
+	agent temple, palace, AIRootAgent;
+	integer temple_count, spawn_interval, band;
+
+Begin
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	Palaces = $ListPalaces ();
+	Palace = $ListMember ( Palaces, 1 );
+
+	$ListObjects ( palace, "lair", -1, temples, #NotMyPlayer, #NoHiddenMap );
+	temples = $ListTitles ( temples, "Krolm_Altar" );
+	temple_count = $ListSize ( temples );
+
+	if ( temple_count < 1 )
+		return;
+
+	temple = $ListMember ( temples, $RandomNumber ( temple_count ) + 1 );
+
+	Band = $Randomnumber ( 2 ) + 2;
+	while ( Band > 0 ) do
+		begin
+			$SpawnUnit ( temple, "Enemy_Barbarian", "override" );
+			band -= 1;
+		end
+
+	//Set the interval depending on temple numbers.
+
+	spawn_interval = ( 20000 + ( 12000 * Temple_count ));
+
+	$NewThread ( AIRootAgent's "SpecialSpawnScript", Spawn_interval + $RandomNumber ( Spawn_interval ));
+End
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function temple_raider_birth ( agent thisagent )
+// Barbarians generated are equal in level to the average player hero level.
+declare
+	list buildings, heroes, palaces, monsters;
+	agent home, hero;
+	agent palace, AIRootagent;
+	boolean flag;
+	integer total_heroes, total_levels, avg_level;
+
+begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember ( Palaces, 1 );
+
+	$setAttribute ( ThisAgent, #ATTRIB_StoredGold, $randomnumber ( #hero_start_gold ) + #hero_start_gold );
+
+	$listobjects ( palace, "hero", -1, heroes, #NoHiddenMap, #MyPlayer );
+	if ( $ListSize ( heroes ) > 0 )
+		begin
+			foreach hero in heroes do
+				begin
+					if ( hero's "subtype" == "hero" )
+						if ( $IsValidGamePiece ( hero ))
+							begin
+								total_levels += $getattribute ( hero, #ATTRIB_ExperienceLevel );
+								total_heroes += 1;
+							end
+				end
+		end
+
+	if ( total_heroes < 1 )
+		avg_level = 1;
+	else
+		avg_level = ( total_levels / total_heroes );
+
+	if ( avg_level < 1 )
+		avg_level = 1;
+
+	$Upgrade_Barbarian ( thisagent, avg_level );
+
+	thisagent's "Target" = $NullAgent ();
+
+	AIRootAgent = $retrieveagent ( "GPLAIRoot" );
+
+	if ( AIRootAgent's "Quest_Flag_8" == TRUE )
+		$Permanent_Monster_Rage ( ThisAgent );
+
+  	$NewThread ( thisagent's "activeScript", #Normal_Cycle, thisagent );
+	thisagent's "raider_respond" = TRUE;
+
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function Upgrade_Barbarian ( agent thisagent, integer avg_level )
+// This upgrades 'monster' barbarians to match the level of enemy heroes on the map.
+declare
+	float HP_mult;
+	integer old_hp, new_hp;
+begin
+	// Adjust HPs
+	HP_mult = ( 1.0 + ( 0.2 * ( avg_level - 1.0 )));
+
+	old_hp = $GetAttribute ( ThisAgent, #ATTRIB_MaxHP );
+	new_hp = old_hp * HP_mult;
+
+	$SetAttribute ( ThisAgent, #ATTRIB_MaxHP, new_hp );
+	$SetAttribute ( ThisAgent, #ATTRIB_HP, new_hp);
+
+	// Adjust Dodge, Parry & HTH
+	$SetAttribute ( ThisAgent, #ATTRIB_Dodge, ( $GetAttribute ( ThisAgent, #ATTRIB_Dodge ) + ( 1 * avg_level )));
+	$SetAttribute ( ThisAgent, #ATTRIB_Parry, ( $GetAttribute ( ThisAgent, #ATTRIB_Parry ) + ( 1 * avg_level )));
+	$SetAttribute ( ThisAgent, #ATTRIB_HtoH, ( $GetAttribute ( ThisAgent, #ATTRIB_HtoH ) + ( 1 * avg_level )));
+
+	// Adjust Strength
+	$SetAttribute ( ThisAgent, #ATTRIB_Strength, ( $GetAttribute ( ThisAgent, #ATTRIB_Strength ) + ( 1 * avg_level )));
+
+	// Adjust Magic Resistance
+	$SetAttribute ( ThisAgent, #ATTRIB_MagicResistance, ( $GetAttribute ( ThisAgent, #ATTRIB_MagicResistance ) + ( 1 * avg_level )));
+
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is for animals that are summoned by Krolm
+Function Permanent_Monster_Rage ( agent ThisAgent )
+Declare
+Begin
+	if ( $IsDead ( ThisAgent ) == FALSE )
+		if ( ThisAgent's "SubType" != "Controlled" )
+			begin
+				// Create icon that is permanent - as these heroes are permanently raged
+				$CreateEffector ( ThisAgent, "Perm_Rage_Icon", 1, "infinite" );
+
+				// Magically adjust attribs so that they appear a diff color on the stats window
+				$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Strength, #Rage_Strength_Boost );
+				$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_HtoH, #Rage_HtoH_Boost );
+				$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Dodge, #Rage_Dodge_Boost );
+				$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Parry, #Rage_Parry_Boost );
+
+				$AdjustAttribute ( ThisAgent, #ATTRIB_MaxHP, #Rage_MaxHP_Boost );
+				$AdjustAttribute ( ThisAgent, #ATTRIB_HP, #Rage_MaxHP_Boost );
+
+				//Make them go fast.
+				$adjustattribute ( ThisAgent, #ATTRIB_MovementRateModifier, -200 );
+				$adjustattribute ( thisagent, #ATTRIB_ActionRateModifier, -300 );
+
+				ThisAgent's "SubType" = "xx";
+			end
+End
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function Remove_Krolms_Rage ( agent thisagent )
+declare
+begin
+
+	if ( $IsDead ( ThisAgent ) == FALSE )
+		begin
+			// Remove the rage Icon
+			$DeleteEffector ( ThisAgent, "Perm_Rage_Icon" );
+
+			// Remove all statistics
+			$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Strength, -#Rage_Strength_Boost );
+			$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_HtoH, -#Rage_HtoH_Boost );
+			$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Dodge, -#Rage_Dodge_Boost );
+			$MagicalAdjustAttribute ( ThisAgent, #ATTRIB_Parry, -#Rage_Parry_Boost );
+
+			$AdjustAttribute ( ThisAgent, #ATTRIB_MaxHP, -#Rage_MaxHP_Boost );
+			$AdjustAttribute ( ThisAgent, #ATTRIB_HP, -#Rage_MaxHP_Boost );
+
+			//Remove Speed
+			$adjustattribute ( ThisAgent, #ATTRIB_MovementRateModifier, 200 );
+			$adjustattribute ( thisagent, #ATTRIB_ActionRateModifier, 300 );
+			// $TurnOffSpeedTrail ( ThisAgent );
+		end
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function temple_raider ( agent thisagent )
+// This tries to attack Temples before it attacks other buildings
+
+declare
+
+	list Temples, non_Temples, buildings;
+	agent target, building;
+	boolean casting;
+	integer attackrange;
+	string spell_name;
+
+begin
+	target = thisagent's "target";
+
+	if ( $notvalid ( thisagent's "target" ))
+		begin
+
+			//Find the closest buildings (if any) - temples first
+			If ( $ListObjects ( thisagent, "building", 50000, buildings, #NotMyTeam ) > 0 )
+				begin
+
+					Foreach Building in Buildings do
+						begin
+
+							//Attack non-Krolm temples first, then other buildings
+							If ( Building's "Title" == "Temple_Agrela" )
+								Temples << Building;
+
+							Else if ( Building's "Title" == "Temple_Dauros" )
+								Temples << Building;
+
+							Else if ( Building's "Title" == "Temple_Helia" )
+								Temples << Building;
+
+							Else if ( Building's "Title" == "Temple_Krypta" )
+								Temples << Building;
+
+							Else if ( Building's "Title" == "Temple_Lunord" )
+								Temples << Building;
+
+							Else if ( Building's "Title" == "Temple_Fervus" )
+								Temples << Building;
+
+							Else
+								Non_Temples << Building;
+
+						end
+
+					Buildings = $Addlists ( Temples, non_Temples );
+
+					ThisAgent's "Target" = $ListMember ( Buildings, 1 );
+
+				end
+			else
+				begin
+					// raider wanders because it has no targets
+					thisagent's "activescript" = $wandering;
+				end
+		end
+	else
+		begin
+			// pick weapon or spell
+			spell_name = $getbestspell ( thisagent, #list_attack );
+			$debugout ( "raider spell:", spell_name );
+
+			if ( spell_name == "nothing" )
+				begin
+					attackrange = $getattribute ( thisagent, #ATTRIB_maxattackrange );
+					casting = FALSE;
+				end
+			else
+				begin
+					attackrange = thisagent's "castingrange";
+					casting = TRUE;
+				end
+
+			$cleanse_hostiles ( thisagent );
+
+			if (( $listsize ( thisagent's "hostiles" ) > 0 ) && ( thisagent's "raider_respond" == TRUE ))
+				begin
+					$monster_eval_enemies ( thisagent );
+				end
+				
+			if ( $distancebetweenagents ( thisagent, thisagent's "target" ) < attackrange )
+				begin
+					// check for peasants nearby who are repairing buildings
+					if ( $peasants_near ( thisagent ) == FALSE )
+						begin
+							if ( casting )
+								$castspell ( thisagent, spell_name, target, "" );
+							else
+								if ( $randomnumber ( 1000 ) <= 995 )
+									$PerformAction ( ThisAgent, ThisAgent's "Attack_Action", ThisAgent's "Target" );
+								else
+									$PerformAction ( ThisAgent, thisAgent's "Idle_action", ThisAgent's "Target" );
+						end
+				end
+			else
+				begin
+					thisagent's "destination" = $locationof ( thisagent's "target" );
+					thisagent's "activescript" = $monster_travel_to;
+					thisagent's "backscript" = $raider;
+
+					$move ( thisagent, thisagent's "target" );
+				end
+		end
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Krolm_Altar_Death ( agent ThisAgent )
+Declare
+	list	Krolms, lairs, palaces;
+	agent palace, AIRootAgent, Krolm;
+	coordinate endcoord;
+
+Begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	if ( AIRootAgent's "Quest_Flag_9" == TRUE )
+		begin
+			$Lair_Death ( ThisAgent );
+			return;
+		end
+
+	$ListObjects ( ThisAgent, "lair", -1, lairs, #NoHiddenMap );
+	lairs = $ListTitles ( lairs, "Krolm_Altar" );
+	lairs -= ThisAgent;
+
+	$ListObjects ( ThisAgent, "monster", -1, Krolms, #NoHiddenMap );
+	Krolms = $ListTitles ( Krolms, "Krolm" );
+
+	if ( $ListSize ( lairs ) > 0 )
+		begin // If there are still altars standing, spawn a krolm.
+
+			If ( $ListSize ( Krolms ) == 0 ) // Make sure krolm isn't already on the map.
+  				$SpawnUnit ( ThisAgent, "Krolm", $RandomCoord ( ThisAgent, 800 ), "Override" );
+
+			$Lair_Death ( ThisAgent );
+
+		end
+	else
+		begin  // If this was the last krolm_altar, player wins!
+			Palaces = $ListPalaces ();
+			Palace = $ListMember ( Palaces, 1 );
+
+			AIRootAgent's "End_Coord" = $LocationOf ( ThisAgent );
+
+			$Lair_Death ( ThisAgent );
+
+			AIRootAgent's "Quest_Flag_9" = TRUE;
+			$RunThread ( AIRootAgent's "VictoryCondition", 8000 );
+
+			If ( $ListSize ( Krolms ) > 0 )
+				begin
+					Krolm = $ListMember ( Krolms, 1 );
+					If ( $IsDead ( Krolm ) == FALSE )
+						$SetAttribute ( Krolm, #ATTRIB_HP, -10 );
+				end
+		end
+End
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Krolm_Birth ( agent ThisAgent )
+Declare
+	list  Altars, Palaces, monsters;
+	agent Palace, monster, AIRootAgent;
+
+Begin
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	Palaces = $ListPalaces ();
+	Palace = $ListMember ( Palaces, 1 );
+
+	$RevealArea ( Palace, $LocationOf ( ThisAgent ), 300 );
+	$MiniMapAnimation ( thisagent, "event_beacon" );
+	$PlaySound ( ThisAgent, "Avatar_of_Krolm", "VFX_APPEARS" );
+
+	$ListObjects ( ThisAgent, "Lair", -1, Altars, #NoHiddenMap );
+	Altars = $ListTitles ( Altars, "Krolm_Altar" );
+
+	// $SetAttribute ( ThisAgent, #ATTRIB_ExperienceLevel, 100 );
+
+	$LearnSpell ( ThisAgent, "Krolm_Teleport" );
+
+	If ( $ListSize ( Altars ) >= 4 )
+		begin
+
+			$LearnSpell ( ThisAgent, "Summon_Roc" );
+
+		end
+	Else if ( $ListSize ( Altars ) == 3 )
+		begin
+
+			$LearnSpell ( ThisAgent, "Summon_Varg" );
+
+		end
+	Else if ( $ListSize ( Altars ) == 2 )
+		begin
+
+			$LearnSpell ( ThisAgent, "Summon_Bear" );
+
+		end
+	Else if ( $ListSize ( Altars ) == 1 )
+		begin
+
+			$LearnSpell ( ThisAgent, "Summon_Barbarian" );
+
+		end
+
+	// Add 500 to Krolm's HP for each altar still standing.
+	$SetAttribute ( ThisAgent, #ATTRIB_MaxHP, ( $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ) + ( 500 * $ListSize ( Altars ))));
+	$SetAttribute ( ThisAgent, #ATTRIB_HP, ( $GetAttribute ( ThisAgent, #ATTRIB_MaxHP )));
+
+	// Krolm has a fast attack.
+	$adjustattribute ( thisagent, #ATTRIB_ActionRateModifier, -250 );
+
+	// Krolm has a 50% chance to Critical Strike.
+	ThisAgent's "Critical_Chance" = 50;
+
+	ThisAgent's "StartingScript" = $temple_raider;
+	ThisAgent's "ActiveScript" = $temple_raider;
+	ThisAgent's "BackScript" = $temple_raider;
+	ThisAgent's "BasicScript" = $temple_raider;
+	ThisAgent's "Coord_Home" = $LocationOf ( ThisAgent );
+
+	$Offmap_Sleeper_Birth ( ThisAgent );
+
+	$ListObjects ( thisagent, "monster", -1, monsters, #MyPlayer );
+	monsters -= thisagent; // Take the avatar off the list.
+
+	AIRootAgent's "Quest_Flag_8" = TRUE;
+
+	foreach monster in monsters do
+		begin
+			$Permanent_Monster_Rage ( monster );
+		end
+
+End
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Offmap_Sleeper_Go_Home (agent ThisAgent)
+// Overloaded for the purposes of this quest, to allow krolm to set his
+// quest flag to FALSE when he leaves.
+Declare
+	agent AIRootAgent, monster;
+	list monsters;
+
+Begin
+	If ($isnearmapedge(thisagent))
+		begin
+			thisagent's "type" = "Waiting_to_die";
+			$killthread(thisagent's "activescript");
+
+			AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+			if ( thisagent's "title" == "Krolm" )
+				AIRootAgent's "Quest_Flag_8" = FALSE;
+
+			// Remove the rage of krolm from all creatures.
+			$Listobjects ( thisagent, "monster", -1, Monsters, #NoHiddenMap, #MyTeam );
+			foreach monster in monsters do
+				$Remove_Krolms_Rage ( monster );
+
+			$DeleteGamePiece (ThisAgent);
+		end
+	Else
+		begin
+			If ($IsMoving (ThisAgent) == False)
+				begin
+					ThisAgent's "Target" = ThisAgent;
+					$Move (ThisAgent, ThisAgent's "Coord_Home");
+				end
+			$monster_cast_travel(thisagent);
+		end
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function Krolm_Death ( agent ThisAgent )
+// This is called immediately upon Krolm's death.
+declare
+	agent palace, AIRootAgent, monster;
+	list palaces, monsters;
+	coordinate endcoord;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	Palaces = $ListPalaces ();
+	Palace = $ListMember ( Palaces, 1 );
+
+	$KillThread ( ThisAgent's "SleeperScript" );
+
+	// give out gold to players
+	$dropgoldinradius ( thisagent, $getattribute ( thisagent, #ATTRIB_gold ));
+
+	thisagent's "type" = "Dead";
+
+	// Make sure the Activescript is still running. 
+	$ResumeThread ( thisagent's "Activescript" );
+
+	$SetAttribute( thisagent, #ATTRIB_HasEffectInvisibility, 1 );
+	$GetProperUnitArt( thisagent );
+
+	$stopmoving ( thisagent );
+	thisagent's "Activescript" = $be_dead_2;
+	$setthreadinterval ( thisagent's "ActiveScript", 2000 );
+	$performaction ( thisagent, "basic_death", thisagent );
+
+	// Remove the rage of krolm from all creatures.
+	$Listobjects ( thisagent, "monster", -1, Monsters, #NoHiddenMap, #MyTeam );
+	foreach monster in monsters do
+		$Remove_Krolms_Rage ( monster );
+
+	AIRootAGent's "Quest_Flag_8" = FALSE;
+
+	if ( AIRootAgent's "Quest_Flag_9" == FALSE )
+		begin
+  			AIRootAgent's "Quest_Flag_9" = TRUE;
+			AIRootAgent's "End_Coord" = $LocationOf ( ThisAgent );
+			$RunThread ( AIRootAgent's "VictoryCondition", 8000 );
+		end
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function Krolm_Victory ()
+// The victory function.  It does not do any tests, it just immediately declares victory.
+// The victory tests are in the death scripts above, which then sets this script active.
+declare
+	agent AIRootAgent, Palace;
+	list Palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	Palaces = $ListPalaces ();
+	Palace = $ListMember ( Palaces, 1 );
+
+	$DeclareVictory ( palace, AIRootAgent's "end_coord" );
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Shared_Sleeper_Birth (agent ThisAgent)
+// This function is being overloaded within this DLC to ensure that it functions
+// properly with krolm (it was never used or tested with a creature other than Vendral).
+
+Declare
+	integer	Sleeper_Callback_Time;
+	list		Buildings, Altars;
+	integer	alt_count, bonus;
+	agent 	AIRootAgent;
+
+Begin
+	ThisAgent's "Target" = $NullAgent ();
+
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	$ListObjects ( ThisAgent, "Lair", -1, Altars, #NoHiddenMap );
+	Altars = $ListTitles ( Altars, "Krolm_Altar" );
+	Alt_count = $Listsize ( altars );
+
+	Sleeper_Callback_Time = ( 60000 );
+
+	// The first appearance will be 3/4 of a day long. Each subsequent appearance will
+	// add an additional 30 seconds to his duration.
+
+	bonus = ( 5 - Alt_Count );
+
+	Sleeper_Callback_Time = ( 45000 + ( 30000 * bonus ));
+
+	$DebugOut ( 911, "KROLM HAS APPEARED!!! DURATION = ", Sleeper_Callback_Time );
+
+	$NewThread ( ThisAgent's "ActiveScript", #Normal_Cycle, ThisAgent );
+
+	$RunThread ( ThisAgent's "SleeperScript", Sleeper_Callback_Time, ThisAgent );
+
+	thisagent's "startingScript" = thisagent's "basicScript";
+End
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Peaceful_Guardian ( agent ThisAgent )
+// This makes a monster wander around a point, but never attack anything (as they don't eval)
+// They WILL cast travel-based spells
+Declare
+Begin
+
+	If ( $IsMoving ( ThisAgent ) == False )
+		begin
+
+			$Move ( ThisAgent, $RandomCoord ( ThisAgent's "Coord_Home", 500 ));
+
+		end
+	Else
+		$monster_cast_travel ( thisagent );
+
+End
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Summon_Barbarian ( agent ThisAgent, agent Target )
+// This summons Enemy_Barbarians for Krolm.
+Declare
+begin
+	$CreateEffector ( ThisAgent, "Krolm_Summon_Effector", 0 );
+
+	$PlaySound ( thisagent, "Rage_of_Krolm", "Begin" );
+
+	$spawnunit ( thisagent,	"Enemy_Barbarian", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent,	"Enemy_Barbarian", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent,	"Enemy_Barbarian", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent,	"Enemy_Barbarian", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent,	"Enemy_Barbarian", $RandomCoord ( ThisAgent, 300 ));
+
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Summon_Roc ( agent ThisAgent, agent Target )
+// This summons Rocs for Krolm.
+Declare
+begin
+	$CreateEffector ( ThisAgent, "Krolm_Summon_Effector", 0 );
+
+	$PlaySound ( thisagent, "Rage_of_Krolm", "Begin" );
+
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Eagle", $RandomCoord ( ThisAgent, 300 ));
+
+end
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Summon_Varg ( agent ThisAgent, agent Target )
+//This summons Vargs for Krolm.
+Declare
+begin
+	$CreateEffector ( ThisAgent, "Krolm_Summon_Effector", 0 );
+
+	$PlaySound ( thisagent, "Rage_of_Krolm", "Begin" );
+
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Wolf", $RandomCoord ( ThisAgent, 300 ));
+
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Function Summon_Bear ( agent ThisAgent, agent Target )
+//This summons Bears for Krolm.
+Declare
+begin
+	$CreateEffector ( ThisAgent, "Krolm_Summon_Effector", 0 );
+
+	$PlaySound ( thisagent, "Rage_of_Krolm", "Begin" );
+
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+	$spawnunit ( thisagent, "Krolm_Bear", $RandomCoord ( ThisAgent, 300 ));
+
+end
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function Ratman_Birth	(agent ThisAgent)
+// Ratmen commonly call a different birthscript, so this needed to be overridden
+// to birth them with Krolm's rage when he's around.
+Declare
+	list	Lairs;
+	integer Random;
+	agent AIRootAgent;
+
+Begin
+
+	Random = $RandomNumber (2);
+
+	//Check to see which kind of ratman this is
+	If (Random == 0)
+		begin
+			ThisAgent's "ActiveScript" = $Sleeper_Raider;
+			ThisAgent's "BasicScript" = $Sleeper_Raider;
+			ThisAgent's "BackScript" = $Sleeper_Raider;
+			$DebugOut ("Ratman becomes a SLEEPER_RAIDER!!");
+		end
+	Else
+		begin
+			ThisAgent's "ActiveScript" = $Sleeper_Robber;
+			ThisAgent's "BasicScript" = $Sleeper_Robber;
+			ThisAgent's "BackScript" = $Sleeper_Robber;
+			$DebugOut ("Ratman becomes a SLEEPER_ROBBER!!");
+		end
+
+	$Sleeper_Birth (ThisAgent);
+
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	if ( AIRootAgent's "Quest_Flag_8" == TRUE )
+		$Permanent_Monster_Rage ( ThisAgent );
+
+End
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+function monster_birth ( agent thisagent )
+// This is overridden from the base support scripts because in Wrath Of Krolm, we want Rocs/Vargs/Hellbears to be super-tough.
+// Player summoned animals are NOT tougher, and enemy animals cannot be charmed.
+
+declare
+	agent Parent, AIRootAgent;
+	integer gold, player;
+	boolean flag;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	player = $GetUnitPlayerNumber ( ThisAgent );
+	parent = $Parent ( ThisAgent );
+
+	//If Giant Eagle, make them faster and double HP
+	If ( ThisAgent's "Title" == "Krolm_Eagle" )
+		begin
+
+			//Double the hit points
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxHP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ) * 2 );
+			$SetAttribute ( ThisAgent, #ATTRIB_HP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ));
+
+			// Increase Melee
+			$SetAttribute ( ThisAgent, #ATTRIB_HtoH, $GetAttribute ( ThisAgent, #ATTRIB_HtoH ) + 30 );
+
+			//Move and attack very quickly
+			$adjustattribute ( thisagent, #ATTRIB_MovementRateModifier, -300 );
+			$adjustattribute ( thisagent, #ATTRIB_ActionRateModifier, -250 );
+
+			ThisAgent's "Subtype" = "xx"; // This stops Krolm's animals from being charmed.
+
+		end
+
+	//If Red bear, make them stronger with double HP and high MR
+	Else if ( ThisAgent's "Title" == "Krolm_Bear" )
+		begin
+
+			//Double the hit points
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxHP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ) * 2 );
+			$SetAttribute ( ThisAgent, #ATTRIB_HP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ));
+
+			//Double strength
+			$SetAttribute ( ThisAgent, #ATTRIB_Strength, $GetAttribute ( ThisAgent, #ATTRIB_Strength ) * 2 );
+			$SetAttribute ( ThisAgent, #ATTRIB_HtoH, $GetAttribute ( ThisAgent, #ATTRIB_HtoH ) + 20 );
+
+
+			//Set MR to 65
+			$SetAttribute ( ThisAgent, #ATTRIB_MagicResistance, 65 );
+
+			ThisAgent's "Subtype" = "xx"; // This stops Krolm's animals from being charmed.
+
+		end
+
+	//If White Wolf, then harder to hit and more HP
+	Else if ( ThisAgent's "Title" == "Krolm_Wolf" )
+		begin
+
+			//Double the hit points
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxHP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ) * 2 );
+			$SetAttribute ( ThisAgent, #ATTRIB_HP, $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ));
+
+			//Increase Dodge and Parry & Melee
+			$SetAttribute ( ThisAgent, #ATTRIB_Dodge, $GetAttribute ( ThisAgent, #ATTRIB_Dodge ) + 30 );
+			$SetAttribute ( ThisAgent, #ATTRIB_Parry, $GetAttribute ( ThisAgent, #ATTRIB_Parry ) + 30 );
+			$SetAttribute ( ThisAgent, #ATTRIB_HtoH, $GetAttribute ( ThisAgent, #ATTRIB_HtoH ) + 30 );
+
+			ThisAgent's "Subtype" = "xx"; // This stops Krolm's animals from being charmed.
+
+		end
+
+	//If parent is Krolm, then this is a temple raider
+	If ( $IsValidGamePiece ( Parent ))
+		If ( Parent's "Title" == "Krolm" )
+			begin
+
+				ThisAgent's "ActiveScript" = $Temple_Raider;
+				ThisAgent's "BasicScript" = $Temple_Raider;
+				ThisAgent's "BackScript" = $Temple_Raider;
+				ThisAgent's "StartingScript" = $Temple_Raider;
+
+			end
+
+	// If krolm is on the map, then the monster is born raged.
+	if ( AIRootAgent's "Quest_Flag_8" == TRUE )
+		$Permanent_Monster_Rage ( ThisAgent );
+
+	thisagent's "target" = $nullagent ();
+	$clearlist ( thisagent's "hostiles" );
+
+	// Call the base script to setup the monster
+	$Setup_Quest_Monster ( ThisAgent );
+
+	// this will possibly override a monsters scripts if its artifice has
+	// been set by $spawnunit
+	$check_override_behavior ( thisagent );
+
+	$NewThread ( thisagent's "activeScript", #Normal_Cycle, thisagent );
+
+	thisagent's "startingScript" = thisagent's "basicScript";
+end

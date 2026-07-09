@@ -1,0 +1,84 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Fervus_Lived_In (agent ThisAgent)
+Declare
+	integer	Gold_Given;
+	integer	Gold_Kept;
+	agent	ThisBuilding;
+	integer	Hero_Gold;
+
+Begin
+	ThisBuilding = ThisAgent's "Target";
+
+
+	$enter_building(thisagent, ThisBuilding);
+
+	Hero_Gold = $GetAttribute (ThisAgent, #ATTRIB_Gold);
+
+	//Give Taxed Gold to the Guild, put the rest in ThisAgent's stored gold
+	Gold_Given = (Hero_Gold * $GetAttribute (ThisBuilding, #ATTRIB_TaxRate)) / 100;
+
+	//This is Gold that is going to go into Stored_Gold
+	Gold_Kept = Hero_Gold - Gold_Given;
+
+	//This Subtracts Gold_Given from Gold, and gives it to the Building
+	if (gold_given > 0)
+		$Transfer_Gold (ThisAgent, ThisBuilding, Gold_Given);
+
+	//The hero keeps the rest of the gold
+	$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, Gold_Kept);
+
+	$SetAttribute (ThisAgent, #ATTRIB_Gold, 0);
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", ThisBuilding's "Sleep_For");
+
+	ThisAgent's "ActiveScript" = $Rest_at_Fervus;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Rest_at_Fervus (agent ThisAgent)
+Declare
+	integer	HP;
+	integer	MaxHP;
+	agent		ThisBuilding;
+
+
+Begin
+	ThisBuilding = ThisAgent's "Home";
+
+	if (thisagent's "num_picked_goodies" > 0)
+		begin
+			thisbuilding's "num_resources" += thisagent's "num_picked_goodies";
+			thisagent's "num_picked_goodies" = 0;
+		end
+
+	HP = $getattribute (ThisAgent, #ATTRIB_HP);
+	MaxHP = $getattribute (ThisAgent, #ATTRIB_MaxHP);
+	$adjustattribute (ThisAgent, #ATTRIB_HP, (MaxHP - HP));
+
+  //	$DebugOut ("About to check to see if Fervus wants to spawn.");
+
+	If (ThisAgent's "Num_Followers" < (($getattribute(thisagent,#ATTRIB_experienceLevel) - 1) / 3) + 1)
+		begin
+			//$DebugOut ("Inside Spawn_check!");
+			If ($RandomNumber (100) + 1 < #Percent_Chance_Fervus_Spawns_Animal)
+				begin
+					$DebugOut ("Should Spawn!");
+					$DebugOut (ThisBuilding's "Spawn_Type");
+
+					//Cultist spawns an Animal, and increments his num_followers counter
+					$SpawnUnit (ThisAgent, ThisBuilding's "Spawn_Type", $LocationOf (ThisBuilding),#Monster_Player);
+//					(ThisAgent's "Num_Followers") ++;
+				end
+
+		end
+
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+	ThisAgent's "ActiveScript" = $Done_resting_guild;
+
+End

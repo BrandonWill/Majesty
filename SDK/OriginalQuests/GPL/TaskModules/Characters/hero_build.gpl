@@ -1,0 +1,103 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function hero_build(agent thisagent)
+
+declare
+	agent building, palace, AIRootAgent;
+	integer HP, MAXHP, build, maxbuild;
+
+begin
+	building = thisagent's "target";
+	palace = $getpalace(thisagent);
+
+	if ($isdead(building))
+		begin
+			$reset_tasks(thisagent);
+		end
+	else
+	if ($offrepair(building))
+		begin
+			$reset_tasks(thisagent);
+		end
+	else
+		if ($getattribute(building,#ATTRIB_HP) == $getattribute(building,#ATTRIB_MAXHP))
+			begin
+				$reset_tasks(thisagent);
+			end
+		else
+			if ($isdead(palace))
+				begin
+					$reset_tasks(thisagent);
+				end
+			else
+			if (($listsize(palace's "buildings_waiting") > 0) && ($listsize(palace's "Buildings_under_construction") < palace's "busy_peasants"))
+				begin
+					// go to a new waiting building
+					thisagent's "target" = $listmember(palace's "buildings_waiting",1);
+	//				// re arrange the list
+					palace's "buildings_waiting" -= thisagent's "target";
+					palace's "buildings_under_construction" << thisagent's "target";
+					thisagent's "Activescript" = $hero_build;
+				end
+			else
+				if ($isadjacent(thisagent,thisagent's "target") == FALSE)
+					begin
+						thisagent's "destination" = $locationof(thisagent's "Target");
+						thisagent's "Activescript" = $Travel_to;
+						thisagent's "backscript" = $hero_build;
+						$move(thisagent,thisagent's "target");
+					end
+				else
+					begin
+						// build building
+						$performaction(thisagent,"basic_build",building);
+
+						$give_exp(thisagent,#build_exp);
+
+						HP = $getattribute(building,#ATTRIB_HP);
+
+						build = $getattribute(thisagent,#ATTRIB_strength) + #hero_build_bonus;
+
+						if ( build < 1 )
+							build = 1;
+
+						AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+						if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+							begin
+								if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+									begin
+										if (( $GetAttribute ( building, #ATTRIB_FirstStageBuilt ) == 1 ) && ( $GetAttribute ( building, #ATTRIB_CurrentStageBuilt ) == 1 ) )
+											Maxbuild = #Deathmatch_Hero_Repair_Cap;
+										else
+											Maxbuild = build;
+									end
+								else
+									Maxbuild = build;
+							end
+						else
+							Maxbuild = build;
+
+						if ( build > maxbuild )
+							build = Maxbuild;
+
+						HP += build;
+
+						MAXHP = $getattribute(building,#ATTRIB_MAXHP);
+
+						if (HP > MAXHP)
+							HP = MAXHP;
+
+						$setattribute(building,#ATTRIB_HP,HP);
+
+						if ($getattribute(building,#ATTRIB_HP) == MAXHP)
+							begin
+								$BuildingReachedMaxHP(building);
+								palace's "buildings_under_construction" -= building;
+								$reset_tasks(thisagent);
+							end
+					end
+end

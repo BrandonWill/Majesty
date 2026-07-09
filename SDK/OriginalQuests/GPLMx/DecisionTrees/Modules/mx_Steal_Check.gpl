@@ -1,0 +1,109 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Steal_Check (agent ThisAgent, integer Chance) is Boolean
+
+Declare
+	list  	Potentials,lairs,buildings,new_buildings;
+	float		Best_Score;
+	agent		Best_One,Diddly,lair,bldg;
+	float		Temp_Gold,Temp_Score,Temp_Distance;
+	float		Greed;
+
+Begin
+//	$DebugOut ("Should I steal from somewhere?");
+	if ($RandomNumber (100) + 1 > Chance)
+		begin
+//			$DebugOut ("No, not interested!");
+			return False;
+		end
+
+//	$DebugOut ("Sounds interesting!");
+
+	//Use Greed to inform how far to search
+	$ListObjects (ThisAgent, "Lair", -1, Lairs );
+	$Listobjects (thisagent, "Building", -1, buildings );
+
+	// ifa building belongs to the same player as thisagent, there is
+	// a large minus for them trying to steal from it, otherwise
+	// if a building is on the same team there is a slightly smaller minus
+	// otherwise, their isn't even a check.
+	foreach bldg in buildings do
+		begin
+			// if same player, make loyalty roll
+			if ($getunitplayernumber(bldg) == $getunitplayernumber(thisagent))
+				begin
+					if ($randomnumber(100) - #steal_player_mod > thisagent's "loyalty")
+						new_buildings << bldg;
+				end
+			else
+				if ($getplayerteamnumber(bldg) == $getplayerteamnumber(thisagent))
+					begin
+						if ($randomnumber(100) - #steal_team_mod > thisagent's "loyalty")
+							new_buildings << bldg;
+					end
+				else
+					new_buildings << bldg;
+		end
+
+	lairs = $addlists(new_buildings,lairs);
+
+	//Build a list of all potential targets (ie. targets that have gold)
+	If ($ListSize (Lairs) > 0)
+		begin
+			Foreach Lair in Lairs do
+				begin
+					if ($getattribute (Lair, #ATTRIB_Gold) > 0)
+						Potentials << Lair;
+				end
+
+			If ($ListSize (Potentials) > 0)
+				begin
+					Best_Score = 0;
+						foreach Diddly in Potentials do
+							begin
+								Temp_Gold = $getattribute (Diddly, #ATTRIB_Gold);
+								Temp_Distance = $DistanceBetweenAgents (ThisAgent, Diddly);
+
+								//If distance to the agent is 0, make it 1 so I don't divide by 0
+								If (Temp_Distance == 0)
+									Temp_Distance = 1;
+
+								//Make Greed a Float
+								Greed = ThisAgent's "Greed";
+
+								//Use Greed to determine the most attractive location. This probably incorrect.
+								Temp_Score = (Greed * Temp_Gold) / Temp_Distance;
+								If (Temp_Score > Best_Score)
+									begin
+										Best_Score = Temp_Score;
+										Best_One = Diddly;
+									end
+							end
+					//Make a distance modified greed roll to determine you want to continue (this one is currently bogus)
+					//$DebugOut ("Best_Score:",Best_Score);
+					//$DebugOut ("Temp_Score:",Temp_Score);
+					//$DebugOut ("Temp_Gold:",Temp_Gold);
+					//$DebugOut ("Best_One:",Best_One);
+					//$DebugOut ("Temp_Distance:",Temp_Distance);
+					ThisAgent's "Target" = Best_One;
+					ThisAgent's "ActiveScript" = $Go_Steal;
+  //					$DebugOut ("I'm gonna go steal some #$*#!@ !!");
+
+					$SpecifyIntent (ThisAgent, #intent_stealing);
+					return True;
+				end
+			Else
+				begin
+	 //				$DebugOut ("None of the Buildings have any gold !");
+
+					return False;
+				end
+		end
+
+//	$DebugOut ("There aren't any Buildings to steal from!");
+	return False;
+End

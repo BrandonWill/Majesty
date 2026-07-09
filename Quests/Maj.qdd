@@ -1,0 +1,317 @@
+Name = 
+[Quest1]   // quest name must match the name in RGSMissionTemplate
+
+Short Description = 
+[This is where the description goes]
+
+Long Description =
+[Blah blah blah
+sdfasdffsdsdf
+tfdsfsdasdf
+asdffdsdfs]
+
+Name = 
+[BARREN_WASTE]
+
+Short Description = 
+[Build a Fairgrounds to win this quest.
+
+(No non-Human races or Wizards available.)]
+
+Long Description =
+["Do not despair, Your Majesty. Though this swampy region has yet to be transformed into a comfortable abode, I'm sure we can fulfill your mother's dream. I suggest we start small and figure out a way to productively use more of this swampy ground. Perhaps building a festive Fairground in the middle of this desolate quagmire will be sufficient proof of your achievement and ability."
+]
+
+Name = 
+[BELL_BOOK_CANDLE]
+
+Short Description = 
+[Recover the three items which have been stolen from your Palace and hidden in lairs throughout this realm.
+
+(No Warriors or Wizards available in this quest.)]
+
+Long Description =
+["Forgive the intrusion, Highness, but we've been robbed! Someone has stolen the Magic Bell, the Holy Book, and the Eternal Candle! Right from under our noses, they were whisked away from the royal treasury by some scoundrel. We must do something to recover them! They are treasures beyond value."]
+
+Name = 
+[HOLY_CHALICE]
+
+Short Description = 
+[Recover the Holy Chalice within thirty days, or your illness will consume you. 
+
+There are rumors that a guild of mighty Paladins resides somewhere in the countryside. If you find it, they may aid you...
+
+Beware! Lairs in this land never die - they just go dormant for awhile.
+
+(Can't build Marketplaces in this quest.)]
+
+Long Description =
+["Your Majesty's recent illness has taken its toll on the people. Their grief for your suffering only increases with sad news that your condition does not improve. It should now be clear to all that dark magics fuel this insidious ailment.
+I would not disturb your rest were it not for some hopeful news. The trusted old Wizard, Rezzenthell,  told me of a relic - a chalice - containing incredible healing power. It is hidden somewhere in the realm. I implore you to send your heroes scouring the land in search of this Holy Chalice. It may be the only thing which can put an end to your illness."
+]
+
+Name = 
+[QUEST_FOR_CROWN]
+
+Short Description = 
+[Find and destroy the lair that the Crown rests in.]
+
+Long Description =
+["An enlightening discovery, your highness! The Crown of Sydrian - the long lost symbol of your family's power - has been located. It is being held in an evil fortress on the frontier.
+The recent waves of monster attacks have left your people dispirited. Reclaiming this item would doubtlessly boost your subjects' faith and renew the support of your family's house. I greatly urge you to take advantage of this unexpected opportunity."
+]
+
+Name = 
+[DARK_FOREST]
+
+Short Description = 
+[Cure the adventurers of the sickness.
+
+Defeat the Witch King who dwells in the tower.]
+
+Long Description =
+["A curse afflicts the land, your Majesty, sapping your loyal subjects of their strength. Few have even the strength to leave their houses. 
+A single Warrior from the local guild remains mobile. He offers his services in finding a cure to this debilitating bane.
+I... I recommend you take him up on the offer. Now if you'll excuse me, I really must lie down."]
+
+Name = 
+[DAY_OF_RECKONING]
+
+Short Description = 
+[Survive the onslaught of all the most evil creatures in the realm.
+
+(No temples of any kind, or any non-Human dwelling may be built.)]
+
+Long Description =
+["Corruption blossoms from the earth! Hordes of the Underworld are springing up to ravage the land. Surely this plague of evil is a sign of sickness in the heavens - the gods are at war and we are all in danger!
+The realm must be defended from this sweeping chaos! Though mortal strength seems a fragile deterrent, you must call forth all possible might to reckon with these ultimate manifestations of all things foul and pestilent."]
+
+Name = 
+[DEAL_DEMON]
+
+Short Description = 
+[Make 100,000 gold within 40 days, or lose this quest.]
+
+Long Description =
+["Mighty Leader, forgive this intrusion, but a terrible presence has visited our castle! A Demon! He claims he's here to collect on a debt owed to him by your mother. Can this be true?
+Since we were unable to immediately deliver the requested bounty, he said he'd return later for TRIPLE the amount of gold, or he'd curse the entire village. He then vanished in a cloud of foul smelling, green smoke.
+Your Majesty? I hope you have a plan. Something MUST be done before he returns!"]
+
+Name = 
+[SLAY_DRAGON]
+
+Short Description = 
+[The only guild you have is a Temple to Helia. 
+
+You do not have the means to build any Guilds or Temples, so you'll have to find and organize the locals in order to defend your establishment. Use Solarii to rally the guilds lying in the countryside!
+
+Find the Hidden Sword Site and destroy it in order to obtain the Magic Sword, which will make Vendral mortal.
+
+Use the Magic Sword to slay Vendral.
+
+(You can't build any guilds or temples in this quest.)]
+
+Long Description =
+["Forgive the intrusion, your Majesty, but you must awaken! The day that Juleck the Prophet spoke of is upon us. The mighty dragon, Vendral, has awakened from his thousand-year slumber in the Mountains of Doom, and is attacking the realm!
+There is little time. You must recruit forces to find the weapons that will help destroy this threat before the kingdom becomes a scorched, barren waste. Send heroes to find the sword of Byran the Dragonsmiter. This manner of blade is the only known weapon that may cleave Vendral's hide."]
+
+Name = 
+[TOMB_DRAGON]
+
+Short Description = 
+[Destroy the three monster lairs to reveal the location of the Tomb.
+
+Destroy the Tomb of the Dragon King.
+
+(No Guards are willing to venture out in this hostile land, so you can't construct any Guardhouses.)]
+
+Long Description =
+["Your Majesty, I bear news of great import. Using his crystals and ethereal energies, the old Wizard, Tarsival, has divined the destiny of your kingdom. His vision in such matters is usually quite clear, so I urge you to respect his forecast.
+The Wizard claimed to see an ancient tomb, forgotten by all. It is rediscovered and visited by many heroes. One eventually recovered a magic sword that rests within. Tarsival insists that for the good of the land, this event must come to pass."]
+
+Name = 
+[ELVEN_TREACHERY]
+
+Short Description = 
+[Make 50,000 gold in 30 days to pay the ransom,
+
+OR
+
+Defeat the Elves, all enemy heroes and buildings, before that time.
+
+(No Elves will join your city in this quest.)]
+
+Long Description =
+["Majesty? It grieves me to be the bearer of such intolerable news. An Elvish miscreant has just left the castle. He came to deliver the message that his disreputable brethren have taken your son hostage! Apparently they see only the size of your treasury, not the depth of your skilled leadership.
+These foul opportunists demand you pay a ransom or, they say, you'll never again see your son alive. How shall we deal with this Elvish impudence, my Liege?"]
+
+Name = 
+[FERTILE_PLAIN]
+
+Short Description = 
+[Survive seven waves of raiders who attempt to destroy you.
+
+Destroy all raiders!
+
+(No non-Human races available in this quest.)]
+
+Long Description =
+["It honors me to counsel one so wise. Your forebears would be truly proud of the prosperity you've fostered in this land. This region has become rich and pleasant to dwell in thanks to your recent land acquisition. It is wonderful that the former Baron traded it for only a hundred and fifty head of cattle.
+However, such prosperity does not go without notice. Rumors have reached the castle walls that there are many who seek to claim this idyllic setting for themselves. You must be on guard against any such marauders."
+]
+
+Name = 
+[FORSAKEN_LANDS]
+
+Short Description = 
+[Destroy the Evil Castle to win this epic quest.
+
+(No Wizards Guild, non-Human races, Palace level 3, or any temples available.)]
+
+Long Description =
+["My liege, while this land holds great promise I should point out that there is much that requires your immediate attention. Our town is still beset by the marauding monsters who lurk in this forsaken land.
+We will only know true prosperity when these interlopers are kept at bay. It's in your best interest to employ the services of a variety of heroes. With their skills, and the blessings of the gods, we may be able to safeguard this community."]
+
+Name = 
+[GOBLIN_HORDES]
+
+Short Description = 
+[Destroy all Goblin Settlements.
+
+(Rangers Guilds cannot be constructed.)]
+
+Long Description =
+["Dreadful news! Scouts from the frontier report that Goblins have been seen heading this way, in massive numbers. We must stem this dark tide before they overrun and utterly destroy the kingdom. I suggest you put out a call for heroes - as many as we can muster - to protect our village and keep this vile swarm at bay. 
+I implore you to act quickly! The most recent sightings were not far from the village and we are ill-prepared for such an invasion."]
+
+Name = 
+[LICHE_QUEEN]
+
+Short Description = 
+[Drive the Liche Queen from her rocky lair, and then defeat her.
+
+(No Temples to Krypta available. No Blacksmiths, Inns, Dwarven Settlements, or Rogues Guilds may be built, but there may be hidden remnants of an earlier settlement left...)]
+
+Long Description =
+["Majesty. I'm here with the latest report from the Chief Tax Collector. He reports that the fiscal quarter will soon be ending and the treasury reports a deficit of..."
+
+{Voice of the Liche Queen} 
+"You dare interfere with the plans of the Liche Queen?  Your meddling presence has been like a thorn in my side. I will soon remove you and your sorry heroes, permanently."
+
+ "...though such outlays could damage income potential if not properly balanced against spending in other areas.
+
+Uh, Your Highness? Did you hear what I was saying?"]
+
+Name = 
+[SAVE_PRINCE]
+
+Short Description = 
+[Destroy the Tower Prison in which the Prince is imprisoned to win this epic quest. Use the magic spells of your Wizards Guild to help you.
+
+(No temples, non-Human races, or Rangers Guild are available.)]
+
+Long Description =
+["This morning, while cleaning out the royal courier pigeon roost, a servant noticed an unfamiliar bird. Attached to its leg was a message. It reads:
+'I am trapped in the tower of an evil Wizard! Please, please, please rescue me. My mother, the Queen of Valmorgen, will richly reward you.'
+Scouts confirm that the young Prince of Valmorgen recently vanished while on a hunting trip. The reward and goodwill generated by this rescue would do our kingdom well."
+]
+
+Name = 
+[MAGIC_RING]
+
+Short Description = 
+[Recover the Ring of Healing.]
+
+Long Description =
+["Majesty? I fear my vision grows alarmingly dim. The dark plague which grips our land does not respect the boundaries of these castle walls.
+This epidemic sweeps through our land, leeching away the very life from your royal subjects. Our best doctors seem unable to slow the pace of this dread disease. 
+Before slipping into unconsciousness, the mighty Wizard Rezzenthell insisted that there was only one way to halt this affliction. You must recover the Ring of Healing, which the legends say is located somewhere in Ardania.
+Please, your Majesty, act with greatest haste...."]
+
+Name = 
+[SLAVE_PITS]
+
+Short Description = 
+[Destroy four Slave Pits, releasing all slaves.
+
+Kill Url-Shekk, the three-headed beast.]
+
+Long Description =
+["Disturbing rumors have reached my ears, Majesty. There are many reports of villagers gone missing near the edge of town. Fearful whispers speak of some foul creature who has been harvesting the unwitting as slaves for its diabolic schemes.
+Panic is beginning to well within the village. Something must be done, your highness, or we face a grave crisis. I suggest you initiate efforts to recover these people and to rid the land of this frightful menace."
+]
+
+Name = 
+[BRASHNARD]
+
+Short Description = 
+[Recover the seven shards that make up Brashnard's Ultimate Sphere.]
+
+Long Description =
+["Do I understand that your highness seeks Brashnard's Ultimate Sphere of Power? Possession of that legendary artifact would certainly lend authority to your rule. 
+As you surely recall, the sphere was broken into seven sections which were scattered to the far reaches of the land. A great number of heroes must be summoned in order to scour the realm for these lost shards. By your authority, let this bold undertaking commence.
+Majesty? It is not this humble servant's place to question your wise directives, but this undertaking is... well, "ambitious". Can we truly succeed where countless others have failed?"
+]
+
+Name = 
+[WIZARDS_CURSE]
+
+Short Description = 
+[There are two different ways to rid the curse:
+
+Method One: Arrest the Hooligan who stole the book of spells, return it to the Wizard, and then perform whatever the Wizard deems "sufficient good deeds".
+
+Method Two: Destroy the angry Wizard.
+
+Your heroes are cursed, so they won't act like their regular selves...
+
+(Wizards Guilds and Temples to Fervus, Krypta, Agrela, Krolm or Dauros, aren't available in this quest.)]
+
+Long Description =
+[ "I humbly beg for your forgiveness for this rude intrusion, but there's an angry Wizard who..."
+
+{Angry Wizard}
+"Move aside, you sniveling toad! 
+Sovereign! I will have words with you. Under your lawless rule, one of your foolish subjects has stolen my book of spells. The value of that great tome is beyond measure! You and your realm must now pay a price for its loss! 
+Until such a time as sufficient good deeds have been performed, I curse all the dwellers of this land to be as stupid as the dead."
+]
+
+Name = 
+[FRG0]
+
+Short Description = 
+[Eliminate All Enemies.]
+
+Long Description =
+[ Destroy all opposing forces
+]
+
+Name = 
+[FRG1]
+
+Short Description = 
+[Acquire the specified amount of gold.]
+
+Long Description =
+[ Acquire %d gold
+]
+
+Name = 
+[FRG2]
+
+Short Description = 
+[Last the specified amount of time]
+
+Long Description =
+[ Last %d Days without being destroyed
+]
+
+Name = 
+[FRG3]
+
+Short Description = 
+[Destroy All Players. (Many game rules and statistics differ extensively from normal quests or freestyle games to facilitate kingdom-vs-kingdom battles.)]
+
+Long Description =
+[ Last Man Standing
+]

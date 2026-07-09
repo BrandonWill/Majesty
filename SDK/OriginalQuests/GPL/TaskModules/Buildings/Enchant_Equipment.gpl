@@ -1,0 +1,74 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Enchant_Equipment (agent ThisAgent)
+Declare
+
+Begin
+	$Enter_Building (ThisAgent, ThisAgent's "Target");
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Enchant_Equipment_Visit_Duration);
+
+	ThisAgent's "ActiveScript" = $Obtain_Enchantment;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Obtain_Enchantment (agent ThisAgent)
+Declare
+	agent		ThisBuilding;
+	integer	What_To_Upgrade;
+	integer	Total_Gold;
+	integer	Gold;
+	integer	Upgrade;
+	integer	Bldg_Level;
+
+Begin
+	ThisBuilding = ThisAgent's "Target";
+
+	Total_Gold = $Total_Gold (ThisAgent);
+
+	//Tasknumber holds the integer corresponding to the unit a Hero is upgrading
+	What_To_Upgrade = ThisAgent's "Task_Number";
+
+	ThisAgent's "Task_Number" = 0;
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+
+	Bldg_Level = ThisBuilding's "Level";
+
+	If ($GetAttribute (ThisAgent, What_To_Upgrade) == 0 && Total_Gold >= #Cost_Per_Magic_Enchantment1)
+		begin
+			Total_Gold -= #Cost_Per_Magic_Enchantment1;
+			Gold += #Cost_Per_Magic_Enchantment1;
+			Upgrade = 1;
+		end
+
+
+	If ($GetAttribute (ThisAgent, What_To_Upgrade) <= 1 && Total_Gold >= #Cost_Per_Magic_Enchantment2 && Bldg_Level > 1)
+		begin
+			Total_Gold -= #Cost_Per_Magic_Enchantment2;
+			Gold += #Cost_Per_Magic_Enchantment2;
+			Upgrade = 2;
+		end
+
+	If ($GetAttribute (ThisAgent, What_To_Upgrade) <= 2 && Total_Gold >= #Cost_Per_Magic_Enchantment3 && Bldg_Level > 2)
+		begin
+			Gold += #Cost_Per_Magic_Enchantment3;
+			Upgrade = 3;
+		end
+
+
+	If (Upgrade > 0)
+	  	begin
+			$Spend_Gold (ThisAgent, ThisBuilding, Gold);
+			$SetAttribute (ThisAgent, What_To_Upgrade, Upgrade);
+			$DebugOut (thisagent's "title","purchased",Upgrade,what_to_upgrade,"enchantments!");
+		end
+
+
+	ThisAgent's "ActiveScript" = $Done_Enhancing_Equipment;
+End

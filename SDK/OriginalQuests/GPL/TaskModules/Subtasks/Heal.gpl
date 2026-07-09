@@ -1,0 +1,46 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// A character cast healing on a unit
+Function Heal( Agent ThisAgent, Agent Target, integer Healing_Amount )
+Declare
+
+Begin
+	$Healing_Shared( Target, Healing_Amount );
+End
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// A player cast healing on a unit
+Function Player_Heal( Agent Target, integer Healing_Amount )
+
+Declare
+
+Begin
+	$Healing_Shared( Target, Healing_Amount );
+End
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// healing shared code
+Function Healing_Shared( Agent Target, integer Healing_Amount )
+
+Declare
+	integer	Max_Healing;
+
+Begin
+	if ($isdead(target))
+		return;
+
+	//This is the maximum amount of healing that a target can endure before they are over-healed
+	Max_Healing = ($getattribute( Target,#ATTRIB_MaxHP )) - ($getattribute( Target,#ATTRIB_HP ));
+
+	If (Healing_Amount > Max_Healing)
+		Healing_amount = Max_healing;
+
+	$adjustattribute( Target, #ATTRIB_HP, Healing_Amount );
+	$DebugOut ( Target's "Type", "is healed for", Healing_Amount, "points of healing." );
+End

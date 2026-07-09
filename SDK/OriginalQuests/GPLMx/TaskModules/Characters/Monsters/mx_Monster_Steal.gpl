@@ -1,0 +1,33 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Monster_Steal (agent ThisAgent, agent Target)
+Declare
+	integer	Random_Percentage;
+	integer	Amount_Stolen;
+
+Begin
+	If ($getattribute (Target, #ATTRIB_Gold) > 0)
+		begin
+			//Roll a random percentage to steal from the Target
+			Random_Percentage = $RandomNumber (100) + 1;
+			Amount_Stolen = ($getattribute (Target, #ATTRIB_gold) * Random_Percentage) / 100;
+
+			If (Amount_Stolen < 1)
+				Amount_Stolen = 1;
+
+			$DebugOut (thisagent's "title","steals",Amount_Stolen,"gold from",target's "title");
+
+			//take amount stolen from the Target
+			$adjustattribute (Target,#ATTRIB_gold, -Amount_Stolen);
+			$Give_Gold (ThisAgent, Amount_Stolen);
+			$PerformAction (ThisAgent, thisAgent's "Idle_action", Target);
+
+		end
+
+	Else
+		$DebugOut ("Target has no gold!");
+End

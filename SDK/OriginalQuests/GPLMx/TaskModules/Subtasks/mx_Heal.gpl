@@ -1,0 +1,60 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// A character cast healing on a unit
+Function Heal( Agent ThisAgent, Agent Target, integer Healing_Amount )
+Declare
+
+Begin
+	$Healing_Shared( Target, Healing_Amount );
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// A player cast healing on a unit
+Function Player_Heal( Agent Target, integer Healing_Amount )
+
+Declare
+
+Begin
+	$Healing_Shared( Target, Healing_Amount );
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Healing shared code
+Function Healing_Shared( Agent Target, integer Healing_Amount )
+
+Declare
+	integer	Max_Healing;
+
+Begin
+	if ($isdead(target))
+		return;
+
+	//If the unit has the Plague, then cure them.
+	//Check the effector, not the ATTRIB, as we don't want to cure the contagion carrier.
+
+	//TODO: Right now this is a kludge, as we have hardcoded a number to check against to
+	//see if the unit is cured or not. This kludge makes it so the unit won't gets cured if
+	//they are using a healing potion...
+	If (Healing_Amount != #Heal_Potion_Recovery)
+		If ( $CheckEffector ( Target, "Ratman_Plague_Icon" ))
+			begin
+				$DeleteEffector ( target, "Ratman_Plague_Icon" );
+			end
+
+
+	//This is the maximum amount of healing that a target can endure before they are over-healed
+	Max_Healing = ($getattribute( Target,#ATTRIB_MaxHP )) - ($getattribute( Target,#ATTRIB_HP ));
+
+	If (Healing_Amount > Max_Healing)
+		Healing_amount = Max_healing;
+
+	$adjustattribute( Target, #ATTRIB_HP, Healing_Amount );
+	$DebugOut ( Target's "Type", "is healed for", Healing_Amount, "points of healing." );
+
+End

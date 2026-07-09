@@ -1,0 +1,20 @@
+[GuardHouse2]
+	{GuardHouse
+		(type building)
+		(subtype xx)
+		(title GuardHouse)
+		(EnemyType Monster)
+		(Max_Guards				2)
+		(Strength				9)
+		(AttackType				5)
+		(Ranged					75)
+		(Sleep_For				9000)
+		(Hero_Guarded			False)
+		(Guard_Function			Building_Guard)
+		(Guard_Spawn_Function	City_Guard_Spawner)
+		(Visited_Script			GuardHouse_Visited)
+		(birthscript			basic_birth)
+		(birthScript2			GuardHouse_Birth)
+		(IGdeathscript			GuardHouse_death)
+	}
+[end]

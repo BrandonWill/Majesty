@@ -1,0 +1,69 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function collect_object (agent thisagent)
+
+declare
+	agent target;
+
+begin
+	target = thisagent's "target";
+
+	if ($isvalidgamepiece(target) == False)
+		begin
+			// all done
+			$reset_tasks(thisagent);
+		end
+	else
+		begin
+
+			if ($isadjacent(thisagent,target) == FALSE)
+				// move towards target
+				begin
+					ThisAgent's "ActiveScript" = $Travel_To;
+					thisagent's "destination" = $locationof(target);
+					thisagent's "backScript" = $collect_object;
+					$move(thisagent,target);
+				end
+			else
+				begin
+					// pick the damn thingie
+					$PerformAction (ThisAgent, ThisAgent's "Pickup_Action", Target);
+				end
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function collect_object_callback(agent thisagent,agent target)
+
+declare
+
+begin
+	(thisagent's "num_picked_goodies")++;
+
+	if (target's "type" == "healing_herbs")
+		begin
+			if (thisagent's "num_picked_goodies" == #healing_herb_limit)
+				begin
+					$adjustattribute(thisagent,#ATTRIB_NumHealingPotions,1);
+					thisagent's "num_picked_goodies" = 0;
+				end
+		end
+	else
+		if (target's "type" == "poison_plants")
+			begin
+				if (thisagent's "num_picked_goodies" == #Poison_plant_limit)
+					begin
+						// TODO: what if the rogue already has poisoned weapons?
+						$setattribute(thisagent,#ATTRIB_weaponPoisoned,1);
+						thisagent's "num_picked_goodies" = 0;
+					end
+			end
+
+	$give_exp(thisagent,#resource_exp);
+	$deletegamepiece(target);
+end

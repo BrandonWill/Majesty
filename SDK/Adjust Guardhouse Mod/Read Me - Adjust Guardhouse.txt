@@ -1,0 +1,5 @@
+Adjust Guardhouse Mod
+
+This is a very simple data mod that replaces the data prototype for the level 2 guardhouse.  
+All the values are from the original game, except the Max_Guards field is now set to 2.  
+Because the Guardhouse2 prototype was the same in both Majesty and the Expansion, this mod can be marked as working with Any data set.

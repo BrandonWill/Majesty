@@ -1,0 +1,977 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Rise of the Ratmen Quest entry point
+function RISE_RATMEN ()
+
+declare
+	agent AIRootAgent;
+	agent palace;
+	list palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_rise_ratmen;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$Setup_Quest_Music (AiRootAgent);
+
+// what can't be used in this quest?
+
+// setup starting messages
+
+// setup special things
+
+// start all scripts that need to be run
+	AIRootAgent's "VictoryCondition" = $ratmen_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	AIRootAgent's "VictoryCondition2" = $ratmen_Events;
+	$NewThread( AIRootAgent's "VictoryCondition2", $random_time(210000) );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Ratmen_victory()
+
+declare
+	agent AIRootAgent,palace;
+	list palaces,sewers;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	if (AIRootAgent's "Quest_flag_7" == TRUE)
+		begin
+			// check for the death of Rhoden and all broken sewer mains
+//			if (AIRootAgent's "Quest_flag_8" == TRUE) // rhoden is dead if flag 8 is true
+			if ($IsTitleAlive(palace,"RhodenKingRat") == FALSE)
+
+				begin
+					$listobjects(palace,"Lair",-1,sewers, #CheckTitles, "BrokenSewerMain");
+					//sewers = $listtitles(sewers,"BrokenSewerMain");
+
+					if ($listsize(sewers) == 0)
+						begin
+							$declarevictory(palace);
+							$Reset_Quest_Music (AIRootAgent);
+							$killthread(AIRootAgent's "VictoryCondition");
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Ratmen_Events()
+
+declare
+	agent AIRootAgent,palace,place,bldg;
+	list palaces,sewers,stuff,bldgs;
+	integer i,i2;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$listobjects(palace,"Lair",-1,sewers);
+	$listobjects(palace,"AutoBuilding",-1,stuff);
+	stuff = $listtitles(stuff,"Sewers");
+	sewers = $listtitles(sewers,"BrokenSewerMain");
+
+	sewers = $addlists(stuff,sewers);
+
+
+	if (AIRootAgent's "Quest_flag_1" == FALSE)
+		begin
+			// small rat gang from a sewer entrance
+			$playsound(palace,"Ratman_king","taunt2");
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+
+			$rat_gang1(place);
+
+			AIRootAgent's "Quest_flag_1" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",$random_time(220000));
+		end
+  	else
+	if (AIRootAgent's "Quest_flag_2" == FALSE)
+		begin
+			// 2 rat gangs from 2 sewer entrances
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+
+			$rat_gang1(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+
+			$rat_gang2(place);
+
+			AIRootAgent's "Quest_flag_2" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",$random_time(220000));
+		end
+  	else
+	if (AIRootAgent's "Quest_flag_3" == FALSE)
+		begin
+			// 2 rat gangs
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+
+			$rat_gang2(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+
+			$rat_gang3(place);
+
+			AIRootAgent's "Quest_flag_3" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",$random_time(360000));
+		end
+  	else
+	if (AIRootAgent's "Quest_flag_4" == FALSE)
+		begin
+			// ratapults + 3 rat gangs
+			$playsound(palace,"Ratman_king","taunt");
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang2(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang3(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang3(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang4(place);
+
+			AIRootAgent's "Quest_flag_4" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",$random_time(200000));
+		end
+  	else
+	if (AIRootAgent's "Quest_flag_5" == FALSE)
+		begin
+			// 3 rat gangs
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang3(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang1(place);
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rat_gang2(place);
+
+			AIRootAgent's "Quest_flag_5" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",$random_time(420000));
+		end
+  	else
+	if (AIRootAgent's "Quest_flag_6" == FALSE)
+		begin
+//			$playsound(palace,"Ratman_king","VFX_GO_COMBAT");
+//			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+//			sewers -= place;
+//			$rhoden_gang(place);
+
+			$listobjects(palace,"building",-1,bldgs, #MyPlayer, #ATTRIB_FirstStageBuilt, 1);
+			//bldgs = $listcompleted(bldgs);
+
+			bldgs << palace;
+
+			i2 = $listsize(bldgs);
+
+			i = 0;
+			while (i < 7) do
+				begin
+					bldg = $listmember(bldgs,$randomnumber(i2) + 1);
+					$minimapanimation(bldg,"Event_beacon");
+
+					$spawnunit(bldg,"BrokensewerMain","maxhp");
+					i += 1;
+				end
+
+			// rhoden appears with his ratly host (soon)! with extra gangs at other sewers
+//			$messageFlag(palace,#message_Rise_ratmen_Rhoden);
+
+			AIRootAgent's "Quest_flag_6" = TRUE;
+			$setthreadInterval(AIRootAgent's "VictoryCondition2",5000);
+		end
+	  	else
+	if (AIRootAgent's "Quest_flag_7" == FALSE)
+		begin
+			// rhoden appears a moment later to make his
+			// entrance dramatic!
+			$playsound(palace,"Ratman_king","VFX_GO_COMBAT");
+
+			place = $listmember(sewers,$randomnumber($listsize(sewers)) + 1);
+			sewers -= place;
+			$rhoden_gang(place);
+
+			$messageFlag(palace,#message_Rise_ratmen_Rhoden);
+			AIRootAgent's "Quest_Flag_7" = TRUE;
+			$killthread(AIRootAgent's "VictoryCondition2");
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rat_gang1(agent place)
+
+declare
+
+begin
+	$minimapanimation(place,"Event_beacon");
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rat_gang2(agent place)
+
+declare
+
+begin
+	$minimapanimation(place,"Event_beacon");
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rat_gang3(agent place)
+
+declare
+
+begin
+	$minimapanimation(place,"Event_beacon");
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "Ratman", #Monster_player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rat_gang4(agent place)
+
+declare
+
+begin
+	$minimapanimation(place,"Event_beacon");
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Rhoden_gang(agent place)
+
+declare
+
+begin
+	$minimapanimation(place,"Event_beacon");
+	$SpawnUnit (place, "RhodenKingRat", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "Ratmancatapult", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanChampion", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+	$SpawnUnit (place, "RatmanShaman", #Monster_player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Scions of Chaos Quest entry point
+function SCIONS_CHAOS ()
+
+declare
+	agent AIRootAgent;
+	agent palace,guy;
+	list palaces,guys;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_SCIONS_CHAOS;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$Setup_Quest_Music (AiRootAgent);
+
+// what can't be used in this quest?
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+
+	$disableunittype("Marketplace1");
+	$disableunittype("Outpost");
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Embassy");
+
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+// setup starting messages
+
+// setup special things
+	$listobjects(palace,"hero",-1,guys,#NotMyPlayer,#NoHiddenMap);
+	guy = $listmember(guys,1);
+	$advance_to_level(guy,35);
+	$adjustattribute(guy,#ATTRIB_MAXHP,100);
+	$adjustattribute(guy,#ATTRIB_HP,100);
+	guy's "title" = "Scion";
+	guy's "resist_critical" = TRUE;
+
+
+// start all scripts that need to be run
+	AIRootAgent's "VictoryCondition" = $scions_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Scions_victory()
+
+declare
+	agent AIRootAgent;
+	agent palace,guy,thing;
+	list palaces,guys,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// see if the player has killed all three scions
+	if (AIRootAgent's "Quest_flag_1" == FALSE)
+		begin
+			//$listobjects(palace,"hero",-1,guys,#NotMyPlayer,#NoHiddenMap);
+			guys = $list_all_enemy_heroes(palace);
+			if ($listsize(guys) == 0)
+				begin
+					// the first scion is dead!
+					// spawn scion #2
+					guy = $spawnunit(palace,"Cultist",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Red_bear",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Red_bear",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Red_bear",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Rust_spitter",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Rust_spitter",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Rust_spitter",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"white_wolf",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"white_wolf",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"white_wolf",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"giant_eagle",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"giant_eagle",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"giant_eagle",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"werewolf",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"Medusa",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+					$spawnunit(palace,"werewolf",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+
+					$advance_to_level(guy,35);
+					guy's "title" = "Scion";
+					$adjustattribute(guy,#ATTRIB_MAXHP,200);
+					$adjustattribute(guy,#ATTRIB_HP,200);
+					guy's "resist_critical" = TRUE;
+
+					AIrootAgent's "Quest_flag_1" = TRUE;
+				end
+		end
+	else
+	if (AIRootagent's "quest_flag_2" == FALSE)
+		begin
+			guys = $list_all_enemy_heroes(palace);
+//			$listobjects(palace,"hero",-1,guys,#NotMyPlayer,#NoHiddenMap);
+
+			if (AIRootAgent's "quest_flag_3" == FALSE)
+				begin
+					// confirm scion #2's existance
+					if ($listsize(guys) == 1)
+						begin
+//							guy = $listmember(guys,1);
+//							$advance_to_level($listmember(guys,1),35);
+//							$adjustattribute(guy,#ATTRIB_MAXHP,200);
+//							$adjustattribute(guy,#ATTRIB_HP,200);
+//							guy's "resist_critical" = TRUE;
+//							guy's "title" = "Scion";
+							AIRootAgent's "quest_flag_3" = TRUE;
+
+							// turn all animals into raiders!!!!
+							$listobjects(palace,"monster",-1,monsters,#NotMyPlayer,#NoHiddenMap, #CheckSubtypes, "Animal");
+							//monsters = $listsubtypes(monsters,"animal");
+							foreach thing in monsters do
+								begin
+									$make_raider(thing);
+								end
+						end
+				end
+			else
+				begin
+					// see if scion #2 is dead
+					if ($listsize(guys) == 0)
+						begin
+							// generate scion #3 and friends
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+							$spawnunit(palace,"Strangleweed",#Monster_player);
+
+							guy = $spawnunit(palace,"Warrior_of_Discord",$randomcoord($farthestmapcorner(palace),300),#Monster_player);
+							$advance_to_level(guy,35);
+							guy's "title" = "Scion";
+							guy's "resist_critical" = TRUE;
+
+							AIRootAgent's "quest_flag_2" = TRUE;
+						end
+				end
+		end
+	else
+	if (AIRootagent's "quest_flag_4" == FALSE)
+		begin
+			guys = $list_all_enemy_heroes(palace);
+  //			$listobjects(palace,"hero",-1,guys,#NotMyPlayer,#NoHiddenMap);
+
+			if (AIRootAgent's "quest_flag_5" == FALSE)
+				begin
+					// confirm scion #3's existance
+					if ($listsize(guys) == 1)
+						begin
+//							guy = $listmember(guys,1);
+//							$advance_to_level($listmember(guys,1),35);
+//							guy's "resist_critical" = TRUE;
+//							guy's "title" = "Scion";
+							AIRootAgent's "quest_flag_5" = TRUE;
+						end
+				end
+			else
+				begin
+					// see if scion #3
+					if ($listsize(guys) == 0)
+						begin
+							$declarevictory(palace);
+							$Reset_Quest_Music (AIRootAgent);
+							$killthread(AIRootAgent's "VictoryCondition");
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function list_all_enemy_heroes(agent palace) is list
+
+declare
+	list guys,l2,l3;
+	agent thing;
+
+begin
+	$listobjects(palace,"hero",-1,guys,#NotMyPlayer,#NoHiddenMap);
+	$listobjects(palace,"invisible",-1,l2,#NotMyPlayer,#NoHiddenMap);
+	$listobjects(palace,"camouflaged",-1,l3,#NotMyPlayer,#NoHiddenMap);
+
+	l2 = $addlists(l2,l3);
+	foreach thing in l2 do
+		if (thing's "subtype" == "hero")
+			guys << thing;
+
+	return guys;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Urban Renewal Quest entry point
+function URBAN_RENEWAL ()
+
+declare
+	agent AIRootAgent;
+	agent palace,guild;
+	list palaces,guilds,bldgs,alist;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_Urban_renewal;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent's "end_coord" = $locationof(Palace);
+
+//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+// what can't be used in this quest?
+	$disableunittype("rogues_guild1");
+	$disableunittype("Elven_bungalow");
+
+// setup starting messages
+	$messageFlag(palace,#Message_Urban_Renewal_intro);
+
+// setup special things
+
+	//Find all the guilds not belonging to the palace
+	$ListObjects (Palace, "Building", -1, alist, #NotMyPLayer, #NoHiddenMap);
+	Guilds = $ListSubtypes (alist, "Guild");
+	bldgs = $listsubtypes(alist,"entertainment");
+
+	$debugout(911,$listsize(guilds),$listsize(bldgs));
+
+	Foreach Guild in Guilds do
+		begin
+			Guild's "IGDeathScript" = $Urban_guild_destroyed;
+			Guild's "SpecialScript" = $Hero_Generator;
+			$NewThread( Guild's "SpecialScript", 90000 + $randomnumber(60000), Guild );
+		end
+
+	foreach guild in bldgs do
+		begin
+			guild's "IGDeathScript" = $Urban_crime_spot_destroyed;
+			guild's "ActiveScript" = $Corrupt_peasant_home;
+			$NewThread( Guild's "ActiveScript", 90000 + $randomnumber(60000), Guild );
+		end
+
+
+// start all scripts that need to be run
+	AIRootAgent's "VictoryCondition" = $urban_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+// quest flag notes
+	// flag 1 - am I at war with the rogues and stuff yet?
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function urban_victory()
+
+declare
+	agent AIRootAgent;
+	agent palace,bldg;
+	list palaces,bldgs,b2,b3;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$listobjects(palace,"building",-1,bldgs,#NotMyPlayer,#NoHiddenMap);
+
+	b2 = $listsubtypes(bldgs,"guild");
+	b3 = $listsubtypes(bldgs,"entertainment");
+	b2 = $addlists(b2,b3);
+
+	// see if the player has killed all the slums!
+	if ($listsize(b2) == 0)
+		begin
+			$declarevictory(palace,AIRootAgent's "end_coord");
+			$killthread(AIrootAgent's "VictoryCondition");
+			$Reset_Quest_Music (AIRootAgent);
+			return;
+		end
+
+	if (AIRootAgent's "Quest_flag_1" == TRUE)
+		begin
+			bldg = $Listmember(bldgs,1);
+			if ($getPlayerTeamNumber(palace) == $getPlayerTeamNumber(bldg))
+				$setplayerteamNumber(bldg,$newteamnumber());
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function corrupt_peasant_home(agent thisagent)
+
+declare
+	list things;
+
+begin
+	// spawn peasants up to a max limit for red side
+	$listobjects(thisagent,"hero",-1,things,#MyPlayer,#NoHiddenMap);
+	things = $listtitles(things,"peasant");
+	if ($listsize(things) < 15)
+		$spawnunit(thisagent,"peasant");
+
+	// force the peasant to be corrupt
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function urban_guild_destroyed(agent thisagent)
+
+declare
+	agent AIRootAgent;
+	agent palace,thing;
+	list palaces,bldgs,things;
+	coordinate loc;
+	integer player,num,i;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "Quest_flag_1" = TRUE;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	loc = $locationof(thisagent);
+	player = $getunitplayernumber(thisagent);
+	// count how many guilds are left on this player's side
+	// and do special things as it hits certain numbers (11 total)
+	$listobjects(thisagent,"building",-1,bldgs,#NoHiddenMap,#MyPlayer, #CheckSubtypes, "Guild");
+	//bldgs = $listsubtypes(bldgs,"guild");
+	num = $listsize(bldgs);
+
+	if (num == 9)
+		begin
+			// event 1 - they are mad now!!! they should all be forced to attack
+			// a player building!!!
+
+		end
+	else
+	if (num == 6)
+		begin
+			// event 2 - they sent away for help! to the goblins
+			i = 0;
+			while (i < 6) do
+				begin
+					$spawnunit(palace,"goblin_fighter",$RandomedgeCoord($randomnumber(4)),player);
+					$spawnunit(palace,"goblin_champion",$RandomedgeCoord($randomnumber(4)),player);
+					$spawnunit(palace,"goblinoverlord",$RandomedgeCoord($randomnumber(4)),player);
+					$spawnunit(palace,"goblin_priest",$RandomedgeCoord($randomnumber(4)),player);
+					i += 1;
+				end
+			$messageFlag(palace,#message_urban_renewal_Goblins);
+		end
+	else
+	if (num == 3)
+		begin
+			// event 3 - they are angry and become raiders
+			$listobjects(thisagent,"Hero",-1,things,#MyPlayer, #CheckSubtypes, "Hero");
+			//things = $listsubtypes(things,"Hero");
+			foreach thing in things do
+				begin
+					$make_raider(thing);
+					thing's "evaluationScript" = $Monster_eval_enemies;
+				end
+
+		end
+
+	// release a bunch of 'corrupt' guys
+	$adjustattribute(thisagent,#ATTRIB_MaxGuildMembers,20);
+	$spawnunit(palace,"rogue",loc,player);
+	$spawnunit(palace,"rogue",loc,player);
+	$spawnunit(palace,"elf",loc,player);
+	$spawnunit(palace,"rogue",loc,player);
+	$spawnunit(palace,"elf",loc,player);
+
+	if ($randomnumber(100) > 65)
+		begin
+			$spawnunit(palace,"rogue",loc,player);
+			$spawnunit(palace,"elf",loc,player);
+		end
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(palace,"goblin_champion",loc,player);
+	if ($randomnumber(100) > 85)
+		$spawnunit(palace,"goblinoverlord",loc,player);
+
+	// do a normal death
+	$guild_destroyed_common(thisagent,$homeless);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function urban_crime_spot_destroyed(agent thisagent)
+
+declare
+	agent AIRootAgent;
+	agent palace,thing;
+	list palaces,bldgs,things;
+	integer num;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "Quest_flag_1" = TRUE;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+	// count how many 'crime spots' are left and do special wacky events
+	// based on the number - 3 and then 0
+	$listobjects(thisagent,"building",-1,bldgs,#NoHiddenMap,#MyPlayer, #CheckSubtypes, "entertainment");
+	//bldgs = $listsubtypes(bldgs,"entertainment");
+	num = $listsize(bldgs);
+
+	if (num == 3)
+		begin
+			// the peasants are revolting!!!
+			$listobjects(thisagent,"Hero",-1,things,#MyPlayer);
+			things = $listtitles(things,"Peasant");
+			foreach thing in things do
+				begin
+					$adjustattribute(thing,#ATTRIB_Weapon_basic_Damage,10);
+					$adjustattribute(thing,#ATTRIB_Strength,10);
+					$adjustattribute(thing,#ATTRIB_HtoH,55);
+					$adjustattribute(thing,#ATTRIB_MaxAttackRange,5);
+					$adjustattribute(thisagent,#ATTRIB_ActionRateModifier, -300);
+					$make_raider(thing);
+				end
+			$messageFlag(palace,#message_urban_renewal_peasants);
+		end
+	else
+	if (num == 2)
+		begin
+			// another event!!!
+		end
+
+
+	// spawn some occupants
+	$spawnunit(thisagent,"rogue");
+	$spawnunit(thisagent,"elf");
+	$spawnunit(thisagent,"Peasant");
+	if ($randomnumber(100) > 65)
+		begin
+			$spawnunit(thisagent,"rogue");
+			$spawnunit(thisagent,"elf");
+		end
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(thisagent,"warrior");
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(thisagent,"Barbarian");
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(thisagent,"warrior");
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(thisagent,"Barbarian");
+
+	if ($randomnumber(100) > 75)
+		$spawnunit(thisagent,"goblin_champion");
+	if ($randomnumber(100) > 85)
+		$spawnunit(thisagent,"goblinoverlord");
+
+	$building_death(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Vigil for a Fallen Hero Quest entry point
+function VIGIL ()
+
+declare
+	agent AIRootAgent;
+	agent palace,thing;
+	list palaces,stuff;
+
+begin
+// basic quest setup things
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_Vigil;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent's "end_coord" = $locationof(Palace);
+
+	$Setup_Quest_Music (AiRootAgent);
+
+// what can't be used in this quest?
+	//NO GUILDS OR TEMPLES IN THIS QUEST!
+	$disableunittype("Warriors_guild");
+	$disableunittype("Rangers_guild");
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Rogues_guild1");
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+	$disableunitType("Embassy");
+	$disableunitType("Mausoleum");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+
+	$disableunittype("Fairgrounds");
+	$disableunittype("Magicbazaar");
+	$disableunittype("Sorcerersabode");
+	$disableunittype("Outpost");
+
+// setup starting messages
+
+// setup special things
+	$SetUp_Rescue_Buildings (Palace);
+	$setup_hero_level(palace,10);
+
+	// force starting gorgons to become PC hunters
+	$listobjects(palace,"monster",-1,stuff,#NoHiddenMap);
+	stuff = $listtitles(stuff,"GreaterGorgon");
+
+	foreach thing in stuff do
+		begin
+			$make_PC_Hunter(thing);
+			$adjustattribute(thing,#ATTRIB_sightrange,100);
+		end
+
+// start all scripts that need to be run
+	AIRootAgent's "VictoryCondition" = $vigil_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "VictoryCondition2" = $vigil_Events;
+	$NewThread( AIRootAgent's "VictoryCondition2", $random_time(360000) );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Vigil_victory()
+
+declare
+	agent AIRootAgent;
+	agent palace;
+	list palaces,guys;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$rescue_buildings(palace);
+
+	// see if the player has killed the horror in the hills
+	$listobjects(palace,"monster",-1,guys,#NohiddenMap);
+	guys = $listtitles(guys,"Abomination");
+	if ($listsize(guys) == 0)
+		begin
+			$declarevictory(palace,AIRootAgent's "end_coord");
+			$killthread(AIrootAgent's "VictoryCondition");
+			$killthread(AIrootAgent's "VictoryCondition2");
+			$Reset_Quest_Music (AIRootAgent);
+		end
+	else
+		AIRootAgent's "end_coord" = $locationof($Listmember(guys,1));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function vigil_events()
+
+declare
+	agent AIRootAgent;
+	agent palace;
+	list palaces;
+	integer i;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	if (AIRootAgent's "quest_flag_1" == FALSE)
+		begin
+			// send out a wave of my favorite: Minotaurs!!!!
+			i = 16;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($randomnumber(4)),#Monster_player);
+					i -= 1;
+				end
+
+			$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(300000));
+			AIRootAgent's "quest_flag_1" = TRUE;
+		end
+	else
+	if (AIRootAgent's "quest_flag_2" == FALSE)
+		begin
+			// send out a wave of shadowbeasts
+			i = 20;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"ShadowBeast",$RandomedgeCoord($randomnumber(4)),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_PC_hunter));
+					i -= 1;
+				end
+			$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(180000));
+			AIRootAgent's "quest_flag_2" = TRUE;
+		end
+	else
+	if (AIRootAgent's "quest_flag_3" == FALSE)
+		begin
+			// send out a wave of shadowbeasts
+			i = 20;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"ShadowBeast",$RandomedgeCoord($randomnumber(4)),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					i -= 1;
+				end
+			$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(320000));
+			AIRootAgent's "quest_flag_3" = TRUE;
+		end
+	else
+	if (AIRootAgent's "quest_flag_4" == FALSE)
+		begin
+			// send out a wave of werewolfs
+			i = 30;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Werewolf",$RandomedgeCoord($randomnumber(4)),#Monster_player);
+					i -= 1;
+				end
+			$killthread(AIRootAgent's "VictoryCondition2");
+			AIRootAgent's "quest_flag_4" = TRUE;
+		end
+//	else
+end

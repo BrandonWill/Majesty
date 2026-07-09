@@ -1,0 +1,64 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+function Wizard_tree (agent thisagent)
+
+declare
+
+begin
+
+//	$debugout("I'm deciding what to do!");
+	$createeffector(thisagent,"thought_bubble_think",#think_bubble_time);
+	$SpecifyIntent (ThisAgent, #Intent_Thinking);
+
+	if ($check_nearby(thisagent) == False)
+
+	if ($Check_rewards(thisagent,FALSE) == False)
+
+	if ($Defend_home(thisagent) == False)
+
+	if ($defend_building(thisagent,"Library") == FALSE)
+
+	if ($defend_building(thisagent,"Marketplace") == FALSE)
+
+	if ($rest(thisagent) == False)
+
+	if ($Purchase_equipment(thisagent) == False)
+
+	if ($pursue_entertainment(thisagent) == False)
+
+//	if ($Collect_Resource (ThisAgent, "Magic_Crystals",90) == FALSE)
+
+	if ($Check_Library(thisagent,90, "Wizard_Spell") == False)
+
+	if ($check_library(thisagent,55, "Wizard_train_intel") == FALSE)
+
+	if ($check_library(thisagent,15, "Train_magic_resist") == FALSE)
+
+	if ($follow_support_check(thisagent,"barbarian",30) == FALSE)
+
+	if ($follow_support_check(thisagent,"monk",20) == FALSE)
+
+	if ($Raid_lair(thisagent,45) == False)
+
+	if ($raid_enemy_building(thisagent,30) == False)
+
+	if ($Combat_wandering(thisagent,65) == False)
+
+	if ($combat_wandering_heroes(thisagent,60) == False)
+
+	if ($Explore_Map(thisagent,50) == False)
+
+	if ($Visit_Building(ThisAgent, "Royal_gardens", 5) == False)
+
+	if ($Go_Home(thisagent,85) == False)
+
+		begin
+			$SpecifyIntent (ThisAgent, #intent_wandering);
+			thisagent's "counter" = 0;
+			thisagent's "activescript" = $hero_wander;
+		end
+
+end

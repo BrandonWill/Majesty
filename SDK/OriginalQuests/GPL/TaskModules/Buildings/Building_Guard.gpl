@@ -1,0 +1,934 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Building_Guard (agent ThisAgent)
+// this function scans the area around the guardhouse for intruders
+// and releases guard if it sees intruders
+// otherwise it finds nearby construction sites for the guards to patrol
+Declare
+	list	Intruders;
+	agent	Palace,guard;
+
+Begin
+
+	if (thisagent's "enemytype" == "nothing")
+		return;
+
+	intruders = $list_enemies_seen(thisagent,$getattribute (ThisAgent, #ATTRIB_SightRange));
+
+	If ($ListSize (Intruders) > 0)
+		begin
+			$DebugOut ("Releasing Guards: Intruders");
+			//$KillThread (ThisAgent's "Guard_Function");
+			ThisAgent's "Guard_Function" = $Release_Guards;
+			//$NewThread (ThisAgent's "Guard_Function", #Normal_Cycle, ThisAgent);
+		end
+
+   //Else, Check to see if there are Buildings under constructions within ThisAgent's SightRange
+	//If yes, then send a Guard out to guard them.
+	Else
+		begin
+			ThisAgent's "Under_Const_In_Sight" = $Bldgs_Under_Constuct_In_Sight (ThisAgent);
+
+			If ($ListSize (ThisAgent's "Under_Const_In_Sight") > 0)
+				begin
+					$DebugOut ("Releasing Guards: Buildings Under Construction");
+					//$KillThread (ThisAgent's "Guard_Function");
+					ThisAgent's "Guard_Function" = $Release_Guards;
+				end
+
+
+			Else
+				//If thisagent is a guardhouse, then possibly allow guard to wander around for a little bit
+				If (ThisAgent's "Title" == "Guardhouse")
+					begin
+						If ($RandomNumber (100) + 1 > 99)
+							begin
+		  						ThisAgent's "Guard_Function" = $Release_Guards;
+								ThisAgent's "TaskName" = "Wander";
+							end
+						else
+							If ($GetAttribute (thisagent, #ATTRIB_ResearchGoodGuard) != 0)
+								begin
+									if ($listsize(thisagent's "guards") > 0)
+										begin
+											guard = $listmember(thisagent's "guards",1);
+											if (guard's "title" == "city_guard")
+												begin
+													if (guard's "home" == thisagent)
+														begin
+															Thisagent's "Guard_function" = $Release_guards;
+															Thisagent's "TaskName" = "Switch_guards";
+														end
+												end
+										end
+								end
+					end
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// this function releases all the guards off of a guardhouse's waiting_guards
+// and activates those guards threads
+Function Release_Guards (agent ThisAgent)
+Declare
+	agent	Guard;
+	list	Intruders;
+	list	Guards;
+
+Begin
+	//Continually refresh your Under_Const_In_Sight list
+	ThisAgent's "Under_Const_In_Sight" = $Bldgs_Under_Constuct_In_Sight (ThisAgent);
+
+	//If I am a Guardhouse, and I have researched arrows, then see if anybody is within range of my arrows.
+	// If so, get 'em.
+	If (ThisAgent's "Title" == "Guardhouse")
+		begin
+			//make sure that Arrows have been researched
+			If ($GetAttribute (ThisAgent, #ATTRIB_ResearchArrows) != 0)
+				begin
+					intruders = $list_enemies_seen(thisagent,#guardhouse_arrow_range);
+					if ($listsize(intruders) > 0)
+						begin
+							ThisAgent's "Target" = $ListMember (Intruders, 1);
+
+							$PerformAction (ThisAgent, "Guardhouse_Arrow", ThisAgent's "Target");
+						end
+				end
+		end
+
+	if ($ListSize(ThisAgent's "Waiting_Guards") > 0)
+		begin
+			Guards = ThisAgent's "Waiting_Guards";
+			$ClearList(ThisAgent's "Waiting_Guards");
+		
+			foreach Guard in Guards do
+				begin
+					if ($IsDead(Guard) == FALSE)
+						begin
+							If ($IsHidden (Guard))
+								begin
+									$DebugOut ("Guardhouse releases a Hidden Guard!");
+									Guard's "Type" = "Hero";
+									$UnHide (Guard);
+								end
+							$DebugOut ("Guardhouse is setting Guard's ActiveScript to Guard Find Target.");
+							Guard's "ActiveScript" = $Guard_Find_Target;
+							$DebugOut ("Resuming Guard's ActiveScript");
+							$ResumeThread (Guard's "ActiveScript");
+						end
+					else
+						begin
+							$DebugOut (911, "Release Guards has a dead agent in the list for ", $GetTitle(ThisAgent));
+						end
+				end
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Guard_Find_Target (agent ThisAgent)
+
+Declare
+	list	Targets;
+	agent Home;
+	agent	Palace;
+	agent	Building;
+	list	Under_Const;
+	boolean flag;
+
+// guard finds a target
+
+Begin
+	Home = ThisAgent's "Home";
+
+	if ($isvalidgamepiece(home) == FALSE)
+		begin
+			thisagent's "activescript" = $guard_goto_palace;
+			thisagent's "backScript" = $guard_goto_palace;
+			ThisAgent's "Target" = $NullAgent ();
+			return;
+		end
+
+//	Home's "Waiting_Guards" -= ThisAgent;
+
+	// first look for enemies
+	Targets = $list_enemies_seen(home,$getattribute (Home, #ATTRIB_SightRange));
+	If ($ListSize (Targets) > 0)
+		begin
+			// targets! pick closest, then set script to attack
+			$DebugOut ("Guard has targets...picking closest!");
+
+			ThisAgent's "Target" = $ListMember (Targets, 1);
+
+			//ThisAgent's "Target" = $Pick_Closest (ThisAgent, Targets);
+			$say(thisagent,"VFX_GO_COMBAT");
+			ThisAgent's "ActiveScript" = $Guard_Attack_Object;
+//			Home's "Waiting_Guards" -= ThisAgent;
+  //			$debugout("Guard has targets.");
+		end
+	Else
+		begin
+			//See if there are any buildings under construction that need to be patrolled.
+			Under_Const = Home's "Under_Const_In_Sight";
+
+			If ($ListSize (Under_Const) > 0)
+				begin
+					Foreach Building in Home's "Under_Const_In_Sight" do
+						begin
+							if ($isdead(building) == FALSE)
+								$Move (ThisAgent, $LocationOf (Building), "Add_Waypoint");
+						end
+
+					//Have the agent put their home on the list, so that they patrol it as well
+					//NOTE that it is also their destination
+					$Move (ThisAgent, $LocationOf (Home), "Add_Waypoint");
+
+					//ThisAgent's destination should be his home, so thay they include it on their patrol route
+					ThisAgent's "Destination" = $LocationOf (Home);
+
+					ThisAgent's "Target" = ThisAgent;
+					ThisAgent's "ActiveScript" = $Voyaging_Guard_Travel_To;
+					ThisAgent's "BackScript" = $Guard_Find_Target;
+				end
+			Else
+				//If home is a Guardhouse, then see if it wants ThisAgent to wander
+				If (Home's "Title" == "Guardhouse" && Home's "TaskName" == "Wander")
+					begin
+						ThisAgent's "ActiveScript" = $Guard_Wander;
+						//Init ThisAgent's counter to 0, so they wander the right number of times
+						ThisAgent's "Counter" = 0;
+					end
+
+				Else
+					// no targets, guard must go home
+					begin
+						flag = false;
+						// do I need to be exchanged for a veteran guard?
+						if (thisagent's "title" == "City_Guard")
+							If ($GetAttribute (Home, #ATTRIB_ResearchGoodGuard) != 0)
+								begin
+									// switch me for a new guard
+									thisagent's "activescript" = $guard_goto_palace;
+									thisagent's "backScript" = $guard_goto_palace;
+									ThisAgent's "Target" = $NullAgent ();
+									Thisagent's "home" = $NullAgent();
+
+									if ($agentinlist(thisagent,home's "guards"))
+										begin
+											Home's "Guards" -= ThisAgent;
+											(Home's "num_guards") --;
+										end
+
+									If ($AgentInList (ThisAgent, Home's "Waiting_Guards"))
+										Home's "Waiting_Guards" -= ThisAgent;
+
+									Home's "Guard_Function" = $Building_Guard;
+
+									$runthread(home's "Guard_Spawn_Function",1,home);
+									flag = TRUE;
+								end
+
+						if (flag == FALSE)
+							begin
+								Home's "Waiting_Guards" << ThisAgent;
+								Home's "Guard_Function" = $Building_Guard;
+								$DebugOut ("Setting newthread (scanning) on Guardhouse because there aren't any targets.");
+								ThisAgent's "ActiveScript" = $Guard_Return_Home;
+								$debugout("Guard has no targets!");
+								$DebugOut (ThisAgent,"is returning home.");
+							end
+
+					end
+		end
+
+	//Reset home's taskname so that Guard doesn't keep wandering
+	Home's "TaskName" = "";
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Guard_attack_object (agent thisagent)
+// uysed by guards who have reached their home
+declare
+	integer HP;
+	integer maxHP;
+	integer mytargetrange;
+	integer hometargetrange;
+	integer Speed;
+	integer targetspeed;
+	agent target;
+	agent	home;
+
+begin
+	target = thisagent's "target";
+
+	home = ThisAgent's "home";
+
+	if ($isvalidgamepiece(home) == FALSE)
+		begin
+			// this insures the target is in pursuit range if the guards home is dead
+			home = thisagent;
+		end
+
+	// is target alive?
+	if ($notvalid(target))
+		begin
+			ThisAgent's "ActiveScript" = $guard_find_target;
+			ThisAgent's "Target" = $NullAgent ();
+		end
+
+	else
+		begin
+			// is target out of pursuit range?
+			hometargetrange = $distanceBetweenAgents (Home, Target);
+		 	if (hometargetrange > $getattribute (Home,#ATTRIB_sightrange))
+				begin
+					$DebugOut ("Enemy is too far away.");
+					$DebugOut ("Resetting my target, and looking for another one.");
+					ThisAgent's "Target" = $NullAgent ();
+					ThisAgent's "ActiveScript" = $Guard_Find_Target;
+				end
+			else
+				begin
+					mytargetrange = $distancebetweenagents (ThisAgent, Target);
+					if (mytargetrange > $getattribute(thisagent,#ATTRIB_maxattackrange))
+						begin
+							// move towards target
+							$DebugOut ("I need to get closer to attack my target.");
+							thisagent's "destination" = $locationof(target);
+							thisagent's "activeScript" = $Guard_travel_to;
+							thisagent's "backScript" = $Guard_attack_object;
+							$move(thisagent,target);
+						end
+					else
+						begin
+							$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+  //							$make_attack(thisagent,target);
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Guard_Travel_To (agent thisagent)
+
+// used by guards who have reached their home, and are traveling around
+declare
+
+begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		$Guard_Eval_Enemies (ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Guard_Eval_Enemies(agent thisagent)
+// this function is used by guards when they are moving to attack an object
+// on their way out of the guard house?
+declare
+	string enemy;
+	list in_sight;
+	agent target,newtarget;
+	agent	home;
+
+begin
+
+	$Cleanse_Hostiles (ThisAgent);
+
+	home = ThisAgent's "Home";
+	enemy = thisagent's "EnemyType";
+	target = ThisAgent's "Target";
+
+	if ($isvalidgamepiece(home) == False)
+		begin
+			// this insures the target is in pursuit range if the guards home is dead
+			home = thisagent;
+		end
+
+	//Check to make sure that the enemy I am chasing isn't out of range of my home
+	If ($DistanceBetweenAgents (Home, Target) > $getattribute (Home, #ATTRIB_SightRange))
+		begin
+			$DebugOut ("My target is too far away. Going back to Guard_Find_Target!");
+			ThisAgent's "ActiveScript" = $guard_find_target;
+			ThisAgent's "BackScript" = $guard_find_target;
+		end
+
+  	Else
+		begin
+			in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+
+ 			if ($listsize(in_sight) > 0)
+				begin
+					$DebugOut ("I found targets while Evaluating Nearby. Picking CLosest.");
+					newtarget = $pick_closest(thisagent,in_sight);
+					if (newtarget != thisagent's "target")
+						begin
+							thisagent's "Target" = newtarget;
+ 							thisagent's "ActiveScript" = $Guard_Attack_object;
+						end
+				end
+		end
+
+	$Clearlist (ThisAgent's "Hostiles");
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+//This sends guards home
+Function Guard_Return_Home (agent ThisAgent)
+
+Declare
+	agent	Home;
+
+Begin
+	Home = ThisAgent's "Home";
+
+	if ($isvalidgamepiece(home) == FALSE)
+		begin
+			thisagent's "activescript" = $guard_goto_palace;
+			thisagent's "backScript" = $guard_goto_palace;
+			ThisAgent's "Target" = $NullAgent ();
+			return;
+		end
+
+//	If ($IsAdjacent (ThisAgent, Home))
+	if ($insidebuilding(thisagent))
+		begin
+			$DebugOut ("Guard sleeping.");
+//			$StopMoving (ThisAgent);
+			ThisAgent's "Type" = "Hidden";
+//			$Hide (ThisAgent, Home);
+			$SuspendThread (ThisAgent's "ActiveScript");
+		end
+	Else
+		begin
+			ThisAgent's "Target" = Home;
+//			ThisAgent's "Destination" = $LocationOf (Home);
+			ThisAgent's "ActiveScript" = $Guard_Travel_To;
+			ThisAgent's "BackScript" = $Guard_Return_Home;
+
+			$hide(thisagent,home);
+			$debugout("Guard going home.");
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This is for City_Guards -- they use it to travel from the Palace to their Guardhouse
+// they need to attack things on their way to their home!
+Function Guard_Voyage_Home (agent ThisAgent)
+Declare
+	agent		home;
+
+Begin
+	home = ThisAgent's "Home";
+
+	if ($isdead(home))
+		begin
+			thisagent's "activescript" = $guard_goto_palace;
+			thisagent's "backScript" = $guard_goto_palace;
+			ThisAgent's "Target" = $NullAgent ();
+			return;
+		end
+
+	If (($DistanceBetweenAgents (ThisAgent, ThisAgent's "Home") < $getattribute (ThisAgent, #ATTRIB_SightRange))
+		|| ($insidebuilding(thisagent)))
+		begin
+		 //	Home's "Waiting_Guards" << ThisAgent;
+			ThisAgent's "ActiveScript" = $guard_find_target;
+			ThisAgent's "BackScript" = $guard_find_target;
+			ThisAgent's "BasicScript" = $guard_find_target;
+			$debugout("guard set to find target.");
+		end
+
+	Else
+		begin
+			ThisAgent's "Target" = ThisAgent's "Home";
+
+			$hide(thisagent,thisagent's "home");
+			ThisAgent's "ActiveScript" = $Voyaging_Guard_Travel_To;
+			$debugout("Guard set to travel home.");
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This is s special case for guards that are voyaging to their home for the first time
+Function Voyaging_Guard_Travel_To (agent ThisAgent)
+Declare
+
+Begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		$Guard_Eval_Enemies_While_Voyaging (ThisAgent);
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Guards who are voyaging home use this to fight enemies along the way
+Function Guard_Eval_Enemies_While_Voyaging (agent ThisAgent)
+Declare
+	string enemy;
+	list in_sight;
+	agent newtarget;
+
+begin
+	$Cleanse_Hostiles (ThisAgent);
+
+	Enemy = ThisAgent's "EnemyType";
+//	$ListObjects(thisagent,enemy,$getattribute(thisagent,#ATTRIB_Sightrange), In_Sight );
+
+	in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+	// add hostiles to in_sight;
+	in_sight = $AddLists (ThisAgent's "Hostiles", in_Sight);
+
+	//in_sight = $possibly_remove_target(thisagent,in_sight);
+
+//	$debugout($listsize(in_sight));
+ 	if ($listsize(in_sight) > 0)
+		begin
+			// pick the closest guy to attack - in_sight may be unsorted
+			newtarget = $pick_closest(thisagent,in_sight);
+			if (newtarget != thisagent's "target")
+				begin
+					thisagent's "Target" = newtarget;
+					thisagent's "ActiveScript" = $Voyaging_Guard_Attack_object;
+				end
+		end
+
+	$Clearlist (ThisAgent's "Hostiles");
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// A special case-- Guards use this while voyaging home -- it uses the Guard's sightrange instead of home's to
+// attack enemies
+function Voyaging_Guard_Attack_Object(agent thisagent)
+
+declare
+	integer HP,maxHP,targetrange,Speed,targetspeed;
+	agent target;
+
+begin
+	target = thisagent's "target";
+
+	// is target alive?
+	if ($notvalid(target))
+		begin
+			$reset_tasks(thisagent);
+		end
+	else
+		begin
+			// is target out of pursuit range?
+			targetrange = $distanceBetweenAgents(thisagent,target);
+
+		 	if (targetrange > $getattribute(thisagent,#ATTRIB_sightrange))
+				begin
+					// go back to regular functioning
+					$reset_tasks(thisagent);
+				end
+			else
+				begin
+					// is thiaagent in attackrange of target
+
+					if (targetrange > $getattribute(thisagent,#ATTRIB_maxattackrange))
+						begin
+							// move towards target
+							thisagent's "destination" = $locationof(target);
+							thisagent's "activeScript" = $Voyaging_Guard_Travel_To;
+							thisagent's "backScript" = $Voyaging_Guard_attack_object;
+							$move(thisagent,target);
+						end
+					else
+						begin
+								begin
+									// make attack on object
+									$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+//									$make_attack(thisagent,target);
+								end
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function will spawn improved guards if they have been researched
+Function City_Guard_Spawner (agent ThisAgent)
+
+Declare
+	integer	Num_Gds;
+	agent		Palace;
+
+Begin
+	Palace = $GetPalace (ThisAgent);
+
+	if ($isvalidgamepiece(palace))
+		begin
+			num_gds = thisagent's "num_guards";
+
+			//$debugout(num_gds,thisagent's "max_guards");
+			if (num_gds < thisagent's "max_guards")
+				begin
+					//See if improved guards has been researched
+					If ($GetAttribute (ThisAgent, #ATTRIB_ResearchGoodGuard) != 0)
+						begin
+
+							//Spawn a beefy guard
+							$SpawnUnit (Palace, "Veteran_City_Guard");
+
+						end
+
+					Else
+						//Spawn a regular guard
+						$spawnunit(Palace, "City_Guard");
+
+					Palace's "Waiting_Guardhouses" << ThisAgent;
+					
+					// Num_Guards will be updated when the new Guard attaches to the Guardhouse, in its birthscript, 
+					// which will be run after we exit.  It will restart this thread if needed.
+				end
+		end
+End
+
+/////////////////////////////////////////////////////////////////////////
+// Restart the Guard Spawn thread for the guardhouse, if needed.
+function RestartGuardSpawnThread(agent thisAgent, integer delay)
+
+Declare
+	integer		numGuards;
+
+begin
+
+	numGuards = thisAgent's "num_guards";
+	if (numGuards < thisAgent's "max_guards")
+		begin
+			if ($IsRunning (thisAgent's "Guard_Spawn_Function") == False)
+				begin
+  					$RunThread (thisAgent's "Guard_Spawn_Function", delay, thisAgent);
+  				end
+  		end
+  		
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Palace_Guard_Spawner (agent ThisAgent)
+Declare
+	integer	Num_Gds;
+
+Begin
+	num_gds = thisagent's "num_guards";
+	//$debugout(num_gds,thisagent's "max_guards");
+	if (num_gds < thisagent's "max_guards")
+		begin
+			$spawnunit(thisagent, "Palace_Guard");
+			$runthread(thisagent's "Guard_Spawn_Function",#Guard_Spawn_Time,thisagent);
+		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This sends a Guard to the Palace if their Home is dead
+Function Guard_Goto_Palace (agent ThisAgent)
+Declare
+	agent 	Palace;
+
+Begin
+	Palace = $GetPalace (ThisAgent);
+
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	If ($IsAdjacent (ThisAgent, Palace) == FALSE)
+		begin
+			ThisAgent's "Target" = Palace;
+//			ThisAgent's "Destination" = $LocationOf (Palace);
+			ThisAgent's "ActiveScript" = $Voyaging_Guard_Travel_To;
+			$Move (ThisAgent, palace);
+		end
+
+	Else
+		begin
+	   	thisagent's "type" = "Waiting_to_die";
+			$killthread(thisagent's "activescript");
+			$DeleteGamePiece (ThisAgent);
+		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function has the Visitor stay in the Guardhouse for a few seconds. If danger comes within range, they will
+// jump out and attack it
+Function Guardhouse_Visited (Agent ThisAgent)
+Declare
+	agent BackTarget;
+
+Begin
+	$Enter_Building (ThisAgent, ThisAgent's "Target");
+
+	$give_exp(thisagent,#garrison_exp);
+
+	ThisAgent's "ActiveScript" = $Garrison_Scan_Or_Leave;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This scans for enemies within range of the Guardhouse.
+// Hero also has a chance of just exiting
+Function Garrison_Scan_Or_Leave (agent ThisAgent)
+Declare
+	agent		Guardhouse;
+	integer	Guardhouse_Range;
+	list		Enemies;
+
+Begin
+	Guardhouse = $GetBuildingContainer ( thisagent );
+	Guardhouse_Range = $GetAttribute (Guardhouse, #ATTRIB_SightRange);
+
+	enemies = $list_enemies_seen(guardhouse,Guardhouse_range);
+
+	//If there are baddies around the guardhouse, go fight the closest one.
+	If ($ListSize (Enemies) > 0)
+		begin
+			$Exit_Building (ThisAgent, Guardhouse);
+
+			ThisAgent's "Target" = $ListMember (Enemies, 1);
+
+			ThisAgent's "ActiveScript" = $Attack_Object;
+		end
+
+
+	Else
+		If ($RandomNumber (100) + 1 < #Stop_Garrisoning_Chance)
+			begin
+
+				$Exit_Building (ThisAgent, Guardhouse);
+
+			end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Bldgs_Under_Constuct_In_Sight (agent ThisAgent) is list
+
+Declare
+	agent	Palace, Building;
+	list	Buildings;
+	list	Under_Const;
+
+Begin
+	//Get the palace's buildings under constuction list
+	If (thisagent's "title" == "Palace")
+		Palace = ThisAgent;
+
+	Else
+		Palace = $GetPalace (ThisAgent);
+
+	//If the Palace is dead, return an empty list
+	If ($IsDead (Palace))
+		return Under_Const;
+
+	Buildings = $AddLists (Palace's "Buildings_Waiting", Palace's "Buildings_Under_Construction");
+
+	//See which Buildings are close enough to ThisAgent in order to send out the Guards
+	Foreach Building in Buildings do
+		begin
+			If ($IsDead (Building) == False)
+				begin
+					If ($DistanceBetweenAgents (ThisAgent, Building) <= $GetAttribute (ThisAgent, #ATTRIB_SightRange))
+						Under_Const << Building;
+				end
+		end
+
+	return Under_Const;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This activescript wanders around 10 times
+Function Guard_Wander (agent ThisAgent)
+Declare
+	agent	Home;
+
+Begin
+	If (ThisAgent's "Counter" <= #Guard_Wander_Number)
+		begin
+
+			//If ThisAgent isn't moving, then either have them roam around the Guardhouse or idle
+			If ($IsMoving (ThisAgent) == False)
+				begin
+					if ($randomNumber(100) > 80)
+						$performaction(thisagent,thisAgent's "Idle_action",$locationof(thisagent));
+
+					else
+						begin
+							Home = ThisAgent's "Home";
+
+							$Move (ThisAgent, $RandomCoord (Home, $GetAttribute (Home, #ATTRIB_SightRange)));
+
+							(ThisAgent's "Counter") ++;
+						end
+				end
+
+			Else
+				begin
+					$Guard_Eval_Enemies_While_Wandering (ThisAgent);
+				end
+		end
+
+	Else
+		begin
+
+			ThisAgent's "ActiveScript" = $Guard_Find_Target;
+
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This scans for insight and hostiles while a guard is wandering. If they are found, then ThisAgent is sent to
+// Wandering_Guard_Attack_Object
+Function Guard_Eval_Enemies_While_Wandering (agent ThisAgent)
+
+Declare
+	list in_sight;
+	agent newtarget;
+	agent Home;
+	integer	HomeTargetRange;
+
+begin
+	$Cleanse_Hostiles (ThisAgent);
+
+	in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+	// add hostiles to in_sight;
+	in_sight = $AddLists (ThisAgent's "Hostiles", in_Sight);
+
+	//in_sight = $possibly_remove_target(thisagent,in_sight);
+
+//	$debugout($listsize(in_sight));
+ 	if ($listsize(in_sight) > 0)
+		begin
+			// pick the closest guy to attack - in_sight may be unsorted
+			newtarget = $pick_closest(thisagent,in_sight);
+			Home = ThisAgent's "Home";
+
+
+			if (newtarget != thisagent's "target")
+				begin
+					hometargetrange = $distanceBetweenAgents (Home, Newtarget);
+
+		 			if (hometargetrange <= ($getattribute (Home,#ATTRIB_sightrange)  + $GetAttribute (ThisAgent, #ATTRIB_SightRange ) ))
+						begin
+							thisagent's "Target" = newtarget;
+							thisagent's "ActiveScript" = $Wandering_Guard_Attack_object;
+						end
+
+					Else
+						begin
+							ThisAgent's "Target" = $NullAgent ();
+
+							$Move (ThisAgent, Home);
+
+						end
+				end
+		end
+
+	$Clearlist (ThisAgent's "Hostiles");
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function will callback if the target moves beyond the Guardhouse "SightRange" * 2
+Function Wandering_Guard_attack_object (agent thisagent)
+// used by guards who have reached their home
+declare
+	integer HP,maxHP,mytargetrange,hometargetrange,Speed,targetspeed;
+	agent target,home;
+
+begin
+	target = thisagent's "target";
+
+	home = ThisAgent's "home";
+
+	if ($IsDead (Home))
+		begin
+			// this insures the target is in pursuit range if the guards home is dead
+			home = thisagent;
+		end
+
+	// is target alive?
+	if ($notvalid(target))
+		begin
+			ThisAgent's "ActiveScript" = $guard_find_target;
+			ThisAgent's "Target" = $NullAgent ();
+		end
+
+	else
+		begin
+			// is target out of pursuit range?
+			hometargetrange = $distanceBetweenAgents (Home, Target);
+		 	if (hometargetrange > ($getattribute (Home,#ATTRIB_sightrange) + $GetAttribute (ThisAgent, #ATTRIB_SightRange )))
+				begin
+					$DebugOut ("Enemy is too far away.");
+					$DebugOut ("Resetting my target, and looking for another one.");
+					ThisAgent's "Target" = $NullAgent ();
+					ThisAgent's "ActiveScript" = $Guard_Wander;
+				end
+			else
+				begin
+					mytargetrange = $distancebetweenagents (ThisAgent, Target);
+					if (mytargetrange > $getattribute(thisagent,#ATTRIB_maxattackrange))
+						begin
+							// move towards target
+							$DebugOut ("I need to get closer to attack my target.");
+							thisagent's "destination" = $locationof(target);
+							thisagent's "activeScript" = $Wandering_Guard_travel_to;
+							thisagent's "backScript" = $Wandering_Guard_attack_object;
+							$move(thisagent,target);
+						end
+					else
+						begin
+							$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+//							$make_attack(thisagent,target);
+						end
+				end
+		end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Wandering_Guard_Travel_To (agent ThisAgent)
+Declare
+	agent Home;
+	integer TargetRangeFromHome;
+
+Begin
+	Home = ThisAgent's "Home";
+
+	If ($IsDead (ThisAgent's "Home"))
+		begin
+
+			Home = ThisAgent;
+
+		end
+
+	//It is possible that Guard_Eval_Enemies while wandering will set the target to nullagent
+	If ($NotValid (ThisAgent's "Target"))
+		TargetRangeFromHome = $DistanceBetweenAgents (Home, ThisAgent);
+
+	Else
+		//How far is the target from my Home?
+		TargetRangeFromHome = $DistanceBetweenAgents (Home, ThisAgent's "Target");
+
+	if (TargetRangeFromHome > ($getattribute (Home,#ATTRIB_sightrange) + $GetAttribute (ThisAgent, #ATTRIB_SightRange )))
+		begin
+			// go back to regular functioning
+			thisagent's "activeScript" = $Guard_Wander;
+			thisagent's "backscript" = $Guard_Wander;
+			$DebugOut (ThisAgent's "Type","thinks that the target is too far away.");
+			ThisAgent's "Target" = $NullAgent ();
+		end
+
+	Else
+		begin
+			if ($has_arrived(thisagent,false) == FALSE)
+				$Guard_Eval_Enemies_While_Wandering (ThisAgent);
+		end
+End

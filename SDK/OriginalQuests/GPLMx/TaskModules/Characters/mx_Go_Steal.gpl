@@ -1,0 +1,186 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Go_Steal (agent ThisAgent)
+Declare
+	integer	TargetRange;
+	agent		Target;
+
+Begin
+	Target = ThisAgent's "Target";
+	//$DebugOut (target's "title");
+
+	//Make sure the target still exists
+//	If ($IsValidGamePiece (Target) == FALSE || Target == $NullAgent ())
+	if ($notvalidsteal(target))
+		begin
+			$reset_tasks(thisagent);
+		end
+	Else
+		begin
+			TargetRange = $DistanceBetweenAgents (ThisAgent, Target);
+	   	//Make sure the target still has gold
+			If ($getattribute (Target, #ATTRIB_Gold) == 0)
+				begin
+					$reset_tasks(thisagent);
+				end
+			Else
+				begin
+//			  		if (TargetRange > $GetTargetRange (ThisAgent))
+					if ($isadjacent(thisagent,target) == FALSE)
+						begin
+							ThisAgent's "Destination" = $LocationOf (Target);
+							ThisAgent's "ActiveScript" = $Travel_To_Steal;
+							ThisAgent's "BackScript" = $Go_Steal;
+							$Move (ThisAgent, Target);
+						end
+					else
+						begin
+							//Attempt to Steal from target, then return to BasicScript
+							$Steal (ThisAgent, Target);
+							$reset_tasks(thisagent);
+						end
+				End
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Travel_To_Steal (agent ThisAgent)
+Declare
+
+begin
+	if ($Has_Arrived_Steal (thisagent,false) == FALSE)
+		// am I low on HP
+		if ($haslowHP(thisagent) == FALSE)
+			begin
+
+			if ((thisagent's "evaluationscript")(thisagent) == FALSE)
+
+				If ($TryTravelSpell( thisagent ) == FALSE)
+
+						If ($Eval_Items_Nearby (ThisAgent) == FALSE)
+
+							begin
+							end
+			end
+		else
+			begin
+				// hero is low on HP
+				$heal_self(thisagent);
+			end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Has_Arrived_Steal (agent thisagent, boolean safe) is Boolean
+Declare
+
+	coordinate agent_loc;
+	coordinate Destination_loc;
+	coordinate Target_loc;
+
+	integer arrivedist;
+
+	agent target;
+
+begin
+	target = thisagent's "target";
+
+	if (thisagent's "target" != thisagent)
+		begin
+//			if ($isdead(target))
+			if ($notvalidsteal(Target))
+				begin
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					$debugout("not valid target");
+					return TRUE;
+				end
+
+			if ($GetAttribute (Target, #ATTRIB_Gold) == 0)
+				begin
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					$debugout("not gold at target");
+//					thisagent's "backscript" = thisagent's "basicscript";
+					return TRUE;
+				end
+
+			//arrivedist = $gettargetrange(thisagent);
+
+//			if ((target's "type" != "Building") && (target's "type" != "lair"))
+//				$adjust_destination(thisagent,safe);
+
+//			if (($distanceBetweenAgents(thisagent,target) < arrivedist)
+			if (($isadjacent(thisagent,target))
+				|| ($ismoving(thisagent) == FALSE))
+				begin
+					// agent has arrived at destination
+					// so go back to the task that called 'travel_to'
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					return TRUE;
+				end
+		end
+	else
+		begin
+//			$debugout("I am checking...");
+			arrivedist = 15; //$gettargetrange(thisagent);
+
+			if (thisagent's "title" == "caravan")
+				arrivedist = #Caravan_Arrivedist;
+
+			agent_loc = $locationof(thisagent);
+			Destination_loc = thisagent's "destination";
+//			Target_loc = $locationof(thisagent's "target");
+
+//			$debugout($distanceBetweenCoords(agent_loc,destination_loc));
+
+			if (($distanceBetweenCoords(agent_loc,destination_loc) < arrivedist) ||
+				($ismoving(thisagent) == FALSE))
+				begin
+					// agent has arrived at destination
+					// so go back to the task that called 'travel_to'
+//					$debugout("I think I'm there.");
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					return TRUE;
+				end
+
+			return False;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function notvalidsteal(agent thisagent) is boolean
+
+declare
+
+begin
+
+	if ($IsValidGamePiece (ThisAgent) == FALSE)
+		begin
+			// $debugout("notvalidsteal: isvalidgamepiece is FALSE.");
+			return TRUE;
+		end
+
+	if (thisagent == $nullagent())
+		begin
+			// $debugout("notvalidsteal: thisagent == $nullagent()");
+			return TRUE;
+		end
+
+	// If we were targeting a dead guy, see if he is inside a building now, if so
+	// break it off.  The guy is most likely inside a Mausoleum now.
+	if (thisagent's "type" == "Dead" && $InsideBuilding( thisagent ) == TRUE )
+		begin
+			// $debugout("notvalidsteal: Dead guy inside a building");
+			return TRUE;
+		end
+
+	// $debugout("notvalidsteal: FALSE for default reason.");
+	return FALSE;
+end

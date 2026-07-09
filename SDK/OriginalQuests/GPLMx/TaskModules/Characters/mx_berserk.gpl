@@ -1,0 +1,84 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function berserk(agent thisagent)
+
+declare
+	integer targetrange,attackrange;
+	agent target;
+	string spell_name;
+	boolean casting;
+
+
+begin
+	target = thisagent's "target";
+
+	if ($haslowHP(thisagent) == FALSE)
+		begin
+			// return to normal decisions
+//			thisagent's "activescript" = thisagent's "basicscript";
+			$reset_tasks(thisagent);
+		end
+	else
+		if ($isspellavailable(thisagent,"healer_heal"))
+			begin
+				$castspell(thisagent,"healer_heal",thisagent,"");
+				return;
+			end
+
+		if ($notvalid(thisagent's "target"))
+			begin
+				// pick new target
+				$list_enemies(thisagent,1);
+				if ($listsize(thisagent's "Hostiles") > 0)
+					begin
+						thisagent's "target" = $pick_closest(thisagent,thisagent's "Hostiles");
+					end
+				else
+					begin
+						// no more enemies to fight!
+						//$flee_berserk(thisagent);
+						$reset_tasks(thisagent);
+
+					end
+			end
+		else
+			begin
+				// pick a weapon to use - a spell or regular weapon
+				spell_name = $getbestspell(thisagent,#list_attack);
+
+				if (spell_name == "nothing")
+					begin
+						attackrange = $getattribute(thisagent,#ATTRIB_maxattackrange);
+						casting = FALSE;
+					end
+				else
+					begin
+						attackrange = thisagent's "castingrange";
+						casting = TRUE;
+					end
+
+				targetrange = $distanceBetweenAgents(thisagent,target);
+
+				if (targetrange > attackrange)
+					begin
+						// move towards target
+						thisagent's "destination" = $locationof(target);
+//						thisagent's "activeScript" = $travel_to_safe;
+						thisagent's "activeScript" = $travel_to_berserk;
+						thisagent's "backScript" = $berserk;
+						$move(thisagent,target);
+					end
+				else
+					begin
+						if (casting)
+							$castspell(thisagent,spell_name,target, "");
+						else
+							$PerformAction (ThisAgent, ThisAgent's "Attack_Action", Target);
+					end
+
+			end
+end

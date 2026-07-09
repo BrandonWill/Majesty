@@ -1,0 +1,1060 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function lair_death(agent thisagent)
+
+declare
+	agent hero;
+	list heroes;
+
+begin
+
+	$killthread(thisagent's "Spawn_function");
+
+	If (ThisAgent's "Special_Spawn_Type" != "xx")
+		$SpawnUnit (ThisAgent, ThisAgent's "Special_Spawn_Type", $LocationOf (ThisAgent), "Override");
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$chance_drop_equip(thisagent);
+
+	$Drop_QItems (ThisAgent);
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Lair_Multispawn_Death (agent ThisAgent)
+
+Declare
+	integer	Spawn_Counter;
+
+Begin
+
+	//Init spawn counter to one. It keep track of how many spawns the lair has done
+	Spawn_Counter = 1;
+
+	//Spawn the Multi_Spawn_Num if monsters
+	While (Spawn_Counter <= ThisAgent's "Multi_Spawn_Num") do
+		begin
+			$SpawnUnit (ThisAgent, ThisAgent's "Spawn_type");
+
+			Spawn_Counter ++;
+		end
+
+	$killthread(thisagent's "Spawn_function");
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$chance_drop_equip(thisagent);
+
+	$Drop_QItems (ThisAgent);
+
+	$building_death( thisagent );
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function hideout_death(agent thisagent)
+
+declare
+	agent hero;
+	list heroes;
+
+begin
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$chance_drop_equip(thisagent);
+
+	$Drop_QItems (ThisAgent);
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Death script for the Witch_King_Tower
+function witch_king_tower_death(agent thisagent)
+
+declare
+	coordinate coord;
+
+begin
+	// spawn 5 spiders in far corner from the tower
+	coord = $farthestmapcorner(thisagent);
+
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,300));
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,350));
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,300));
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,300));
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,300));
+	$spawnunit(thisagent,"Giant_spider",$randomcoord(coord,300));
+
+	$lair_death(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function chance_drop_equip(agent thisagent)
+
+declare
+	agent hero;
+	list heroes;
+
+begin
+
+	// check for special weapons and armor to be dropped
+	$ListObjects(thisagent,"hero",#GOLD_drop_radius, heroes );
+
+	foreach hero in heroes do
+		begin
+			// Make sure this is a real Hero
+			If (Hero's "SubType" == "Hero")
+			 	begin
+					$chance_weapon(thisagent,hero);
+					$chance_armor(thisagent,hero);
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function chance_weapon(agent thisagent,agent hero)
+
+declare
+	integer bonus_limit,struct_bonus,magic_bonus;
+	boolean goody_flag;
+
+begin
+	//$Debugout( 911, "chance_weapon: " );
+	//$Debugout( 911, "building : ", thisagent );
+	//$Debugout( 911, "hero : ", hero, "weapon index : ", $getattribute(hero,#ATTRIB_weapontypeindex) );
+	if ($getattribute(hero,#ATTRIB_weapontypeindex) > 0)
+		begin
+			// check to see if the hero gets a bonus weapon
+			goody_flag = FALSE;
+			//$Debugout( 911, "rolling for chance against difficulty : ", thisagent's "difficulty" );
+			if ($randomnumber(100) < #lair_weapon_chance * thisagent's "difficulty")
+				begin
+//								if ($randomnumber(100) > 3 * thisagent's "difficulty")
+						begin
+							// they found a normal 'bonus' weapon
+							bonus_limit = (thisagent's "difficulty" / 3) + 2;
+							struct_bonus = $randomnumber(bonus_limit);
+							magic_bonus = $randomnumber(bonus_limit);
+							//$Debugout( 911, "with bonus limit of ", bonus_limit, ", rolled struct_bonus: ", struct_bonus, " magic_bonus:", magic_bonus );
+							//$Debugout( 911, "current weapon struct_bonus: ", $getattribute(hero,#ATTRIB_weapon_struct_bonus), " magic_bonus:", $getattribute(hero,#ATTRIB_Weapon_magic_bonus) );
+							if (struct_bonus + magic_bonus > $getattribute(hero,#ATTRIB_weapon_struct_bonus) + $getattribute(hero,#ATTRIB_Weapon_magic_bonus))
+								goody_flag = TRUE;
+						end
+//								else
+//									begin
+							// they found a special weapon
+//									end
+					if (goody_flag)
+						begin
+							//$Debugout( 911, "updating weapon" );
+							$setattribute(hero,#ATTRIB_weapon_struct_bonus,struct_bonus);
+							$setattribute(hero,#ATTRIB_weapon_magic_bonus,magic_bonus);
+//							$performaction(hero,"got_weapon",hero);
+							$createeffector(hero,"got_weapon",0);
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function chance_armor(agent thisagent, agent hero)
+
+declare
+	integer bonus_limit,struct_bonus,magic_bonus;
+	boolean goody_flag;
+
+begin
+	if ($getattribute(hero,#ATTRIB_armortypeindex) > 0)
+		begin
+			// check for bonus armor
+			goody_flag = FALSE;
+			if ($randomnumber(100) < #Lair_armor_chance * thisagent's "difficulty")
+				begin
+//								if ($randomnumber(100) > 3 * thisagent's "difficulty")
+						begin
+							// they found a normal 'bonus' armor
+							bonus_limit = (thisagent's "difficulty" / 3) + 2;
+							struct_bonus = $randomnumber(bonus_limit);
+							magic_bonus = $randomnumber(bonus_limit);
+							if (struct_bonus + magic_bonus > $getattribute(hero,#ATTRIB_armor_struct_bonus) + $getattribute(hero,#ATTRIB_armor_magic_bonus))
+								goody_flag = TRUE;
+						end
+//								else
+//									begin
+							// they found special armor
+//									end
+					if (goody_flag)
+						begin
+							$setattribute(hero,#ATTRIB_armor_struct_bonus,struct_bonus);
+							$setattribute(hero,#ATTRIB_armor_magic_bonus,magic_bonus);
+							//$performaction(hero,"got_armor",hero);
+							$createeffector(hero,"got_armor",0);
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function building_death(agent thisagent)
+
+declare
+
+begin
+  	thisagent's "type" = "Dead";
+
+	$release_occupants(thisagent);
+
+	//Make sure the building is taken off of the palace's construction lists
+	$Clean_Palace_Construction_Lists (ThisAgent);
+
+	$performaction( thisagent,"Become_Rubble",thisagent );
+
+	$deleteagent(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function statue_death(agent thisagent)
+
+declare
+	list guys;
+	agent guy;
+
+begin
+	$listobjects(thisagent,"hero",-1,guys,#MyPlayer,#insideOtherUnits);
+
+	foreach guy in guys do
+		if (guy's "subtype" == "hero")
+			begin
+				guy's "loyalty" -= #statue_loyalty_boost;
+
+				if (guy's "loyalty" < 0)
+					guy's "loyalty" = 0;
+			end
+
+	$building_death(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gardens_death(agent thisagent)
+
+declare
+	list guys;
+	agent guy;
+
+begin
+	$listobjects(thisagent,"hero",-1,guys,#MyPlayer,#insideOtherUnits);
+
+	foreach guy in guys do
+		if (guy's "subtype" == "hero")
+			begin
+				guy's "loyalty" -= #Gardens_loyalty_boost;
+
+				if (guy's "loyalty" < 0)
+					guy's "loyalty" = 0;
+			end
+
+	$building_death(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function guild_destroyed_a(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$homeless);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function guild_destroyed_2(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$flee_map);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Palace_Death(agent ThisAgent)
+
+declare
+	integer gold;
+	list flags;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	gold = $getplayerdata(thisagent,"gold");
+	$adjustplayerdata(thisagent,"gold",0 - gold);
+	$dropgoldeveryone(thisagent,gold);
+
+	// clear all flags of this player
+	$listobjects(thisagent,"rewardFlag",-1,flags,#rewardflags,#Myplayer,#NoHiddenMap);
+
+	while ($listsize(flags) > 0) do
+		$removelistmember(flags,1);
+
+  	thisagent's "type" = "Dead";
+
+	$release_occupants(thisagent);
+
+	$performaction( thisagent,"Become_Rubble",thisagent );
+
+	if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+		if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+			$Player_Dead_Cleanup ( thisagent );
+
+	$declareloss(thisagent);
+
+	$deleteagent(thisagent);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Player_Dead_Cleanup ( agent thisagent )
+// This function removes flags and destroys all buildings belonging to the player.
+declare
+	agent unit, palace;
+	list units;
+
+begin
+
+	$listobjects ( thisagent, "rewardFlag", -1, units, #rewardflags, #Myplayer, #NoHiddenMap );
+	foreach unit in units do
+		begin
+			$deletegamepiece ( unit );
+		end
+
+	$ListObjects ( thisagent, "building", -1, units, #Myplayer, #NoHiddenMap );
+	foreach unit in units do
+		begin
+			if ( $IsDead ( unit ) == FALSE )
+				$SetAttribute ( unit, #ATTRIB_HP, -1 );
+		end
+
+	$ListObjects ( thisagent, "lair", -1, units, #Myplayer, #NoHiddenMap );
+	foreach unit in units do
+		begin
+			if ( $IsDead ( unit ) == FALSE )
+				( unit's "IGDeathScript" )( unit );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function dropgoldeveryone(agent thisagent, integer amount)
+
+// this is for when a palace dies, it gives out all the treasury gold to nearby
+// heroes and monsters
+
+declare
+	list guysnearby,newguys,monstersnearby;
+	agent guy;
+	integer num_guys,goldper;
+
+begin
+	$ListObjects(thisagent,"hero",#gold_drop_radius * 2, guysnearby );
+
+	foreach guy in guysnearby do
+		begin
+			//if (($getsubtype(guy) != "henchman"))
+			  //	if ($GetSubtype (Guy) != "Controlled")
+			If (Guy's "Subtype" == "Hero")
+				begin
+					newguys << guy;
+				end
+		end
+
+	guysnearby = newguys;
+
+	$listobjects(thisagent,"monster",#gold_drop_radius * 2,monstersnearby);
+
+	guysnearby = $addlists(guysnearby,monstersnearby);
+
+	num_guys = $listsize(guysnearby);
+
+	if (num_guys > 0)
+		begin
+			goldper = (amount / num_guys);
+			foreach guy in guysnearby do
+				$give_gold(guy,goldper);
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gnome_camp_destroyed(agent thisagent)
+
+declare
+	agent palace;
+	list	hovels;
+
+begin
+	palace = $getpalace(thisagent);
+
+	If ($NotValid (Palace) == False)
+		begin
+
+			$ListObjects (ThisAgent, "Building", -1, Hovels, #MyPlayer);
+
+			Hovels = $ListTitles (Hovels, "Gnome_Hovel");
+
+			//If this is the last Hovel, then kill the Hovel spawn script, and don't spawn another one.
+			If ($ListSize (Hovels) == 0)
+				begin
+					If ($IsRunning (Palace's "Gnome_Camp_Spawner"))
+						begin
+
+							$KillThread (Palace's "Gnome_Camp_Spawner");
+
+						end
+				end
+
+			//Otherwise, see if we want to run it again.
+			Else
+				begin
+					If ($isrunning(palace's "gnome_camp_spawner") == FALSE)
+						$runthread(palace's "gnome_camp_spawner",#gnome_camp_delay,palace);
+
+				end
+		end
+
+	$guild_destroyed_2(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Krypta_destroyed(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$flee_map);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Fervus_destroyed(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$flee_map);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Agrela_destroyed(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$flee_map);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Dauros_destroyed(agent thisagent)
+
+declare
+
+begin
+	$guild_destroyed_common(thisagent,$flee_map);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function bungalow_destroyed(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	if ($isrunning(thisagent's "spawn_2"))
+		begin
+			palace = $getpalace(thisagent);
+			palace's "gambling_hall_building" = FALSE;
+		end
+
+	$guild_destroyed_common(thisagent,$flee_map);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rogues_guild_destroyed(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	if ($isrunning(thisagent's "spawn_1"))
+		begin
+			palace = $getpalace(thisagent);
+			palace's "gambling_hall_building" = FALSE;
+		end
+
+	$guild_destroyed_common(thisagent,$homeless);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function release_occupants(agent thisagent)
+
+declare
+	list guys;
+	agent guy;
+
+begin
+	// release anyone inside the building
+	if ($hasattribute("occupants",thisagent))
+		if ($listsize(thisagent's "occupants") > 0)
+			begin
+				guys = thisagent's "occupants";
+				foreach guy in guys do
+					begin
+						if ($isvalidgamepiece(guy))
+							$exit_building(guy,thisagent);
+		//					$debugout("occupant left building in a paniced state.");
+					end
+				$clearlist(thisagent's "occupants");
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function guild_destroyed_common(agent thisagent,function no_where_script)
+
+declare
+	agent member,guild,guy;
+	list other_guilds,new_list,guys,homeless_members,other_players,op_new_list,working_list;
+
+begin
+	// inform guild members of their guild's death
+
+	$release_occupants(thisagent);
+
+	$ListObjects(thisagent,"building",-1,other_guilds,#MyPlayer);
+	other_guilds = $listtitles(other_guilds,thisagent's "title");
+
+	$listObjects(thisagent,"Building",-1,other_players,#NotMyPlayer);
+	other_players = $listtitles(other_players,thisagent's "title");
+
+	$clearlist(op_new_list);
+
+	$clearlist(new_list);
+
+	// try to give all members a home with the same player
+	// if they don't get a home - put them on a list to check for
+	// possible homes with another player
+
+	// remove all 'full' guilds from consideration
+	if ($listsize(other_guilds) > 0)
+		begin
+			foreach guild in other_guilds do
+				begin
+					// check to see if the guild has any free slots
+					if ($GuildHasOpenSlots( guild ))
+						new_list << guild;
+				end
+		end
+
+	foreach guild in other_players do
+		begin
+			if ($GuildHasOpenSlots( guild ))
+				op_new_list << guild;
+		end
+
+
+	// remove dead guild members from thisagent
+	// just so we avoid potential errors
+	Foreach Member in ThisAgent's "Members" do
+		begin
+			If ($IsDead (Member) == False)
+				Working_List << Member;
+		end
+
+	ThisAgent's "Members" = Working_list;
+
+
+	// check each member to see what they should do.
+	foreach member in working_list do
+		begin
+//			if (member != $nullagent())
+
+//				if ($isdead(member))
+//					begin
+//						$deletegamepiece(member);
+//					end
+//				else
+					if ($listsize(new_list) == 0)
+						begin
+							// no where else to go on this player's team!
+							if ($listsize(op_new_list) > 0)
+								begin
+									if ($randomnumber(100) > member's "loyalty")
+										begin
+											guild = $listmember(op_new_list,1);
+											$adopt(guild,member);
+
+											if ($listsize(guild's "members") == guild's "max_members")
+												$removelistmember(op_new_list,1);
+										end
+									else
+										homeless_members << member;
+								end
+							else
+								homeless_members << member;
+						end
+					else
+						begin
+							// add the guy to the other guild
+							guild = $listmember(new_list,1);
+							$adopt(guild,member);
+
+							// is this guild is full
+							if ($GuildHasOpenSlots( guild ) == FALSE)
+								$removelistmember(new_list,1);
+						end
+		end
+
+	foreach member in homeless_members do
+		begin
+			member's "BasicScript" = no_where_script;
+			member's "ActiveScript" = no_where_script;
+			member's "Home" = $nullagent();
+		end
+
+   $building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function GuardHouse_Death (agent ThisAgent)
+Declare
+	agent	Guard;
+	agent Solarus;
+
+Begin
+	thisagent's "type" = "Dead";
+
+	Foreach Guard in ThisAgent's "Guards" do
+		begin
+			If ($IsHidden (Guard))
+				begin
+					Guard's "Type" = "Hero";
+					$UnHide (Guard);
+				end
+
+			Guard's "ActiveScript" = $Guard_Goto_Palace;
+			Guard's "BasicScript" = $Guard_Goto_Palace;
+			Guard's "BackScript" = $Guard_Goto_Palace;
+			$ResumeThread (Guard's "ActiveScript");
+		end
+
+	Foreach Solarus in ThisAgent's "Occupants" do
+		begin
+			$Exit_Building (Solarus, ThisAgent);
+
+		end
+
+        $building_death( thisagent );
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Death function for "Slay the Mighty Dragon" quest's building, Hidden_Sword_Site
+Function Hidden_Sword_Death (agent ThisAgent)
+declare
+	agent RootAgent;
+
+begin
+	//$DebugOut (911, "In Hidden sword death");
+
+	RootAgent = $RetrieveAgent("GplAIRoot");
+
+	thisagent's "type" = "Dead";
+
+	//$DebugOut (911, "Killing spawn function");
+	$killthread(thisagent's "Spawn_function");
+
+	//$DebugOut (911,"Seeing if special spawn type is valid. If so, spawning");
+	If (ThisAgent's "Special_Spawn_Type" != "xx")
+		$SpawnUnit (ThisAgent, ThisAgent's "Special_Spawn_Type", $LocationOf (ThisAgent), "Override");
+
+	//$DebugOut (911, "Dropping gold...");
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	//Drop the magic sword
+	//ThisAgent's "Epic_Quest_Item" = #QItem_Magic_Sword;
+	$CreateNewInventoryItem (#QItem_Magic_Sword, ThisAgent);
+
+	$Drop_Qitems (ThisAgent);
+
+	$MessageFlag ($LocationOf(ThisAgent), #message_slay_dragon_sword_site_dead);
+
+	//Enable the Dwarven Settlement, so that the player can build it in order to give the magic sword to each of the
+	//Heroes (The Dwarven Settlement will automatically clone the sword)
+	$Enableunittype("Dwarven_Settlement");
+
+	//$DebugOut (911, "Hidden sword death: abouth to Building_Death");
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Death function for "Quest for the Magic Ring" quest's building, Hidden_Ring_Site
+Function Hidden_Ring_Death (agent ThisAgent)
+declare
+	agent 	RootAgent;
+	integer  Counter;
+
+begin
+	RootAgent = $RetrieveAgent("GplAIRoot");
+
+	thisagent's "type" = "Dead";
+
+	//$DebugOut (911, "Killing spawn function");
+	$killthread(thisagent's "Spawn_function");
+
+	//$DebugOut (911, "Dropping gold...");
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	//If this is false, then this is the first magic ring site, and it has to drop the ring.
+	If (RootAgent's "Quest_Flag_1" == False)
+
+		begin
+			//Drop the Magic Ring, and make it so Player 1 and 2 are now at war
+
+			$Drop_Qitems (ThisAgent);
+
+			Counter = 1;
+
+			While (Counter <= #Blk_Phants_Spawned_In_Magic_Ring) do
+				begin
+					$SpawnUnit (ThisAgent, "Black_Phantom", "override");
+	      		Counter ++;
+	   		end
+
+			RootAgent's "Quest_Flag_1" = True;
+
+			$MessageFlag ($LocationOf (ThisAgent), #Message_Magic_Ring_Found_Ring);
+
+		end
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Death function for "Quest for the Holy Chalice" quest's building, Hidden_Chalice_Site
+Function Hidden_Chalice_Death (agent ThisAgent)
+declare
+	agent 	RootAgent;
+	integer  Counter;
+
+begin
+	RootAgent = $RetrieveAgent("GplAIRoot");
+
+	thisagent's "type" = "Dead";
+
+	$killthread(thisagent's "Spawn_function");
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$Drop_QItems (ThisAgent);
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Death function for "Quest for the Crown" quest's building, Crown_Site
+Function crown_site_Death (agent ThisAgent)
+declare
+	agent 	RootAgent;
+	integer  Counter;
+
+begin
+	RootAgent = $RetrieveAgent("GplAIRoot");
+
+	thisagent's "type" = "Dead";
+
+	//$DebugOut (911, "Killing spawn function");
+	$killthread(thisagent's "Spawn_function");
+
+	//$DebugOut (911, "Dropping gold...");
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$building_death( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function cleans up the Palace's Constuction Lists, to make sure their aren't invalid agents on it
+// when a building dies.
+Function Clean_Palace_Construction_Lists (agent ThisAgent)
+Declare
+	agent Palace;
+
+Begin
+	 Palace = $GetPalace (ThisAgent);
+
+	 If ($IsValidGamePiece (Palace))
+		begin
+			If ($AgentInList (ThisAgent, Palace's "Buildings_Waiting"))
+				Palace's "buildings_waiting" -= ThisAgent;
+
+			If ($AgentInList (ThisAgent, Palace's "Buildings_Under_Construction"))
+				Palace's "buildings_under_construction" -= ThisAgent;
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Death function for "Free the Slaves" quest's building, Slave_Pits
+function slave_pits_death(agent thisagent)
+
+declare
+	list crosses,palaces,pits;
+	agent cross,palace,pit;
+	integer i,edge;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// release the slaves from the slave crosses
+	$listobjects(thisagent,"Mystery",400,crosses);
+	foreach cross in crosses do
+		begin
+			$setattribute(cross,#ATTRIB_ForceBuildingState,#building_force_active);
+			$killthread(cross's "activescript");
+			$killthread(cross's "spawn_function");
+
+			//Take the cross off the minimap
+			$ShowMinimap (cross, False);
+
+			//Make it so the slave cross no longer plays its selection sound
+			$SetAttribute (Cross, #ATTRIB_InhibitSelectionSound, 1);
+
+			$spawnunit(cross,$random_hero(),$getunitplayernumber(palace));
+		end
+
+	$messageflag($LocationOf (thisagent),#message_slaves_freed);
+
+	$listobjects(thisagent,"lair",-1,pits,#NoHiddenMap);
+	pits = $listtitles(pits,"Slave_pits");
+
+	i = $listsize(pits);
+	if ( i == 2 )
+		begin
+			// send out a wave of raiders if 2 pits are left
+			edge = $randomnumber(4);
+			i = 7;
+			while (i > 0) do
+				begin
+					// the main invasion force
+					$spawnunit(palace,"ratman",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					$spawnunit(palace,"Giant_rat",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					$spawnunit(palace,"Giant_rat",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+
+					// extra ratmen and rats at random spots
+					$spawnunit(palace,"ratman",$randomedgeCoord($randomnumber(4)),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					$spawnunit(palace,"Giant_rat",$randomedgeCoord($randomnumber(4)),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					i -= 1;
+				end
+		end
+	else
+	if ( i == 1 )
+		begin
+			// do something special when only one pit is left.
+			pit = $listmember(pits,1);
+			$spawnunit(pit,"minotaur",#monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian),"override");
+			$spawnunit(pit,"minotaur",#monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian),"override");
+			$spawnunit(pit,"medusa",#monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian),"override");
+			$spawnunit(pit,"medusa",#monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian),"override");
+			$spawnunit(pit,"minotaur",#monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian),"override");
+		end
+
+	$lair_death(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function random_hero() is string
+
+declare
+	string what_hero;
+	integer x;
+
+begin
+	x = $randomnumber(10);
+
+	what_hero = "gnome";
+
+	if (x == 0)
+		what_hero = "paladin";
+	else
+	if (x == 1)
+		what_hero = "warrior_of_discord";
+	else
+	if (x == 2)
+		what_hero = "Priestess";
+	else
+	if (x == 3)
+		what_hero = "healer";
+	else
+	if (x == 4)
+		what_hero = "warrior";
+	else
+	if (x == 5)
+		what_hero = "ranger";
+
+	return what_hero;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Respawning_Lair_Death (agent ThisAgent)
+declare
+	agent hero;
+	list heroes;
+
+begin
+  	thisagent's "type" = "Dead";
+
+	//This Lair can't be flagged or cast on till it respawns, and it doessn't show up on the minimap
+	$SetAttribute (ThisAgent, #ATTRIB_NotFlaggable, 1);
+	$SetAttribute (ThisAgent, #ATTRIB_NotSpellTarget, 1);
+	$ShowMinimap (ThisAgent, False);
+
+
+	$killthread (thisagent's "spawn_function");
+
+	$killthread(thisagent's "activescript");
+
+	If (ThisAgent's "Special_Spawn_Type" != "xx")
+		$SpawnUnit (ThisAgent, ThisAgent's "Special_Spawn_Type", $LocationOf (ThisAgent), "Override");
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	$SetAttribute (ThisAgent, #Attrib_Gold, 0);
+
+	// check for special weapons and armor to be dropped
+	$ListObjects(thisagent,"hero",#GOLD_drop_radius, heroes );
+
+	foreach hero in heroes do
+		begin
+			//if (($getsubtype(hero) != "henchman"))
+			  //	if ($GetSubtype (hero) != "Controlled")
+
+			//Make sure this is a real Hero
+			If (Hero's "SubType" == "Hero")
+			 	begin
+					$chance_weapon(thisagent,hero);
+					$chance_armor(thisagent,hero);
+				end
+		end
+
+	$Drop_QItems (ThisAgent);
+
+	ThisAgent's "Type" = "Dead";
+
+	//Have the Lair wake up in X ms
+	ThisAgent's "ActiveScript" = $Respawn_Lair;
+
+	$RunThread (ThisAgent's "ActiveScript", $RandomNumber (30000) + 400000 , ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This deathscript just makes a lair specific message and then calls Lair Death
+// for Brashnard's Sphere
+Function Sphere_Death (agent ThisAgent)
+Declare
+	list	Spheres;
+	agent	AIRootAgent;
+
+Begin
+	$ListObjects (ThisAgent, "Lair", -1, Spheres, #NoHiddenMap);
+
+	Spheres = $ListTitles (Spheres, "Brashnards_Sphere");
+
+	If ($ListSize (Spheres) == 6)
+		$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_1);
+
+	Else if ($ListSize (Spheres) == 5)
+		$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_2);
+
+	Else if ($ListSize (Spheres) == 4)
+		$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_3);
+
+	Else if ($ListSize (Spheres) == 3)
+		$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_4);
+
+	Else if ($ListSize (Spheres) == 2)
+		begin
+
+			$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_5);
+
+			//Spawn a slew of baddies on one of the map edges
+			$spawnunit(ThisAgent,"Zombie",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Zombie",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Zombie",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Zombie",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Zombie",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Rust_Spitter",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Rust_Spitter",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Rust_Spitter",$RandomedgeCoord(#North),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Rust_Spitter",$RandomedgeCoord(#North),"Override",#Monster_player);
+
+
+			$spawnunit(ThisAgent,"Skeleton",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Skeleton",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Skeleton",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Skeleton",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Skeleton",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Giant_Spider",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Giant_Spider",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Giant_Spider",$RandomedgeCoord(#South),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Giant_Spider",$RandomedgeCoord(#South),"Override",#Monster_player);
+
+		end
+
+	Else if ($ListSize (Spheres) == 1)
+		begin
+			AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+			//Stop playing current music, and play the last music track
+			$Play_Endgame_Music (AIRootAgent);
+
+			$MessageFlag ($LocationOf (ThisAgent), #message_brash_sphere_6);
+
+			//Spawn a slew of baddies on one of the map edges
+			//Spawn a slew of baddies on one of the map edges
+			$spawnunit(ThisAgent,"Troll",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Troll",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Troll",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Troll",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Troll",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#West),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#West),"Override",#Monster_player);
+
+			$spawnunit(ThisAgent,"Minotaur",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Minotaur",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Minotaur",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Minotaur",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Minotaur",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#East),"Override",#Monster_player);
+			$spawnunit(ThisAgent,"Ratman",$RandomedgeCoord(#East),"Override",#Monster_player);
+
+
+			//Also spawn 2 Guardian Rock_Golems around the last sphere site.
+			$spawnunit(ThisAgent,"Rock_Golem",$LocationOf ($ListMember (Spheres,1)) ,"Override",#Monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian));
+			$spawnunit(ThisAgent,"Rock_Golem",$LocationOf ($ListMember (Spheres,1)) ,"Override",#Monster_player,$concatenate(#ATTRIB_Artifice,#force_guardian));
+
+
+
+		end
+
+	//Have the lair do a Multispawn
+	ThisAgent's "Multi_Spawn_Num" = 5;
+	$Lair_Multispawn_Death (ThisAgent);
+
+End

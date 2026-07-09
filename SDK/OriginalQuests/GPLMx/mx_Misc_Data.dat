@@ -1,0 +1,214 @@
+[Trees_Grass]
+	{Generic_Object
+		(type Trees_Grass)
+	}
+[end]
+
+
+[Trees_Dirt]
+	{Generic_Object
+		(type Trees_Dirt)
+	}
+[end]
+
+[Trees_Soil]
+	{Generic_Object
+		(type Trees_Soil)
+	}
+[end]
+
+[Trees_Rocky]
+	{Generic_Object
+		(type Trees_Rocky)
+	}
+[end]
+
+[Trees_Scorch]
+	{Generic_Object
+		(type Trees_Scorch)
+	}
+[end]
+
+[Trees_Swamp]
+	{Generic_Object
+		(type Trees_Swamp)
+	}
+[end]
+
+[Trees_Forest]
+	{Generic_Object
+		(type Trees_Forest)
+	}
+[end]
+
+[Trees_Savannah]
+	{Generic_Object
+		(type Trees_Savannah)
+	}
+[end]
+
+[Trees_Stumps]
+	{Generic_Object
+		(type Trees_Stumps)
+	}
+[end]
+
+[Tocks_Mossy]
+	{Generic_Object
+		(type Rocks_Mossy)
+	}
+[end]
+
+[Rocks_Plain]
+	{Generic_Object
+		(type Rocks_Plain)
+	}
+[end]
+
+[Rocks_Scorch]
+	{Generic_Object
+		(type Rocks_Scorch)
+	}
+[end]
+
+[Rubble_Small]
+	{Generic_Object
+		(type Rubble_Small)
+	}
+[end]
+
+[Rubble_Medium]
+	{Generic_Object
+		(type Rubble_Medium)
+	}
+[end]
+
+[Rubble_Large]
+	{Generic_Object
+		(type Rubble_Large)
+	}
+[end]
+
+[Goblin_Markers]
+	{Generic_Object
+		(type Goblin_Markers)
+	}
+[end]
+
+[Goblin_Shrine]
+	{Generic_Object
+		(type Goblin_Shrine)
+	}
+[end]
+
+[Ruined_Altar2]
+	{Generic_Object
+		(type Ruined_Altar2)
+	}
+[end]
+
+[Ruined_Keep2]
+	{Generic_Object
+		(type Ruined_Keep2)
+	}
+[end]
+
+[Ruined_Shrine2]
+	{Generic_Object
+		(type Ruined_Shrine2)
+	}
+[end]
+
+[Resource_Healplant]
+	{Resource
+		(type Healing_herbs)
+		(HP 10)
+		(maxHP 10)
+	}
+[end]
+
+[Resource_Crystal]
+	{Resource
+		(type Magic_Crystals)
+		(HP 10)
+		(MaxHP 10)
+	}
+[end]
+
+[Resource_Poisonplant]
+	{Resource
+		(type Poison_plants)
+		(HP 10)
+		(maxHP 10)
+	}
+[end]
+
+[Resource_Items]
+	{Special_Item
+		(type 		Special_Item)
+		(title		Resource_Item)
+		(HP 10)
+		(maxHP 10)
+	}
+[end]
+
+
+[Treasure_Chest1]
+	{Special_Item
+		(type 		Special_Item)
+		(Title		Treasure_Chest)
+		(HP    10)
+		(maxHP 10)
+		(BirthScript	Treasure_Chest_Birth)
+		(IGDeathScript	Treasure_Chest_Death)
+	}
+[end]
+
+
+[Treasure_Chest2]
+	{Special_Item
+		(type 		Special_Item)
+		(Title		Treasure_Chest)
+		(HP    10)
+		(maxHP 10)
+		(BirthScript	Treasure_Chest_Birth)
+		(IGDeathScript	Treasure_Chest_Death)
+	}
+[end]
+
+
+[Treasure_Chest3]
+	{Special_Item
+		(type 		Special_Item)
+		(Title		Treasure_Chest)
+		(HP    10)
+		(maxHP 10)
+		(BirthScript	Treasure_Chest_Birth)
+		(IGDeathScript	Treasure_Chest_Death)
+	}
+[end]
+
+[Treasure_Chest4]
+	{Special_Item
+		(type 		Special_Item)
+		(Title		Treasure_Chest)
+		(HP    10)
+		(maxHP 10)
+		(BirthScript	Treasure_Chest_Birth)
+		(IGDeathScript	Treasure_Chest_Death)
+	}
+[end]
+
+[GplAIRoot]
+	{AIRoot
+		(Done_setup 0)
+		(KickoffFunction GplKickoff)
+		(Track_Number	3)
+		(Lair_extra_delay  7000)
+	}
+[end]
+
+[EventAgent]
+	{EventAgent
+	}
+[end]

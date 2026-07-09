@@ -1,0 +1,184 @@
+<Majesty>
+	<Description type="Unit" subType="Projectile" ID="WPh1" Name="Chain_Lightning_Missile" Description="Chain Lightning Missile">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPh1"/>
+			<Script type="2" cProc="0" GPLFunction="ChainLightning_MissileHit"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPi1" Name="Frost_Field_Missile" Description="Frost Field Missile">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPi1"/>
+			<Script type="0" cProc="0" GPLFunction="Frost_Missile_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="dragon_missile"/>
+			<DefaultSound value="Frost_Field_blast"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPj1" Name="gate_p" Description="Gate projectile">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPj1"/>
+			<Script type="0" cProc="0" GPLFunction="gate_hit"/>
+			<Attachment kind="Movement" type="Walk" ID="dragon_missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPk1" Name="Horrify_p" Description="Horrify bolt">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPk1"/>
+			<Script type="0" cProc="0" GPLFunction="horrify_hit"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+			<ShadowType value="Dynamic"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPl1" Name="fire_balm_pdagger" Description="Fire Dagger">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPl1"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPm1" Name="fire_balm_parrow" Description="Fire Arrow">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPm1"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPn1" Name="icebreath_proj" Description="Icebreath">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Info value="NoRandomTargetOnDestination"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPn1"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+			<Attachment kind="Movement" type="Walk" ID="dragon_missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPo1" Name="Spire_Projectile" Description="Spire Projectile">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPo1"/>
+			<Script type="0" cProc="0" GPLFunction="Spire_Blast_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPp1" Name="Ixmil_Projectile" Description="Ixmil's Blast">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPp1"/>
+			<Script type="0" cProc="0" GPLFunction="Ixmil_Blast_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPq1" Name="Fire_Hammer_Projectile" Description="Fire Hammer">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoRandomTargetOnDestination"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPq1"/>
+			<Script type="0" cProc="0" GPLFunction="Fire_Hammer_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="medium missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPr1" Name="Fire_Hammer_False_Projectile" Description="Fire Hammer">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPq1"/>
+			<Script type="0" cProc="0" GPLFunction="Fire_Hammer_Dud"/>
+			<Attachment kind="Movement" type="Walk" ID="medium missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPs1" Name="Gorgon_Blade_Missile" Description="Rogue Bolt">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPs1"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+			<Attachment kind="Movement" type="Walk" ID="medium missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="WPr2" Name="ratman_pest_proj" Description="Pestilence Missile">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="WPr1"/>
+			<Script type="0" cProc="0" GPLFunction="Pestilence_Missile_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="dragon_missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="BPA5" Name="Dragon_Fire_Breath" Description="Dragon Fire Breath">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Info value="NoRandomTargetOnDestination"/>
+			<CanUse value="Monster"/>
+			<Menu value="10"/>
+			<ImageIDBase value="BPA5"/>
+			<Script type="0" cProc="0" GPLFunction="fire_make_attack"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="BPA6" Name="GoblinBolt" Description="GoblinBolt">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<CanUse value="Monster"/>
+			<Menu value="10"/>
+			<ImageIDBase value="BPA6"/>
+			<Attachment kind="Movement" type="Walk" ID="medium missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="BPA7" Name="RatapultMissile" Description="Ratapult Missile">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<CanUse value="Monster"/>
+			<Menu value="10"/>
+			<ImageIDBase value="BPA7"/>
+			<Script type="1" cProc="0" GPLFunction="Ratapult_hit"/>
+			<Attachment kind="Movement" type="Walk" ID="Parabolic_Missile"/>
+			<DefaultSound value="Ratapult_Hit"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="Projectile" ID="BPB8" Name="Infectious_Cloud_Missile" Description="Infectious Cloud">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<CanUse value="Monster"/>
+			<Menu value="10"/>
+			<ImageIDBase value="BPB8"/>
+			<Script type="0" cProc="0" GPLFunction="Infectious_Cloud_Hit"/>
+			<Attachment kind="Movement" type="Walk" ID="fast missile"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+</Majesty>

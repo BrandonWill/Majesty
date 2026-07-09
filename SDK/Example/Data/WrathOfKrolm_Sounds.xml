@@ -1,0 +1,92 @@
+<Majesty>
+	<Description type="Sound" subType="Standard" ID="AK01" Name="Akrolm_Building" Description="Avitar of Krolm Building">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Select">
+				<Wave value="DQ30"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Active1">
+				<Wave value="DQ33"/>
+				<Flags value="Looped"/>
+			</Phase>
+			<Phase ID="Ambient_Die1">
+				<Wave value="AM14"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die2">
+				<Wave value="AM14"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Ambient_Die3">
+				<Wave value="AM14"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="GetHit">
+				<Wave value="HG37"/>
+			</Phase>
+			<Phase ID="Ambient_Inactive1">
+				<Wave value="DQ33"/>
+				<Flags value="Looped"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="AK02" Name="Avitar of Krolm">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="VFX_APPEARS">
+				<Wave value="DQ10"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="VFX_CAST_SPELL1">
+				<Wave value="DQ03"/>
+			</Phase>
+			<Phase ID="Taunt">
+				<Wave value="DQ05"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Death">
+				<Wave value="DQ12"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+			<Phase ID="Attack">
+				<Wave value="WU02"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="DQ34" Name="Roar">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="DQ34"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="DQ35" Name="Howls">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="DQ35"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="DQ36" Name="Chirps">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="DQ36"/>
+				<DistanceModifier value="10000.0"/>
+			</Phase>
+		</Engine>
+	</Description>
+	<Description type="Sound" subType="Standard" ID="DQ37" Name="Barks">
+		<Engine version="1">
+			<Category value="0"/>
+			<Phase ID="Begin">
+				<Wave value="DQ37"/>
+			</Phase>
+		</Engine>
+	</Description>
+</Majesty>

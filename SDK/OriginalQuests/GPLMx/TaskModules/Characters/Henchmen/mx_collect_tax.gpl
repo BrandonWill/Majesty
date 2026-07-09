@@ -1,0 +1,311 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function collect_tax(agent thisagent)
+
+declare
+	agent bldg;
+	list new_list;
+	list places_to_visit;
+	agent Palace,old_target;
+	integer limit;
+	boolean full_list;
+
+begin
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	Palace = $GetTruePalace (ThisAgent);
+	places_to_visit = Palace's "tax_route";
+	old_target = thisagent's "target";
+
+//	$debugout("Collecting Tax.");
+
+	if ($getattribute(thisagent,#ATTRIB_gold) > $getattribute(thisagent,#ATTRIB_ReturnAmount))//#TaxMan_Return_Gold_Threshold)
+		begin
+			// go to drop off gold
+			thisagent's "target" = $nearest_city_building(thisagent);
+
+			thisagent's "destination" = $locationof(thisagent's "Target");
+			thisagent's "backscript" = $bring_home_goods;
+			thisagent's "Activescript" = $Henchmen_travel_to;
+
+			$hide(thisagent,thisagent's "target");
+
+//		   $debugout("Full of gold - returning to palace.");
+		end
+	else
+		begin
+			if (palace's "tax_route_dead" >= #tax_route_dead_limit)
+				begin
+					// reset the tax list - the tax collectors may be 'stuck'
+					$clearlist(Palace's "tax_route");
+					$clearlist(Places_to_visit);
+				end
+
+	      // look for new taxables
+			// if there's no current list, try to make a new one
+			if ($listsize(places_to_visit) == 0)
+				begin
+					// build a new list of targets to tax
+//					$debugout("Finding taxable buildings");
+					$ListObjects(thisagent,"Building",-1,Places_to_visit,#MyPlayer);
+
+					// remove non-taxable buildings from the list
+					// remove buildings covered by another collector
+					// remove palace from list
+					foreach bldg in Places_to_visit do
+						begin
+							if (($getattribute(bldg,#ATTRIB_isTaxed) == 1) || ($getattribute(bldg,#ATTRIB_QuickTax) == 1))
+							if (($getattribute(bldg,#ATTRIB_gold) > 0) && (bldg's "title" != "palace"))
+								if ($agentinlist(bldg,palace's "Tax_targets") == FALSE)
+									begin
+										// this building passed the first cut!
+										new_list << bldg;
+									end
+						end
+
+					places_to_visit = new_list;
+					Palace's "tax_route" = places_to_visit;
+				end
+
+			if ($listsize(places_to_visit) > 0)
+				full_list = TRUE;
+			else
+				full_list = FALSE;
+
+			// temporarily remove buildings that aren't in this tax collector's
+			// tax range
+			$clearlist(new_list);
+			limit = $getattribute(thisagent,#ATTRIB_pickupAmount);
+			foreach bldg in Places_to_visit do
+				begin
+					if ($isdead(bldg) == FALSE)
+						if (($getattribute(bldg,#ATTRIB_isTaxed) == 1) || ($getattribute(bldg,#ATTRIB_QuickTax) == 1))
+							if ($getattribute(bldg,#ATTRIB_gold) >= limit)
+								new_list << bldg;
+				end
+
+			places_to_visit = new_list;
+
+			// if there's no places to tax, go home
+			if ($listsize(places_to_visit) == 0)
+				begin
+//					thisagent's "target" = Palace;
+					thisagent's "target" = $nearest_city_building(thisagent);
+
+					thisagent's "destination" = $locationof(thisagent's "Target");
+					thisagent's "backscript" = $bring_home_goods;
+					thisagent's "Activescript" = $Henchmen_travel_to;
+
+					$hide(thisagent,thisagent's "target");
+
+					// if there was a valid list, but this guy couldn't collect anything
+					// he may be 'stuck' and may need to reset the tax list
+					if (full_list)
+						palace's "tax_route_dead" ++;
+
+					//$DebugOut("There's no Buildings to collect from. - I'm going home.");
+				end
+			else
+				begin
+					palace's "tax_route_dead" = 0;
+					// OLD: pick the next building off the list to tax,
+					//ThisAgent's "Target" = $ListMember (Places_to_Visit, 1);
+
+					// NEW: pick the next closest building to you to tax!
+					thisagent's "Target" = $pick_closest(thisagent,places_to_visit);
+
+					// remove target from the tax_route
+					Palace's "Tax_route" -= thisagent's "Target";
+
+					// put target on palace's list of covered buildings
+					Palace's "tax_targets" << thisagent's "Target";
+
+					thisagent's "activescript" = $tax_building;
+
+					$DebugOut("Going to collect tax from",thisagent's "target");
+
+				if ($isvalidgamepiece(old_target))
+					if ($hasattribute("occupants",old_target))
+						if ($agentinlist(thisagent,old_target's "occupants"))
+							old_target's "occupants" -= thisagent;
+
+				end
+		end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+function tax_building(agent thisagent)
+
+declare
+	integer gold;
+	agent palace;
+
+begin
+
+	$unhide(thisagent);
+
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	if ($isdead(thisagent's "target"))
+		begin
+			thisagent's "activescript" = thisagent's "basicscript";
+			palace = $GetTruePalace (ThisAgent);
+			palace's "tax_targets" -= thisagent's "target";
+		end
+	else
+//		if ($getattribute(thisagent's "target",#ATTRIB_gold) == 0)
+//			begin
+//				// this tax man's target lost its gold somehow.
+//				thisagent's "activescript" = thisagent's "basicscript";
+//				palace = thisagent's "home";
+//				palace's "tax_targets" -= thisagent's "target";
+//			end
+//		else
+		if ($isadjacent(thisagent,thisagent's "target") == FALSE)
+			begin
+				thisagent's "destination" = $locationof(thisagent's "Target");
+				thisagent's "Activescript" = $Henchmen_travel_to;
+				thisagent's "backscript" = $tax_building;
+				$move(thisagent,thisagent's "Target");
+			end
+		else
+			begin
+				// get tax
+				$say(thisagent,"VFX_SPECIAL1");
+				$performaction(thisagent,"collect_tax",thisagent);
+
+				gold = $getattribute(thisagent's "target",#ATTRIB_gold);
+				$give_gold(thisagent,gold);
+
+				$adjustattribute(thisagent's "target",#ATTRIB_gold,-gold);
+
+				palace = $GetTruePalace (ThisAgent);
+				Palace's "tax_targets" -= thisagent's "target";
+
+				thisagent's "activescript" = thisagent's "basicscript";
+
+				if ($getattribute(thisagent's "target",#ATTRIB_QuickTax) == 1)
+					$setattribute(thisagent's "target",#ATTRIB_QuickTax,0);
+
+			end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function bring_home_goods(agent thisagent)
+
+declare
+	integer gold;
+	agent target;
+
+begin
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	if ($isdead(thisagent's "target"))
+		$reset_tasks(thisagent);
+	else
+
+//		if ($isadjacent(thisagent,thisagent's "target") == FALSE)
+		if ($ishidden(thisagent) == FALSE)
+			begin
+				thisagent's "destination" = $locationof(thisagent's "Target");
+				thisagent's "Activescript" = $Henchmen_travel_to;
+				thisagent's "backscript" = $bring_home_goods;
+
+				$hide(thisagent,thisagent's "target");
+			end
+		else
+			begin
+				// give gold to palace
+				gold = $getattribute(thisagent,#ATTRIB_gold);
+				if (gold > 0)
+					begin
+						$say(thisagent,"VFX_SPECIAL2");
+
+						$AdjustPlayerData(thisagent's "target","gold",gold);
+
+						$adjustattribute(thisagent,#ATTRIB_gold,-gold);
+						thisagent's "activescript" = thisagent's "basicscript";
+
+						//$performaction(thisagent's "target","got_gold_bldg",thisagent's "target");
+						$CreateEffector (ThisAgent's "Target", "got_gold_bldg", 0, Gold);
+
+
+						target = thisagent's "target";
+						if (target's "title" != "Palace")
+							if ($agentinlist(thisagent,target's "occupants") == FALSE)
+								target's "occupants" << thisagent;
+
+
+					end
+				else
+					begin
+						// tax collector must sleep;
+						$debugout("Taxman sleeping.",#tax_collector_sleep_time);
+
+						//ThisAgent's "Type" = "Hidden";
+						thisagent's "activescript" = $tax_man_sleep;
+						$setthreadinterval(thisagent's "activescript",#tax_collector_sleep_time);
+					end
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function tax_man_sleep(agent thisagent)
+
+declare
+
+begin
+
+//	$unhide(thisagent);
+//	ThisAgent's "Type" = "Hero";
+	thisagent's "activescript" = thisagent's "basicscript";
+	$setthreadinterval(thisagent's "activescript",#Henchmen_Cycle);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Added Outpost stuff
+function nearest_city_building(agent thisagent) is agent
+
+declare
+	list bldgs1, bldgs2, bldgs3, bldgs;
+	agent bldg;
+
+begin
+	$ListObjects(thisagent,"building",-1,bldgs,#MyPlayer, #ATTRIB_FirstStageBuilt, 1);
+
+	bldgs1 = $removetitles(bldgs,"Guardhouse");
+	//bldgs1 = $listcompleted(bldgs1);
+
+	bldgs2 = $removetitles (bldgs, "Outpost");
+	//bldgs2 = $listcompleted (bldgs2);
+
+	bldgs3 = $removetitles(bldgs,"palace");
+
+	bldgs = $AddLists (bldgs1, bldgs2);
+
+	bldgs = $addlists (bldgs,bldgs3);
+
+	if ($listsize(bldgs) > 0)
+		begin
+//			bldg = $listmember(bldgs,1);
+//			if ($distancebetweenagents(thisagent,bldg) > $distancebetweenagents(thisagent,$getpalace(thisagent)))
+//					bldg = $getpalace(thisagent);
+
+//			return bldg;
+			return $pick_closest(thisagent,bldgs);
+		end
+	else
+		// this is an error condition! It should never get here,
+		// but this line is just in case!!!
+		return $getpalace(thisagent);
+end

@@ -1,0 +1,26 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function check_nearby(agent thisagent) is Boolean
+
+// this function checks the area within thisagent's sight range
+// to see if there are any hostile creatures
+// if there are, it sets the active script to
+// fight or flight with the target being the toughest creature in sight
+declare
+
+begin
+
+	return (thisagent's "evaluationScript"(thisagent));
+//	if ((thisagent's "evaluationscript")(thisagent) == TRUE)
+//		begin
+//			return True;
+//		end
+//	else
+//		begin
+//			return False;
+//		end
+end

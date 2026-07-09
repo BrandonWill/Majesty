@@ -1,0 +1,39 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function homeless(agent thisagent)
+
+declare
+	list inns;
+	agent where_now;
+
+begin
+	$debugout("I'm homeless.");
+
+	// check for danger
+	if ($check_nearby(thisagent) == FALSE)
+		begin
+			//$ListObjects (ThisAgent, "Building", -1, Inns, #CheckTitles, "Inn", #ATTRIB_FirstStageBuilt, 1);
+			//inns = $ListCompletedTitles (thisagent,"building","Inn",-1);
+
+			if ($ListObjects (ThisAgent, "Building", -1, Inns, #CheckTitles, "Inn", #ATTRIB_FirstStageBuilt, 1) > 0)
+				begin
+					$SpecifyIntent (ThisAgent, #intent_sulk);
+					where_now = $ListMember (inns, 1);
+
+					thisagent's "activescript" = $use_building;
+					thisagent's "taskname" = "sulking";
+					thisagent's "backscript" = $use_building;
+					thisagent's "target" = where_now;
+				end
+			else
+				begin
+					thisagent's "activescript" = $flee_map;
+					thisagent's "BasicScript" = $flee_map;
+				end
+		end
+
+end

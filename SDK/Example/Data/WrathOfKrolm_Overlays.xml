@@ -1,0 +1,41 @@
+<Majesty>
+	<Description type="Unit" subType="4" ID="ASZ1" Name="mockup_sparklies" Description="mockup_sparklies">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<CanUse value="HumanPlayer"/>
+			<Menu value="11"/>
+			<ImageIDBase value="ASZ1"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="4" ID="QRa2" Name="Perm_Rage_icon" Description="Rage of Krolm">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="QRa1"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="4" ID="KR0T" Name="Krolm_Summon_Effector" Description="Krolm's Summoning">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="KR0T"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+</Majesty>

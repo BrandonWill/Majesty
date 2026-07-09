@@ -1,0 +1,876 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This function has been modified to add the zoo_legal_target attribute.
+function monster_birth(agent thisagent)
+
+declare
+
+begin
+	thisagent's "target" = $nullagent();
+	$clearlist(thisagent's "hostiles");
+
+	//See if ThisAgent needs to get a Hall of Champs effector over them
+	If ($GetUnitPlayerNumber (ThisAgent) == #Monster_Player)
+		begin
+
+			$SetHallFlag (ThisAgent);
+
+		end
+
+
+	// All normal monsters need an attribute that can be detected by the zoo flag interface.
+	$SetAttribute (ThisAgent, #ATTRIB_Zoo_Legal_Target, 1);
+
+	//This will possibly override a monster's scripts if this is an Epic Quest
+	$Setup_Quest_Monster (ThisAgent);
+
+	// this will possibly override a monsters scripts if its artifice has
+	// been set by $spawnunit
+	$check_override_behavior(thisagent);
+
+	$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+	thisagent's "startingScript" = thisagent's "basicScript";
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This is here because if Ratmen are born from Rat's Nests, they need to War Party.
+function Ratman_Birth (agent ThisAgent)
+
+Declare
+	list		Lairs;
+	integer 	Random;
+	agent		Parent;
+
+Begin
+	Parent = $Parent (ThisAgent);
+
+	If ($IsValidGamePiece (Parent) )
+		begin
+			//If parent is a Rat's Nest, then make warparty
+			If (Parent's "Title" == "RatsNest")
+				begin
+					$Make_War_Party (ThisAgent, 4);
+					$War_Party_Birth (ThisAgent);
+					return;
+				end
+		end
+
+	Random = $RandomNumber (2);
+
+	//Check to see which kind of ratman this is
+	If (Random == 0)
+		begin
+			$make_sleeper_raider(thisagent);
+		end
+	Else
+		begin
+			$make_sleeper_robber(thisagent);
+		end
+
+	$Sleeper_Birth (ThisAgent);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function ShadowBeast_Birth (agent ThisAgent)
+Declare
+	agent 	Parent;
+	integer  Number;
+
+Begin
+
+	Parent = $Parent (ThisAgent);
+
+	If ($IsDead (Parent) == False)
+		begin
+			//If my parent is a monster, then possibly follow them
+			//This also means that this is Darkness Falls
+			If (Parent's "Type" == "Monster")
+				begin
+					Number = $RandomNumber (4) + 1;
+
+					// parent is a monster - roll against chance that ThisAgent will follow them
+
+					If (Number == 1)
+						begin
+							ThisAgent's "ActiveScript" = $Monster_follow;
+							ThisAgent's "BackScript" = $monster_follow;
+							ThisAgent's "BasicScript" = $monster_follow;
+
+							ThisAgent's "Leader" = $Parent (ThisAgent);
+						end
+
+					Else if (Number == 2)
+						$Make_PC_Hunter (ThisAgent);
+
+					Else if (Number == 3)
+						$Make_Raider (ThisAgent);
+
+
+				end
+		end
+
+	$Monster_Birth (ThisAgent);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This sets up the Medusa as a follower of the Gorgon if she is summoned.
+Function Medusa_Birth (agent ThisAgent)
+Declare
+	agent	Parent;
+
+Begin
+	Parent = $Parent (ThisAgent);
+
+	If ($IsValidGamePiece (Parent))
+		begin
+			If (Parent's "Title" == "GreaterGorgon")
+				begin
+					ThisAgent's "ActiveScript" = $Monster_follow;
+					ThisAgent's "BackScript" = $monster_follow;
+					ThisAgent's "BasicScript" = $monster_follow;
+
+					ThisAgent's "Leader" = Parent;
+				end
+
+		end
+
+	$Monster_Birth (ThisAgent);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function check_override_behavior ( agent thisagent )
+
+declare
+	integer artifice;
+
+begin
+	artifice = $getattribute ( thisagent, #ATTRIB_artifice );
+
+	if ( artifice == #force_raider )
+		begin
+			// force this monster to be a raider
+			$make_raider ( thisagent );
+		end
+	else
+	if ( artifice == #force_guardian )
+		begin
+			// force this monster to be a guardian
+			$make_guardian ( thisagent );
+		end
+	else
+	if ( artifice == #force_bomber )
+		begin
+			// force this monster to be a bomber
+			$make_bomber ( thisagent );
+		end
+	else
+	if ( artifice == #Force_PC_Hunter )
+		begin
+			//force this monster to be a PC Hunter
+			$make_PC_hunter ( thisagent );
+		end
+	else
+	if ( artifice == #Force_Wandering )
+		begin
+			//force this monster to be a wanderer
+			$make_wandering ( thisAgent );
+		end
+	else
+	if ( artifice == #Force_Caravan_Raider )
+		begin
+			// Force this monster to be a caravan raider
+			$make_caravan_raider ( thisagent );
+		end
+	else
+	if ( artifice == #Force_Elf_Hunter )
+		begin
+			// Force this monster to be an Elven Bungalow hunter
+			$make_elf_hunter ( thisagent );
+		end
+	if ( artifice == #force_warparty )
+		begin
+			$make_war_party(thisagent,6);
+		end
+	if ( artifice == #force_Monster_Hunter )
+		begin
+			// Monster will hunt monsters on other teams.
+			$make_monster_hunter ( thisagent );
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function boss_monster_birth ( agent thisagent )
+
+declare
+	list palaces;
+	agent palace;
+
+begin
+	$say ( thisagent, "VFX_appears" );
+
+	palaces = $ListPalaces ();
+
+	//This foreach is for multiplayer, so every player gets to see the new boss monster
+	Foreach Palace in Palaces do
+		begin
+
+			$revealarea ( palace, $locationof ( thisagent ), 300 );
+
+		end
+
+	$MiniMapAnimation ( Thisagent, "event_beacon" );
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function troll_birth(agent thisagent)
+
+declare
+
+begin
+	if ($getattribute(thisagent,#ATTRIB_artifice) == #force_overlay)
+		$createeffector(thisagent,"troll_spawn",1);
+
+	$monster_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function witch_king_birth(agent thisagent)
+
+declare
+	list spiders,demonwoods,monsters;
+	agent monster,AIRootAgent;
+
+begin
+	$boss_monster_birth(thisagent);
+
+	$spawnunit(thisagent,"giant_spider");
+	$spawnunit(thisagent,"giant_spider");
+	$spawnunit(thisagent,"giant_spider");
+	$spawnunit(thisagent,"giant_spider");
+	$spawnunit(thisagent,"giant_spider");
+
+	AIRootAgent = $RetrieveAgent("GPLAIRoot");
+
+	if (AIRootAgent's "Quest_number" == #QNumber_Dark_Forest)
+		begin
+
+			$spawnunit(thisagent,"Rock_golem");
+
+			// make all current spiders into raiders
+			$ListObjects(thisagent,"monster",-1, monsters, #NoHiddenMap );
+			spiders = $listtitles(monsters,"giant_spider");
+			demonwoods = $listtitles(monsters,"Daemonwood");
+
+			monsters = $addlists(spiders,demonwoods);
+
+			if ($listsize(monsters) > 0)
+				foreach monster in monsters do
+					begin
+						$make_raider(monster);
+						$reset_tasks(monster);
+					end
+		end
+
+	$Guardian_Birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Dirgo_Birth (agent ThisAgent)
+
+Declare
+
+Begin
+	$boss_monster_birth(thisagent);
+	$Monster_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Phantom_Birth (agent ThisAgent)
+
+Declare
+
+Begin
+	$boss_monster_birth(thisagent);
+
+	$Monster_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function Vendral_Birth (agent ThisAgent)
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GPLAiRoot");
+
+	$boss_monster_birth(thisagent);
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_Slay_Dragon)
+		begin
+
+			//This Flag is only TRUE if player hasn't found and cloned the Magic Sword
+			If (AIRootAgent's "Quest_Flag_2" == False)
+				begin
+					$SetAttribute (ThisAgent, #ATTRIB_Armor_Basic_Damage, 500);
+					$SetAttribute (ThisAgent, #ATTRIB_MagicResistance, 100);
+				end
+			else
+				begin
+					$monster_birth(thisagent);
+					return;
+				end
+
+		end
+
+	if (AIRootAgent's "Quest_Number" == #QNumber_Day_reckoning)
+		begin
+			$make_raider(thisagent);
+			$monster_birth(thisagent);
+			return;
+		end
+
+	$Offmap_Sleeper_Birth (ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Rrongol_Birth (agent ThisAgent)
+Declare
+	agent	AIRootAgent;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	// If this is the Holy Chalice Quest, then only say your Global Voice line. Don't reveal map.
+	If (AIRootAgent's "Quest_Number" == #QNumber_Holy_Chalice)
+		begin
+
+			$say(thisagent,"VFX_appears");
+
+		end
+
+	Else
+		$boss_monster_birth(thisagent);
+
+
+	//Rrongol heals faster than normal units
+	$adjustattribute(thisagent,#ATTRIB_HealingRateModifier, -3);
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_day_reckoning)
+		begin
+			$make_PC_hunter(thisagent);
+			$Monster_Birth(thisagent);
+		end
+	else
+		$Guardian_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function url_shekk_birth(agent thisagent)
+
+declare
+	agent	AIRootAgent;
+
+begin
+	$boss_monster_birth(thisagent);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	if (AIRootAgent's "Quest_Number" == #QNumber_Slave_Pits)
+		begin
+			// set this flag so the victory condition knows
+			// url shekk has been spawned
+			AIRootagent's "Quest_flag_4" = TRUE;
+		end
+
+	$monster_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Liche_queen_birth(agent thisagent)
+
+declare
+
+begin
+	$boss_monster_birth(thisagent);
+
+	// the Liche Queen appears with the following Minions
+	$spawnunit(thisagent,"skeleton");
+	$spawnunit(thisagent,"skeleton");
+	$spawnunit(thisagent,"vampire");
+	$spawnunit(thisagent,"vampire");
+	$spawnunit(thisagent,"vampire");
+	$spawnunit(thisagent,"skeleton");
+	$spawnunit(thisagent,"skeleton");
+	$spawnunit(thisagent,"Zombie");
+	$spawnunit(thisagent,"Zombie");
+
+	$monster_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function spider_birth(agent thisagent)
+
+declare
+	agent parent;
+
+begin
+	parent = $parent(thisagent);
+
+	//Check to see if I am a summoned spider
+	If ($IsValidGamePiece (Parent))
+		begin
+			If (Parent's "title" == "Witch_king")
+				begin
+					// witch king summoned spider
+					$make_raider(thisagent);
+
+					$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+					$clearlist(thisagent's "hostiles");
+					thisagent's "target" = $nullagent();
+
+					thisagent's "startingScript" = thisagent's "basicScript";
+
+				end
+			else
+				$guardian_birth(thisagent);
+		end
+	else
+		$guardian_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Skeleton_Birth (agent ThisAgent)
+
+Declare
+	agent parent;
+
+Begin
+	// these are set now, but overwritten if the skeleton turns out to be summoned
+	thisagent's "type" = "monster";
+	thisagent's "EnemyType" = "hero";
+
+	thisagent's "target" = $nullagent();
+	$clearlist(thisagent's "hostiles");
+
+	if ($getattribute(thisagent,#ATTRIB_artifice) == #force_raider)
+		begin
+			$make_raider(thisagent);
+			$monster_birth(thisagent);
+			return;
+		end
+
+	parent = $parent(thisagent);
+
+	//Check to see if I am a summoned skeleton
+	if ($isdead(parent) == FALSE)
+		begin
+			// parent is alive and valid
+			If (Parent's "title"  == "Priestess")
+				begin
+					ThisAgent's "ActiveScript" = $familiar_skeleton;
+					ThisAgent's "BackScript" = $familiar_skeleton;
+					ThisAgent's "BasicScript" = $familiar_skeleton;
+					ThisAgent's "IGDeathScript" = $Controlled_Monster_Death;
+					ThisAgent's "Type" = "Hero";
+					ThisAgent's "SubType" = "Controlled";
+					ThisAgent's "Original_Type" = "Hero";
+					ThisAgent's "EnemyType" = "Monster";
+					ThisAgent's "Leader" = Parent;
+					thisagent's "familiar" = TRUE;
+					$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+					$createeffector(thisagent,"Charm_icon",1,"infinite");
+				end
+			else
+				begin
+
+					if (parent's "type" != "lair")
+						begin
+							// parent is not a lair
+							ThisAgent's "ActiveScript" = $Monster_follow;
+							ThisAgent's "BackScript" = $monster_follow;
+							ThisAgent's "BasicScript" = $monster_follow;
+
+							ThisAgent's "Leader" = $Parent (ThisAgent);
+
+							$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+
+							If (Parent's "Type" == "Hero" || Parent's "SubType" == "Hero" || Parent's "SubType" == "Henchman")
+								begin
+									ThisAgent's "ActiveScript" = $Controlled_Monster;
+									ThisAgent's "BackScript" = $Controlled_Monster;
+									ThisAgent's "BasicScript" = $Controlled_Monster;
+
+									ThisAgent's "Type" = "Hero";
+									ThisAgent's "SubType" = "Controlled";
+									ThisAgent's "Original_Type" = "Hero";
+									ThisAgent's "EnemyType" = "Monster";
+									$createeffector(thisagent,"Charm_icon",1,"infinite");
+								end
+						end
+					else
+						begin
+							// parent is a lair
+							$monster_birth(thisagent);
+						end
+				end
+
+		end
+	else
+		begin
+			// parent is dead or not valid
+			if ($getunitplayernumber(thisagent) != #monster_player)
+				$setunitplayernumber(thisagent,#monster_player);
+			$Monster_Birth (ThisAgent);
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This is here because the Wight will target enemies right away
+Function Wight_Birth (agent ThisAgent)
+Declare
+	list	Targets;
+
+Begin
+	$Boss_Monster_Birth (ThisAgent);
+
+	Targets = $Compile_Enemies (ThisAgent, 500);
+	If ($ListSize (Targets) > 0)
+		begin
+
+			$ChainLightning_Begin ( $ListMember (Targets, 1) );
+
+		end
+
+	$Monster_Birth (ThisAgent);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// For Wendigo, who are controlled monsters in Clash of Empires
+Function Wendigo_Birth (agent ThisAgent)
+Declare
+	agent Parent;
+
+Begin
+	parent = $parent(thisagent);
+
+	//Check to see if I am a summoned skeleton
+	if ($isdead(parent) == FALSE)
+		begin
+
+			//See if thisagent was spawned onto a hero. If so, then have them follow the parent around
+			If (Parent's "SubType" == "Hero")
+				begin
+					ThisAgent's "Leader" = $Parent (ThisAgent);
+
+					$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+
+					ThisAgent's "ActiveScript" = $Controlled_Monster;
+					ThisAgent's "BackScript" = $Controlled_Monster;
+					ThisAgent's "BasicScript" = $Controlled_Monster;
+
+					ThisAgent's "Type" = "Hero";
+					ThisAgent's "SubType" = "Controlled";
+					ThisAgent's "Original_Type" = "Hero";
+					ThisAgent's "EnemyType" = "Monster";
+					$createeffector(thisagent,"Charm_icon",1,"infinite");
+				end
+
+			Else
+				$Monster_Birth (ThisAgent);
+
+		end
+
+	Else
+		$Monster_Birth (ThisAgent);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This function changes certain monster's scripts depending on Quest Number
+Function Setup_Quest_Monster (agent ThisAgent)
+Declare
+	agent		AIRootAgent, Palace;
+	list		Palaces;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GPLAiRoot");
+
+	//Make sure we are running an Epic Quest. If not, then don't do anything
+	If (AIRootAgent's "Quest_Number" > 0)
+		begin
+			If (AIRootAgent's "Quest_Number" == #QNumber_Brashnard)
+				begin
+					If (ThisAgent's "Title" == "Evil_Oculus")
+						begin
+							$make_war_party(thisagent,2);
+							return;
+						end
+
+					If (ThisAgent's "Title" == "Harpy")
+						begin
+							$make_war_party(thisagent,4);
+							return;
+						end
+
+					If (ThisAgent's "Title" == "Rust_Spitter")
+						begin
+							$make_war_party(thisagent,6);
+							return;
+						end
+
+					If (ThisAgent's "Title" == "Dryad")
+						begin
+							$make_war_party(thisagent,4);
+							return;
+
+						end
+
+					If (ThisAgent's "Title" == "Zombie")
+						begin
+							$make_war_party(thisagent,6);
+							return;
+						end
+
+				  If (ThisAgent's "Title" == "Skeleton")
+				  		begin
+							$make_war_party(thisagent,4);
+							return;
+						end
+
+				  If (ThisAgent's "Title" == "Vampire")
+				  		begin
+							$make_war_party(thisagent,6);
+							return;
+						end
+
+				  If (ThisAgent's "Title" == "Giant_Spider")
+				  		begin
+							$make_war_party(thisagent,4);
+							return;
+						end
+				end
+
+			Else if (AIRootAgent's "Quest_Number" == #QNumber_Magic_Ring)
+				begin
+					if (thisagent's "title" == "Black_Phantom")
+						begin
+							ThisAgent's "ActiveScript" = $Item_Hunter;
+							ThisAgent's "BackScript" = $Item_Hunter;
+							ThisAgent's "BasicScript" = $Item_Hunter;
+
+		   				ThisAgent's "Target_Item" = #QItem_Magic_Ring;
+						end
+				end
+
+			Else if (AIRootAgent's "Quest_Number" == #QNumber_Goblin_Hordes)
+				begin
+					If (ThisAgent's "Title" == "Troll")
+						begin
+							$make_war_party(thisagent,5);
+							ThisAgent's "SubType" = "Goblin";
+							return;
+						end
+				end
+
+			Else if (AIRootAgent's "Quest_Number" == #QNumber_DEMO)
+				begin
+					If (ThisAgent's "Title" == "Vampire")
+						begin
+							$SpawnUnit (ThisAgent, "Skeleton");
+							$SpawnUnit (ThisAgent, "Skeleton");
+							$SpawnUnit (ThisAgent, "Skeleton");
+							$SpawnUnit (ThisAgent, "Skeleton");
+						end
+				end
+
+			Else if (AIRootAgent's "Quest_Number" == #QNumber_Holy_Chalice)
+				begin
+					//Make sure that thisagent isn't Rrongol - he isn't a Monster Patroller
+					If (ThisAgent's "Title" != "Rrongol")
+						begin
+							If (ThisAgent's "Title" != "Daemonwood")
+								begin
+									ThisAgent's "ActiveScript" = $Monster_Patrol;
+									ThisAgent's "BackScript" = $Monster_Patrol;
+									ThisAgent's "BasicScript" = $Monster_Patrol;
+									ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+								end
+						end
+				end
+
+			Else if (AIRootAgent's "Quest_Number" == #QNumber_Wizards_Curse)
+				begin
+					Palaces = $ListPalaces ();
+					Palace = $ListMember (Palaces, 1);
+
+					//These are the Werewolves that heroes now have to kill
+					If (ThisAgent's "Title" == "Werewolf")
+						begin
+							$make_guardian(ThisAgent);
+							ThisAgent's "coord_home" = $LocationOf (ThisAgent);
+
+							$RevealArea (Palace, $Locationof (ThisAgent), $GetAttribute (ThisAgent, #ATTRIB_SightRange));
+						end
+				end
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function make_sleeper_raider(agent thisagent)
+
+declare
+
+begin
+	ThisAgent's "ActiveScript" = $Sleeper_Raider;
+	ThisAgent's "BasicScript" = $Sleeper_Raider;
+	ThisAgent's "BackScript" = $Sleeper_Raider;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_sleeper_robber(agent thisagent)
+
+declare
+
+begin
+	ThisAgent's "ActiveScript" = $Sleeper_Robber;
+	ThisAgent's "BasicScript" = $Sleeper_Robber;
+	ThisAgent's "BackScript" = $Sleeper_Robber;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_war_party(agent thisagent,integer max_followers)
+
+declare
+
+begin
+	ThisAgent's "ActiveScript" = $War_Party;
+	ThisAgent's "BackScript" = $War_Party;
+	ThisAgent's "BasicScript" = $War_Party;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+	ThisAgent's "Max_Followers" = max_followers;
+	thisagent's "num_followers" = 0;
+	thisagent's "isleader" = FALSE;
+	ThisAgent's "Raider_Respond" = True;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_raider(agent thisagent)
+
+declare
+
+begin
+	// force this monster to be a raider
+	ThisAgent's "ActiveScript" = $raider;
+	ThisAgent's "BackScript" = $raider;
+	ThisAgent's "BasicScript" = $raider;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+	Thisagent's "Raider_respond" = TRUE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_caravan_raider(agent thisagent)
+
+declare
+
+begin
+	// force this monster to be a caravan raider
+	ThisAgent's "ActiveScript" = $caravan_raider;
+	ThisAgent's "BackScript" = $caravan_raider;
+	ThisAgent's "BasicScript" = $caravan_raider;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+	Thisagent's "Raider_respond" = TRUE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_guardian(Agent thisagent)
+
+declare
+
+begin
+	ThisAgent's "ActiveScript" = $guardian;
+	ThisAgent's "BackScript" = $guardian;
+	ThisAgent's "BasicScript" = $guardian;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+
+	$find_guardian_home(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_bomber (agent ThisAgent)
+Declare
+
+Begin
+
+	ThisAgent's "ActiveScript" = $Bomber;
+	ThisAgent's "BackScript" = $Bomber;
+	ThisAgent's "BasicScript" = $Bomber;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function make_PC_Hunter(agent thisagent)
+
+declare
+
+begin
+	thisagent's "activeScript" = $PC_Hunter;
+	thisagent's "basicScript" = $PC_Hunter;
+	thisagent's "backscript" = $PC_Hunter;
+	thisagent's "evaluationScript" = $PC_Hunter_eval_enemies;
+	thisagent's "relentless" = TRUE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function make_wandering (agent ThisAgent)
+Declare
+
+Begin
+
+	// force this monster to be a wanderer
+	ThisAgent's "ActiveScript" = $Wandering;
+	ThisAgent's "BackScript" = $Wandering;
+	ThisAgent's "BasicScript" = $Wandering;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function make_Elf_Hunter (agent ThisAgent)
+Declare
+
+Begin
+
+	thisagent's "activeScript" = $Elf_Hunter;
+	thisagent's "basicScript" = $Elf_Hunter;
+	thisagent's "backscript" = $Elf_Hunter;
+	ThisAgent's "EvaluationScript" = $monster_eval_enemies;
+	thisagent's "relentless" = TRUE;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function make_Monster_Hunter (agent ThisAgent)
+Declare
+
+Begin
+
+	thisagent's "activeScript" = $Monster_Hunter;
+	thisagent's "basicScript" = $Monster_Hunter;
+	thisagent's "backscript" = $Monster_Hunter;
+	ThisAgent's "EvaluationScript" = $PC_Hunter_eval_hostiles;
+	thisagent's "relentless" = TRUE;
+
+End

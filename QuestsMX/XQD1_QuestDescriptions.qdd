@@ -1,0 +1,26 @@
+/////////////////////////////////
+/////////////////////////////////
+// Name =
+// [Quest1]   // quest name must match the name in RGSMissionTemplate
+//
+// Short Description =
+// [This is where the description goes]
+//
+// Long Description =
+// [This is where the Epic Quest Voice over goes]
+/////////////////////////////////
+/////////////////////////////////
+
+Name =
+[DOWNLOADABLE_QUEST_1]
+
+Short Description =
+[Defend your kingdom from the Black Phantoms.
+Find the resting place of the ancient sage & restore him to life.
+Resanctify the Shrine of Light.
+Destroy the Black Phantoms.]
+
+Long Description =
+["Somehow, the Shrine of Light has been despoiled, causing its opposing shrine to grow greatly in power. The dreaded Black Phantoms have been drawn to the power of the Shrine of Darkness, and so long as they are permitted to feed upon it, they cannot be destroyed.
+It is said that an ancient sage was entombed in this place long ago - if we can find his tomb and restore him to life, perhaps he will know how to restore the Shrine of Light.
+Once the balance between the two shrines has been restored, it should be possible to destroy the Black Phantoms and eliminate their presence here for good."]

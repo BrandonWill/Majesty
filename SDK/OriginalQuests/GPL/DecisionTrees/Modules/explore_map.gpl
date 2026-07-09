@@ -1,0 +1,30 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function explore_map(agent thisagent,integer chance) is Boolean
+
+declare
+	coordinate dest;
+
+begin
+//	$debugout("Should I explore map?");
+	if ($randomnumber(100) + 1 > chance)
+		return FALSE;
+
+	if ($getnearesthiddencoord(thisagent,dest) == FALSE)
+		return FALSE;
+
+	thisagent's "target" = thisagent;
+	thisagent's "destination" = dest;
+	$move(thisagent,dest);
+	thisagent's "ActiveScript" = $Travel_to_exp;
+	thisagent's "backscript" = thisagent's "basicscript";
+
+//	$debugout(" Yes.",dest);
+	$SpecifyIntent (ThisAgent, #Intent_Exploring_Map);
+
+	return TRUE;
+end

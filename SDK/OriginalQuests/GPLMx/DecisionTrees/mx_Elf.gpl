@@ -1,0 +1,71 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Elf_tree (agent thisagent)
+
+declare
+
+begin
+
+//	$debugout("I'm deciding what to do!");
+
+	$createeffector(thisagent,"thought_bubble_think",#think_bubble_time);
+	$SpecifyIntent (ThisAgent, #Intent_Thinking);
+
+	if ($check_nearby(thisagent) == False)
+
+	if ($Check_rewards(thisagent,FALSE) == False)
+
+	if ($Defend_home(thisagent) == False)
+
+	if ($defend_building(thisagent,"Gambling_hall") == FALSE)
+
+	if ($defend_building(thisagent,"Brothel") == FALSE)
+
+	if ($rest(thisagent) == False)
+
+	if ($Purchase_equipment(thisagent) == False)
+
+	if ($Purchase_bazaar(thisagent, 70) == False)
+
+	if ($Visit_Building(ThisAgent, "Inn", 50) == False)
+
+	if ($pursue_entertainment(thisagent) == False)
+
+	if ($Hall_Champs_Check(thisagent, 20) == False)
+
+	if ($Visit_Building(ThisAgent, "Trading_Post", 35) == False)
+
+	if ($Visit_Building(ThisAgent, "Marketplace", 20) == False)
+
+	if ($Combat_wandering(thisagent,80) == False)
+
+	if ($Combat_wandering_heroes(thisagent,80) == False)
+
+	if ($Raid_lair(thisagent,15) == False)
+
+	if ($Raid_enemy_building(thisagent,15) == False)
+
+	if ($Steal_Check(thisagent,50) == False)
+
+	if ($collect_special_item (ThisAgent, 80) == False)
+
+	if ($Visit_Building(ThisAgent, "Royal_gardens", 45) == False)
+
+	if ($check_library(thisagent,25, "Train_magic_resist") == FALSE)
+
+	if ($check_library(thisagent,55, "Learn_generic_spell") == FALSE)
+
+
+	if ($Go_home(thisagent,90) == False)
+
+		begin
+			$SpecifyIntent (ThisAgent, #intent_wandering);
+			thisagent's "counter" = 0;
+			thisagent's "activescript" = $hero_wander;
+		end
+
+end

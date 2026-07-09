@@ -1,0 +1,81 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function gardens_visited(agent thisagent)
+
+declare
+
+begin
+	$enter_building(thisagent,thisagent's "target");
+
+	$SpecifyIntent (ThisAgent, #intent_meditating_in_gardens);
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Garden_Visit_Duration);
+
+	thisagent's "Activescript" = $rest_at_gardens;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rest_at_gardens(agent thisagent)
+
+declare
+
+begin
+	$setattribute(thisagent,#ATTRIB_HP,$getattribute(thisagent,#ATTRIB_MaxHP));
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+	ThisAgent's "ActiveScript" = $Done_resting_gardens;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function done_resting_gardens(agent thisagent)
+
+declare
+	integer i;
+
+begin
+	$exit_building(thisagent,thisagent's "target");
+
+	i = $randomnumber(6);
+
+	if (i == 0)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_haseffectwingedfeet) == 0)
+				$winged_feet_begin(thisagent);
+		end
+	else
+	if (i == 1)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_haseffectblessing) == 0)
+				$blessing_begin(thisagent);
+		end
+	else
+	if (i == 2)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_HasEffectStoneSkin) == 0)
+				$Dauros_stone_skin_begin(thisagent);
+		end
+	else
+	if (i == 3)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_haseffectcamouflage) == 0)
+				$Camouflage_Begin(thisagent,thisagent);
+		end
+	else
+	if (i == 4)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_HasEffectInvisibility) == 0)
+				$invisibility_begin(thisagent);
+		end
+	else
+	if (i == 5)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_haseffectantimagic) == 0)
+ 				$anti_magic_shield_begin(thisagent);
+		end
+
+	ThisAgent's "ActiveScript" = ThisAgent's "BasicScript";
+end

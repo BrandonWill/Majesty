@@ -1,0 +1,223 @@
+/////////////////////////////////
+/////////////////////////////////
+// Name =
+// [Quest1]   // quest name must match the name in RGSMissionTemplate
+//
+// Short Description =
+// [This is where the description goes]
+//
+// Long Description =
+// [This is where the Epic Quest Voice over goes]
+/////////////////////////////////
+/////////////////////////////////
+
+Name =
+[CLASH_EMPIRES]
+
+Short Description =
+[Destroy all Ratmen and Goblin Lairs.]
+
+Long Description =
+["My Liege, I'm pleased to report that our newest northern settlement has been most prosperous. The first season's harvest is in and our Marketplaces are thriving!
+Ahh... there is one small problem, however. It seems that certain Goblin and Ratmen factions are bent on exterminating each other. While this might normally be cause for celebration, their chosen field of battle seems to be centered rather squarely upon our new village.
+I fear that, in their rush to destroy each other, our settlement will be over-run. Your subjects urge you to take action before they are swept away by torrents of these foul vermin."]
+
+
+Name =
+[DARKNESS_FALLS]
+
+Short Description =
+[Destroy the evil Wights.
+
+(The Dwarves will not move into this area, as they regard it with fear.)]
+
+Long Description =
+["Majesty, do you recall the legend of the evil wights, Styx and Stones, who terrorized the Northern Reaches? Well, the locals inform us that the crypts of these shades are nearby. Indeed, their evil influence can be felt seeping into the land, causing the dead to rest uneasily.
+As long as Styx and Stones dwell in this region, our expansion is threatened. You must find these ancient horrors, wrest them from their slumber, and dispatch them, once and for all. Unfortunately, the two are as inextricably linked in death as they were in life. It is said that while one lives, the other cannot truly die."]
+
+
+Name =
+[FORTRESS_IXMIL]
+
+Short Description =
+[Seek out and destroy Ixmil's Fortress.]
+
+Long Description =
+["My Liege, a most disturbing development. It seems that Ixmil, a mad arch-mage, has cast a blanket of fear over the Northern Reaches. Ixmil controls an imposing, mystic fortress that moves under its own power, appearing and disappearing from place to place. Each time the fortress appears, it disgorges a great host of hostile creatures.
+Ixmil has now turned his eye upon your newly acquired holdings. We must find some way to halt his reign of terror before your subjects become demoralized by his elusive raids. Otherwise we may be forced to retreat from these hard-fought lands."]
+
+
+Name =
+[LEGENDARY_HEROES]
+
+Short Description =
+[Destroy all of the Ancient Barrows within thirty days, or the unstable energies in this realm will reduce your kingdom to rubble.
+
+Buildings can only support one hero at a time.
+
+Heroes start out very experienced.
+
+It takes fewer heroes to upgrade the Palace to levels two and three.
+
+Some lairs in this realm respawn after a duration.]
+
+Long Description =
+["Majesty, your populace is ill at ease. We rest on the edge of Krolm's Anvil, an ancient battlefield. Since before recorded time this place has lain desolate. It is said to be haunted by the spirits of those who died here, and many fell creatures lurk in its shadowed barrows and hills. Rangers consider it one of the most dangerous regions in all of Ardania.
+It is said that many ancient and powerful artifacts lay scattered where great heroes perished. Regardless of the danger, the recovery of these items would demonstrate your resourcefulness to the inhabitants of these cold Northern Reaches."]
+
+
+Name =
+[RISE_RATMEN]
+
+Short Description =
+[Destroy Rhoden, the Rat King, and all Broken Sewer Mains in the realm.]
+
+Long Description =
+["Sovereign, the Ratmen grow bolder day by day. Their numbers appear to increase and strange new sounds can be heard issuing from our sewers. Rumors have reached our ears of a new ruler among Ratkind - a rodent with a taste for surface conquest.
+We must be vigilant against a potential Ratmen invasion. If they choose to strike, we must target their new leader. Without their ruler, the Ratmen will not be able to maintain such an onslaught."]
+
+
+Name =
+[SCIONS_CHAOS]
+
+Short Description =
+[Destroy the three scions of Chaos - the Priestess, the Cultist and the Warrior of Discord.
+
+(No Temples except those belonging to Krypta and Fervus may be built in this land. No Wizards Guilds, Marketplaces, Non-Human races, Outposts or Embassies may be built, either.)]
+
+Long Description =
+["An interesting turn of events, my Liege. Three legendary heroes called 'The Scions of Chaos' have issued a challenge to the champions of our settlement. They call on our heroes to meet them on the field of battle. All three Scions must be defeated before we can truly claim to have bested them."]
+
+
+Name =
+[SIEGE]
+
+Short Description =
+[Destroy Borjin's Palace or cut off the caravan routes supplying him with gold. If they run out of resources they will surely be forced to surrender to our forces.
+
+(No Wizards Guilds may be built.)]
+
+Long Description =
+["Majesty, our battle with the hostile and barbaric kingdom of Borjin the Conqueror has brought us to a siege of his stronghold. We must either force his surrender by blockading his supply Caravans, or storm his fortress and take it by force. Our challenge is complicated by our local Wizards Guild, which has chosen to side with Borjin's forces. Still, I feel we can prevail if you act decisively."]
+
+
+Name =
+[SPIRES_DEATH]
+
+Short Description =
+[Seek out and destroy each of the five spires.
+
+Beware! They grow more powerful with each one that falls...]
+
+Long Description =
+["The richest lands of the Northern Reaches sit tantalizingly close to us. However, our way to these tracts is blocked by huge spires that hurl magical bolts and summon ferocious monsters against anyone approaching.
+A local nomad explained that, long ago, a race of northlanders angered their god so greatly that she hurled them out of their homeland, forbidding them ever to return. She then raised five cursed spires to turn them back.
+While the name of this god is long forgotten, her spires still stand. If you can clear away those obstacles, we can enter the promising lands beyond."]
+
+
+Name =
+[TRADE_ROUTES]
+
+Short Description =
+[Clear routes and protect the caravans entering our kingdom over the next month.  At least half of them must reach our markets intact. If our marketplace is destroyed we will have failed regardless.
+
+(No Marketplaces or Trading Posts may be built.)]
+
+Long Description =
+["Majesty, I have just returned from several of the northern kingdoms. They are open to the idea of trade and offer all manner of exotic goods. However, their trust must be earned.
+Over the next several weeks, a stream of Caravans, opening new trade routes, will be heading to our settlement. If we assure their safe passage, this will seal our end of the bargain and we'll receive a continued stream of goods and riches from the northlands."]
+
+
+Name =
+[URBAN_RENEWAL]
+
+Short Description =
+[Destroy all red Guilds, Elven Lounges and Gambling Halls.
+
+(No Rogues Guilds, or Elven Bungalows may be built.)]
+
+Long Description =
+["(...sigh...) How can I possibly tell our Sovereign the news?...
+Um, Majesty, I have good news and bad. The good news is your uncle died...
+
+No, that won't do...
+
+(ahem) My Leige, your late uncle has bequeathed you a town!...of sorts...
+
+Hmm, maybe more positive...
+
+It pleases me to inform you that you've been granted a tremendous opportunity! You can be the first Ardanian sovereign to give the word "slum" a good name!...
+
+Oh, that won't work either. (...sigh...) it's no use...
+
+Majesty, look out the window. Rogues, Elves, and debauchery as far as the eye can see. It's all yours, no thanks to your dead uncle. Think you can clean up that mess?"]
+
+
+Name =
+[VALE_SERPENTS]
+
+Short Description =
+[Destroy the Snake Pits that are encroaching on your realm.
+
+If you lose all Elven Bungalows, you lose this quest.
+
+You are restricted from placing Elven Bungalows, as it is up to your Elven neighbors to decide when and where to place them...
+
+Many citizens refuse to settle in this threated valley. Hence, much of your normal infrastructure such as General Housing, Sewers, and Broken Sewer Mains, and Graveyards will not appear.]
+
+Long Description =
+["Your Highness, our newest settlement borders an Elven enclave. They offer their warmest greetings and have pledged an alliance with us, in hopes of improving trade and relations.
+On a less pleasant note, there has been talk among the merchants. They speak of skirmishes with a powerful adversary on the distant boundaries of the Elven lands. Perhaps we should make ready our defenses in case these turn out to be more than unfounded rumors."]
+
+
+Name =
+[VIGIL]
+
+Short Description =
+[Destroy the Abomination that lives in the hills.
+
+(No Fairgrounds, Sorcerers Abodes, Magic Bazaars, Outposts, Guilds or Temples can be built.)]
+
+Long Description =
+["My Liege, it pains me to inform you that our realm's most valiant and renowned Paladin, Glohrea Oathtaker, was slain while questing in the outlands. There is not one hero or peasant in this village who does not owe their lives to her selfless acts. Your subjects demand the head of whoever...or whatever murdered our brave Glohrea. Please move quickly and send a small contingent of battle-hardened heroes to the outlands. This deed can not go unpunished!"]
+
+
+Name =
+[FRG0]
+
+Short Description =
+[Eliminate All Enemies.]
+
+Long Description =
+[ Destroy all opposing forces
+]
+
+Name =
+[FRG1]
+
+Short Description =
+[Acquire the specified amount of gold.]
+
+Long Description =
+[ Acquire %d gold
+]
+
+Name =
+[FRG2]
+
+Short Description =
+[Last the specified amount of time]
+
+Long Description =
+[ Last %d Days without being destroyed
+]
+
+Name =
+[FRG3]
+
+Short Description =
+[Destroy All Players. (Many game rules and statistics differ extensively from normal quests or freestyle games to facilitate kingdom-vs-kingdom battles.)]
+
+Long Description =
+[ Last Man Standing
+]

@@ -1,0 +1,1078 @@
+<Majesty>
+	<Description type="Unit" subType="Overlay" ID="XR10" Name="Shapeshift_Potion_Effector" Description="Shapeshift Potion">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR10"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Change_Shape"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR20" Name="Medusa_Stare_Effector" Description="Medusa Stare">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR20"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Medusa_Stare"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR30" Name="Frost_Field_Hit_Effector" Description="Frost Field">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR30"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Frost_Field_hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR60" Name="Infectious_Cloud_Effector" Description="Infectious Cloud">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR60"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Infectious_Cloud"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR70" Name="Stonebacks_Shield_Effector" Description="Stoneback's Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR70"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="stonebacks_hit"/>
+			<DefaultSound value="Stoneback_Shield"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR01" Name="Speed_Tonic_Icon" Description="Speed Tonic">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR01"/>
+			<Script type="0" cProc="0" GPLFunction="Speed_Tonic_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XS01" Name="Speed_Tonic_Icon" Description="Speed_Tonic_Icon">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="ARC2"/>
+			<Script type="0" cProc="0" GPLFunction="Speed_Tonic_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR11" Name="Mausoleum_Resurrect_Effector" Description="Mausoleum Resurrection">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR11"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="Mausoleum_Resurrect_Finish"/>
+			<DefaultSound value="Reanimate"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR21" Name="Medusa_Slow_Icon" Description="Medusa Slow">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR21"/>
+			<Script type="0" cProc="0" GPLFunction="Medusa_Slow_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR31" Name="ChainLightning_Hit" Description="Chain Lightning">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR31"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Chain_lightning_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR51" Name="Dismiss" Description="Dismiss">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR51"/>
+			<DefaultSound value="Dismiss"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR61" Name="Spire_Blast_Effector" Description="Spire Blast">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR61"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Spire_Shot"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR71" Name="Stonebacks_Hit_Effector" Description="Stoneback's Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR71"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Stoneback_Shield_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR02" Name="Speed_Tonic_Effector" Description="Speed Tonic">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR02"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Winged_Feet"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR12" Name="Speed_Monster" Description="Speed Monster">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR12"/>
+			<Script type="0" cProc="0" GPLFunction="Speed_Monster_End"/>
+			<DefaultSound value="Speed_Monster"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR22" Name="Medusa_Slow_Effector" Description="Medusa Slow">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR22"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Wither"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR32" Name="Chainlightning_Effector" Description="Chain Lightning">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR39"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Chain_Lightning"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR52" Name="Mindwarp_Icon" Description="Mindwarp">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR52"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="1"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR62" Name="Howl_of_Discord_Effector" Description="Howl of Discord">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR62"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="WH02"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR72" Name="Spire_Attack_Effector" Description="Spire Attack">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR72"/>
+			<AttachmentPointID value="OG00"/>
+			<DefaultSound value="Spire_Shot"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="WRD2" Name="Antimagic_shield_icon" Description="Antimagic Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="WRD2"/>
+			<Script type="0" cProc="0" GPLFunction="Anti_Magic_Shield_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR03" Name="Strength_Potion_Icon" Description="Strength Potion">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR03"/>
+			<Script type="0" cProc="0" GPLFunction="Strength_Potion_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XS03">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="0"/>
+			<ImageIDBase value="XR03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR13" Name="Damage_Shield" Description="Damage Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR13"/>
+			<Script type="0" cProc="0" GPLFunction="Damage_Shield_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR23" Name="Summon_Medusae_Effector" Description="Summon Medusae">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR23"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="Summon_Medusae_Callback"/>
+			<DefaultSound value="Summon_Medusa"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR33" Name="Gate_Effector" Description="Gate">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="0"/>
+			<ImageIDBase value="XR33"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Teleport"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR53" Name="Chainlightning_Icon" Description="Chain Lightning">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NotVisibleInISOView"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR32"/>
+			<AttachmentPointID value="1"/>
+			<Script type="0" cProc="0" GPLFunction="Chainlightning_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR63" Name="Supernova_Blast_Effector" Description="Supernova">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR63"/>
+			<DefaultSound value="Supernova"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR73" Name="Ixmil_Attack_Effector" Description="Ixmil Attack">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR73"/>
+			<AttachmentPointID value="OG00"/>
+			<DefaultSound value="Ixmil_Blast"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR04" Name="Strength_Potion_Effector" Description="Strength Potion">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR04"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Dirgo_Strength"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR14" Name="Regeneration_Elixer_Icon" Description="Regeneration Elixer">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR14"/>
+			<Script type="0" cProc="0" GPLFunction="Regeneration_Elixer_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR24" Name="Ratman_Contagion_Icon" Description="Ratman Contagion">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR26"/>
+			<Script type="0" cProc="0" GPLFunction="Ratman_Contagion_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR34" Name="Speed_Monster_Effector" Description="Speed Monster">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR34"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Speed_Monster"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR44" Name="Earthquake_Effector" Description="Earthquake">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR44"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Earthquake"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR54" Name="Horrify_eff1" Description="Horrify">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR54"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Horrify_Spell"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR64" Name="Ixmil_Blast_Effector" Description="Ixmil's Blast">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="10"/>
+			<ImageIDBase value="XR64"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Ixmil_Blast"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR74" Name="ratman_pest_eff" Description="Pestilence">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR74"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Roden_Pestilence"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR05" Name="Invisibility_Brew_Icon" Description="Invisibility Brew">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR05"/>
+			<Script type="0" cProc="0" GPLFunction="Invisibility_Brew_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR15" Name="Regeneration_Elixer_Effector" Description="Regeneration Elixer">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR15"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Regeneration"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR25" Name="Ratman_Plague_Icon" Description="Ratman Plague">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR25"/>
+			<Script type="0" cProc="0" GPLFunction="Ratman_Plague_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR35" Name="Damage_Shield_Effector" Description="Damage Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="0"/>
+			<ImageIDBase value="XR35"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Damage_Shield_Endowed"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR45" Name="Reincarnation" Description="Reincarnation">
+		<Engine version="1">
+			<Menu value="11"/>
+			<ImageIDBase value="XR45"/>
+			<AttachmentPointID value="3"/>
+			<DefaultSound value="Resurrection"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR55" Name="horrify_eff2" Description="Horrify">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR55"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR65" Name="Supernova_Hit_Effector" Description="Supernova">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR65"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Supernova"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR75" Name="ratman_pest_hit" Description="Pestilence">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR75"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Pestilence_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="ARF5" Name="wound_critical" Description="Critical hit">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<CanUse value="HumanPlayer"/>
+			<Menu value="11"/>
+			<ImageIDBase value="ARF5"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Critical_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR06" Name="Invisibility_Brew_Effector" Description="Invisibility Brew">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR06"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Invisibility"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR16" Name="Damage_Shield_Reflect_Effector" Description="Damage Shield">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="SRa2"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="damage_shield_hit"/>
+			<DefaultSound value="Damage_Shield_Reflect"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR26" Name="Champion_Icon" Description="Hall of Champions Reward">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR26"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR36" Name="recall_effector" Description="Recall">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR36"/>
+			<AttachmentPointID value="1"/>
+			<DefaultSound value="Teleport"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR56" Name="fire_balm_hit" Description="Fire">
+		<Engine version="1">
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR56"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Fire_Balm_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR66" Name="turn_undead_hit" Description="Harm Undead">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR66"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Turn_Undead_hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR76" Name="Shrubbery_Effector" Description="Shrubbery Effector">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NotVisibleInISOView"/>
+			<Menu value="11"/>
+			<ImageIDBase value="WRd1"/>
+			<Script type="0" cProc="0" GPLFunction="shrubbery_death"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR07" Name="Fire_Balm_Icon" Description="Fire Balm">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR07"/>
+			<Script type="0" cProc="0" GPLFunction="Fire_Balm_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR17" Name="Gorgon_Petrify_Icon" Description="Gorgon Petrify">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR17"/>
+			<Script type="0" cProc="0" GPLFunction="Gorgon_Petrify_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR27" Name="Sbeast_Speed_Icon" Description="Shadow Beast Speed">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NotVisibleInISOView"/>
+			<Menu value="11"/>
+			<ImageIDBase value="CRb1"/>
+			<Script type="0" cProc="0" GPLFunction="SBeast_Speed_End"/>
+			<DefaultSound value="Speed_Monster"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR37" Name="Terrify_effector" Description="This character is terrified!">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR37"/>
+			<AttachmentPointID value="1"/>
+			<DefaultSound value="Terrify"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR57" Name="Champions_Vigor_Icon" Description="Champion's Vigor">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR57"/>
+			<Script type="0" cProc="0" GPLFunction="Champions_Vigor_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="1"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR67" Name="turn_undead_eff" Description="Harm Undead">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR67"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="turn_undead_hit"/>
+			<DefaultSound value="Turn_Undead"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR77" Name="gorgon_missile_hit" Description="Sword hit">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR77"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Gorgon_Missile_hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR08" Name="Fire_Balm_Effector" Description="Fire Balm">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR08"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Fire_Balm"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR18" Name="Gorgon_Petrify_Effector" Description="Gorgon Petrify">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR18"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Medusa_Paralize"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR28" Name="Frost_Field_Effector" Description="Frost Field">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR28"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Frost_Field"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR38" Name="Ixmil_Teleport_In_Effector" Description="Ixmil Teleport">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR38"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Ixmil_Fortress_Teleport"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR48" Name="ChangeHeart" Description="Change of Heart">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR48"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Change_of_Heart"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR58" Name="Champions_Vigor_Effector" Description="Champion's Vigor">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR58"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Vigor_Spell"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR68" Name="Fire_Hammer_Effector" Description="Fire Hammer">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR68"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Fire_Hammer"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR09" Name="Shapeshift_Potion_Icon" Description="Shapeshift Potion">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR09"/>
+			<Script type="0" cProc="0" GPLFunction="Shapeshift_Potion_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR19" Name="Medusa_Stare" Description="Medusa Stare">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR19"/>
+			<Script type="0" cProc="0" GPLFunction="Enhance_Medusa_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR29" Name="Frost_Field_Icon" Description="Frost Field">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR29"/>
+			<Script type="0" cProc="0" GPLFunction="Frost_Field_End"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="1"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR39" Name="Ixmil_Teleport_Out_Effector" Description="Ixmil Teleport">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR38"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="Warp_Out"/>
+			<DefaultSound value="Ixmil_Fortress_Teleport"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR49" Name="MindWarp" Description="Mindwarp">
+		<Engine version="1">
+			<Info value="NoGPLAgent"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR49"/>
+			<AttachmentPointID value="1"/>
+			<DefaultSound value="Mind-Warp"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR59" Name="Spire_Lights_Effector" Description="Spire Lights">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR59"/>
+			<AttachmentPointID value="OG00"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Overlay" ID="XR69" Name="Howl_of_Discord_Hit" Description="Howl of Discord">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="11"/>
+			<ImageIDBase value="XR69"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="Howl_Discord_Hit"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="0"/>
+			<StackPriority value="0"/>
+			<Flags value="TransparentToMouse"/>
+		</Game>
+	</Description>
+</Majesty>

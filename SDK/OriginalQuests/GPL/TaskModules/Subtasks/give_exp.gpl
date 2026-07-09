@@ -1,0 +1,193 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function give_exp(agent thisagent, integer new_exp)
+
+declare
+	integer exp_needed,exp_level,exp;
+
+begin
+	exp_needed = $getattribute(thisagent,#ATTRIB_LevelXP);
+
+	exp_level = $getattribute(thisagent,#ATTRIB_experiencelevel);
+	exp = $getattribute(thisagent,#ATTRIB_experience);
+
+	new_exp = new_exp / exp_level;
+
+	exp += new_exp;
+
+	$debugout(thisagent's "title","got",new_exp,"exp! (lvl",exp_level,")");
+
+	while (exp >= exp_needed) do
+		begin
+			// character went up a level!
+			exp -= exp_needed;
+			exp_level += 1;
+
+//			exp /= exp_level; // divide remaining exp by new hero level
+			exp = exp / exp_level;
+
+			$adjustattribute(thisagent,#ATTRIB_ExperienceLevel,1);
+//			$performaction(thisagent,"level_up",thisagent);
+			$createeffector(thisagent,"level_up",0);
+
+			//If this is the Hero's tenth level, they say a special global voice line - global because of the editor
+			If ($GetAttribute (ThisAgent, #ATTRIB_ExperienceLevel) == 10)
+				$Say (ThisAgent, "VFX_LEVEL_10");
+
+			//Otherwise, say your normal voice line
+			Else
+				$say(thisagent,"VFX_GAIN_LEVEL");
+
+			$createeffector(thisagent,"thought_bubble_talk",#talk_bubble_time);
+			$debugout(thisagent's "title","went up to level,",exp_level);
+
+			$level_up_stats_increase(thisagent);
+
+		end
+
+	$setattribute(thisagent,#ATTRIB_experience,exp);
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function advance_to_level(agent thisagent,integer newlevel)
+
+declare
+
+begin
+
+	while ($getattribute(thisagent,#ATTRIB_experienceLevel) < newlevel) do
+		begin
+			$adjustattribute(thisagent,#ATTRIB_ExperienceLevel,1);
+			$level_up_stats_increase(thisagent);
+		end
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function level_up_stats_increase(agent thisagent)
+
+declare
+	integer NewHPMAX,HPbonus,b2,exp_level;
+
+begin
+	exp_level = $getattribute(thisagent,#ATTRIB_experienceLevel);
+
+	// give more MAXHP
+	HPBonus = ($getattribute(thisagent,#ATTRIB_vitality) / #vitality_div);
+	if (HPBonus < 1) HPBonus = 1;
+	b2 = $randomnumber(HPBonus) + 1;
+	HPBonus += b2;
+
+	NewHPMax = $getattribute(thisagent,#ATTRIB_MAXHP) + HPBonus;
+	$setattribute(thisagent,#ATTRIB_MAXHP,NewHPMAX);
+	$adjustattribute(thisagent,#ATTRIB_HP,HPBonus);
+
+	// Give 1 point of a primary stat if exp_level evenly divided by 2
+	if ((exp_level % 2) == 1)
+		$adjustattribute(thisagent,thisagent's "PrimaryStat",1);
+		//$adjustattribute(thisagent,#ATTRIB_primaryStat,1);
+	// otherwise give 1 point to a random attribute
+
+	// give 1 point to all attack skills - to max of 98?
+	if (thisagent's "attacktype" == 1)
+		if ($getattribute(thisagent,#ATTRIB_HtoH) < 98) $adjustattribute(thisagent,#ATTRIB_HtoH,1);
+	if ($getattribute(thisagent,#ATTRIB_Dodge) < 98) $adjustattribute(thisagent,#ATTRIB_Dodge,1);
+	if ($getattribute(thisagent,#ATTRIB_Parry) < 98) $adjustattribute(thisagent,#ATTRIB_Parry,1);
+	if (thisagent's "attacktype" == 2)
+		if ($getattribute(thisagent,#ATTRIB_Ranged) < 98) $adjustattribute(thisagent,#ATTRIB_Ranged,1);
+
+	if (thisagent's "rangeIncrease" == TRUE)
+		begin
+			if ($getattribute(thisagent,#ATTRIB_sightrange) < #range_increase_max)
+				$adjustattribute(thisagent,#ATTRIB_sightrange,#level_range_increase);
+			if ($getattribute(thisagent,#ATTRIB_maxattackrange) < #range_increase_max)
+				$adjustattribute(thisagent,#ATTRIB_maxattackrange,#level_range_increase);
+		end
+
+	if (thisagent's "criticalIncrease" == TRUE)
+		begin
+			thisagent's "critical_chance" += 1;//#level_critical_increase
+		end
+
+	//If healer, increment reborn counter
+	If (ThisAgent's "Title" == "Healer")
+		begin
+
+			(ThisAgent's "Reborn_Counter") ++;
+
+		end
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function drain_level (agent thisagent, integer level)
+declare
+	integer Counter;
+
+begin
+	Counter = 1;
+
+	While (Counter <= Level) do
+		begin
+			$Level_Down_Stats_Decrease (ThisAgent);
+
+			Counter ++;
+		end
+
+
+	$SetAttribute (ThisAgent, #ATTRIB_Experience, 0);
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function level_down_stats_decrease(agent thisagent)
+
+declare
+	integer NewHPMAX,HPbonus,b2,exp_level;
+
+begin
+	exp_level = $getattribute(thisagent,#ATTRIB_experienceLevel);
+
+	$adjustattribute(thisagent,#ATTRIB_ExperienceLevel,-1);
+
+	// take away some MAXHP
+	HPBonus = ($getattribute(thisagent,#ATTRIB_vitality) / #vitality_div);
+	if (HPBonus < 1) HPBonus = 1;
+	b2 = $randomnumber(HPBonus) + 1;
+	HPBonus += b2;
+
+	NewHPMax = $getattribute(thisagent,#ATTRIB_MAXHP) - HPBonus;
+	$setattribute(thisagent,#ATTRIB_MAXHP,NewHPMAX);
+
+	If ($getAttribute (ThisAgent, #ATTRIB_HP) > NewHPMax)
+		$adjustattribute(thisagent,#ATTRIB_HP, -HPBonus);
+
+	// Give 1 point of a primary stat if exp_level evenly divided by 2
+	if ((exp_level % 2) == 1)
+		$adjustattribute(thisagent,thisagent's "PrimaryStat", -1);
+		//$adjustattribute(thisagent,#ATTRIB_primaryStat,1);
+	// otherwise give 1 point to a random attribute
+
+	// give 1 point to all attack skills - to max of 98?
+	if (thisagent's "attacktype" == 1)
+		if ($getattribute(thisagent,#ATTRIB_HtoH) > 1) $adjustattribute(thisagent,#ATTRIB_HtoH,-1);
+	if ($getattribute(thisagent,#ATTRIB_Dodge) > 1) $adjustattribute(thisagent,#ATTRIB_Dodge,-1);
+	if ($getattribute(thisagent,#ATTRIB_Parry) > 1) $adjustattribute(thisagent,#ATTRIB_Parry,-1);
+	if (thisagent's "attacktype" == 2)
+		if ($getattribute(thisagent,#ATTRIB_Ranged) > 1) $adjustattribute(thisagent,#ATTRIB_Ranged,-1);
+
+	if (thisagent's "rangeIncrease" == TRUE)
+		begin
+			$adjustattribute(thisagent,#ATTRIB_sightrange,-(#level_range_increase));
+			$adjustattribute(thisagent,#ATTRIB_maxattackrange,-(#level_range_increase));
+		end
+
+	if (thisagent's "criticalIncrease" == TRUE)
+		begin
+			thisagent's "critical_chance" -= 1;//#level_critical_increase
+		end
+end

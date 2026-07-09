@@ -1,0 +1,67 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function flee_map(agent thisagent)
+
+declare
+	coordinate board_size;
+	integer x_size;
+	integer y_size;
+	agent palace;
+
+begin
+	$debugout("I'm leaving the game!");
+	$SpecifyIntent (ThisAgent, #intent_flee_map);
+
+	// am I near the edge?
+	palace = $getpalace(thisagent);
+
+	if ($isvalidgamepiece(palace))
+		begin
+			// am I in the palace?
+			if ($insidebuilding(thisagent) == TRUE)
+				begin
+					// yes
+					// - Take me out of the game
+					// drop all objects carried
+					$Hero_Drop_Quest_Items (ThisAgent);
+
+   				thisagent's "type" = "Waiting_to_die";
+					$killthread(thisagent's "activescript");
+					$deletegamepiece(thisagent);
+				end
+			else
+				begin
+					// no
+					thisagent's "target" = palace;
+					thisagent's "activescript" = $travel_to;
+					thisagent's "backscript" = thisagent's "basicscript";
+					$hide(thisagent,palace);
+				end
+		end
+	else
+		begin
+			if ($isnearmapedge(thisagent))
+				begin
+					// yes
+					// - Take me out of the game
+   				thisagent's "type" = "Waiting_to_die";
+					$killthread(thisagent's "activescript");
+					$deletegamepiece(thisagent);
+				end
+			else
+				begin
+					thisagent's "destination" = $closestmapedge(thisagent);
+					$debugout(thisagent's "destination");
+					thisagent's "target" = thisagent;
+					// - go there safe
+					thisagent's "backscript" = thisagent's "basicscript";
+					thisagent's "activescript" = $travel_to;
+					$move(thisagent,thisagent's "destination","avoid_vehicles");
+
+				end
+		end
+end

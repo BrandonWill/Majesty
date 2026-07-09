@@ -1,0 +1,388 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function travel_to(agent thisagent)
+
+	// when this function is set as a unit's activescript,
+	// it must contain a valid agent in 'thisagent's target'.
+	// ig 'thisagent' is not traveling to an agent, it's target
+	// should be itself.
+
+declare
+
+begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		// am I low on HP
+		if ($haslowHP(thisagent) == FALSE)
+			begin
+			// evaluate danger nearby, do I change my plans?
+//			if ($eval_enemies_nearby(thisagent) == FALSE)
+			if ((thisagent's "evaluationscript")(thisagent) == FALSE)
+
+				If ($TryTravelSpell( thisagent ) == FALSE)
+
+						If ($Eval_Items_Nearby (ThisAgent) == FALSE)
+
+							begin
+							end
+			end
+		else
+			begin
+				// hero is low on HP
+				$heal_self(thisagent);
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function travel_to_exp(agent thisagent)
+// used for exploring and patrolling, in order to give experience
+declare
+
+begin
+	if ($has_arrived(thisagent,false))
+		begin
+			$give_exp(thisagent,#explore_exp);
+		end
+	else
+		// am I low on HP
+		if ($haslowHP(thisagent) == FALSE)
+			begin
+			// evaluate danger nearby, do I change my plans?
+			if ((thisagent's "evaluationscript")(thisagent) == FALSE)
+//			if ($eval_enemies_nearby(thisagent) == FALSE)
+
+				If ($TryTravelSpell( thisagent ) == FALSE)
+
+					If ($Eval_Items_Nearby (ThisAgent) == FALSE)
+						begin
+						end
+			end
+		else
+			begin
+				// hero is low on HP
+				$heal_self(thisagent);
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function travel_to_safe(agent thisagent)
+
+declare
+
+begin
+	if ($has_arrived(thisagent,true) == FALSE)
+		if ($hasLowHP(thisagent) == FALSE)
+			$TryTravelSpell( thisagent );
+		else
+			begin
+				$heal_self_fleeing(thisagent);
+			end
+
+	// because they don't evaluate when they are going somewhere via this function
+	// we must clear the hostiles list ourselves
+	$clearlist(thisagent's "hostiles");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function travel_to_berserk(agent thisagent)
+
+declare
+	list nearby;
+	agent nearest;
+
+begin
+	if ($has_arrived(thisagent,true) == FALSE)
+		if ($hasLowHP(thisagent) == FALSE)
+			begin
+				if ($TryTravelSpell( thisagent ) == FALSE)
+					begin
+						nearby = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_sightrange));
+						if ($listsize(nearby) > 0)
+							begin
+								nearest = $listmember(nearby,1);
+								if (nearest != thisagent's "target")
+									if ($distancebetweenagents(thisagent,nearest) < $distancebetweenagents(thisagent,thisagent's "target"))
+										begin
+											// pick new target
+											$stopmoving(thisagent);
+											thisagent's "Target" = nearest;
+											thisagent's "ActiveScript" = thisagent's "backscript";
+										end
+							end
+					end
+			end
+		else
+			begin
+				$heal_self_fleeing(thisagent);
+			end
+
+	// because they don't evaluate when they are going somewhere via this function
+	// we must clear the hostiles list ourselves
+	$clearlist(thisagent's "hostiles");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function monster_travel_to_old(agent thisagent)
+
+declare
+
+begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		begin
+			$monster_cast_travel(thisagent);
+			$Monster_Eval_Enemies (ThisAgent);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function monster_travel_to(agent thisagent)
+
+declare
+
+begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		begin
+			$monster_cast_travel(thisagent);
+			(thisagent's "evaluationScript") (ThisAgent);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function henchmen_travel_to(agent thisagent)
+
+declare
+
+begin
+	if ($has_arrived(thisagent,false) == FALSE)
+		$ClearList (ThisAgent's "Hostiles");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function TryTravelSpell( agent thisagent ) is boolean
+
+declare
+	string spellname;
+
+begin
+	// don't use spells if traveling to a waypoint
+	if ($HasWayPoints( thisagent ) == FALSE)
+		begin
+			// can I use any helpful travel spells?
+			spellname = $getbestspell(thisagent,#list_travel);
+			if (spellname != "nothing")
+				begin
+					$cast(thisagent,spellname,thisagent, "");
+					return True;
+				end
+
+			return False;
+
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function ReachedTargetDistance(agent thisagent, agent target, integer arrivedist) is boolean
+
+declare
+	boolean retval;
+
+begin
+	if (arrivedist > 15)
+		return ($DistanceBetweenAgents(thisagent,target) < arrivedist);
+	else
+		return ($IsAdjacent(thisagent,target));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function has_arrived(agent thisagent, boolean safe) is Boolean
+
+declare
+
+	coordinate agent_loc;
+	coordinate Destination_loc;
+	coordinate Target_loc;
+
+	integer arrivedist;
+
+	agent target;
+
+begin
+	target = thisagent's "target";
+
+	if (thisagent's "target" != thisagent)
+		begin
+			// thisagent is moving to another agent
+
+//			if ($isdead(target))
+			if ($notvalid(target))
+				begin
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					$debugout("not valid target");
+//					thisagent's "backscript" = thisagent's "basicscript";
+					return TRUE;
+				end
+
+			arrivedist = $gettargetrange(thisagent);
+
+//			if ((target's "type" != "Building") && (target's "type" != "lair"))
+//				$adjust_destination(thisagent,safe);
+
+			if ((target's "type" == "building") &&
+				($insidebuilding(thisagent)))
+//				 ($isenteringbuilding(thisagent)))
+///				((thisagent's "backscript" == $use_building) || (thisagent's "backscript" == $use_building_safe)
+///				 || (thisagent's "backscript" == $Guard_Return_Home) ||
+///				 (thisagent's "backscript" == $guard_voyage_home)))
+				begin
+///					if ($insidebuilding(thisagent))
+						begin
+							// thiaagent has arrived inside its target building
+							// so go back to the task that called travel to
+							thisagent's "activescript" = thisagent's "backscript";
+							$debugout("I'm in a building.");
+							return TRUE;
+						end
+				end
+
+			if ((target's "type" == "building") && ($isenteringbuilding(thisagent)))
+				begin
+					return FALSE;
+				end
+			else
+				if ( $ReachedTargetDistance(thisagent,target,arrivedist)
+					|| ($ismoving(thisagent) == FALSE))
+					begin
+						// thisagent has arrived at its target agent
+						// so go back to the task that called 'travel_to'
+						$stopmoving(thisagent);
+						thisagent's "activescript" = thisagent's "backscript";
+						$debugout("I'm at my target.");
+						return TRUE;
+					end
+		end
+	else
+		begin
+			// thisagent is moving to destination on the map
+
+			$debugout("Am I in range of my coordinate destination?");
+			arrivedist = 15; //$gettargetrange(thisagent);
+
+			if (thisagent's "title" == "caravan")
+				arrivedist = #Caravan_Arrivedist;
+
+			agent_loc = $locationof(thisagent);
+			Destination_loc = thisagent's "destination";
+//			Target_loc = $locationof(thisagent's "target");
+
+//			$debugout($distanceBetweenCoords(agent_loc,destination_loc));
+
+			if (($distanceBetweenCoords(agent_loc,destination_loc) < arrivedist) ||
+				($ismoving(thisagent) == FALSE))
+				begin
+//					$debugout(($distanceBetweenCoords(agent_loc,destination_loc));
+					// agent has arrived at destination
+					// so go back to the task that called 'travel_to'
+					$debugout("I've arrived at my coord destination.");
+					$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+					return TRUE;
+				end
+
+			return False;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gettargetrange(agent thisagent) is integer
+
+declare
+	agent target;
+	integer arrivedist;
+
+begin
+	target = thisagent's "Target";
+
+	if ((target's "type" == "hero") || (target's "type" == "monster"))
+		begin
+			arrivedist = $getattackrange(thisagent);
+		end
+	else
+		if (target's "type" == "building")
+			begin
+				// if the unit is 'using' a building the distance is 1
+				// else the dist is maxattackrange
+				if ((thisagent's "backscript" == $use_building) || (thisagent's "backscript" == $use_building_safe))
+					arrivedist = 1;
+				else
+					arrivedist = $getattackrange(thisagent);
+			end
+		else
+			if (target's "type" == "lair")
+				begin
+					// if the unit is 'stealing' the dist is 1
+					// else the dist is maxatackrange
+					if (thisagent's "backscript" == $go_steal)
+						arrivedist = 1;
+					else
+						arrivedist = $getattackrange(thisagent);
+				end
+
+	return arrivedist;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function getattackrange(agent thisagent) is integer
+
+declare
+	integer arrivedist;
+
+begin
+	begin
+		if ($getbestspell(thisagent,#List_attack) == "nothing")
+			arrivedist = $getattribute(thisagent,#ATTRIB_MaxAttackRange);
+		else
+			arrivedist = thisagent's "castingrange";
+	end
+
+	return arrivedist;
+end
+
+
+//function adjust_destination(agent thisagent,boolean safe)
+//// this should only be called when thisagent's target is valid
+
+//declare
+//	coordinate agent_loc;
+//	coordinate Destination_loc;
+//	coordinate Target_loc;
+
+//begin
+//	agent_loc = $locationof(thisagent);
+//	Destination_loc = thisagent's "destination";
+//	Target_loc = $locationof(thisagent's "target");
+
+//	begin // this code makes a unit adjust its course when chasing a moving
+//			// target
+//		if ($distanceBetweenAgents(thisagent,thisagent's "Target") <
+//		    $getattribute(thisagent,#ATTRIB_maxattackrange))
+//			begin
+//				thisagent's "destination" = Target_loc;
+////				Destination_loc = target_loc;
+//			end
+//		else
+//			if ($distanceBetweenCoords(destination_loc,Target_loc) > #Destination_Target_Discrepency_Tolerance)
+//				begin
+//					thisagent's "destination" = target_loc;
+//					if (safe)
+//						$move(thisagent,target_loc,"avoid_vehicles");
+//					else
+//						$move(thisagent,target_loc);
+
+////					Destination_loc = target_loc;
+//				end
+//	end
+//end

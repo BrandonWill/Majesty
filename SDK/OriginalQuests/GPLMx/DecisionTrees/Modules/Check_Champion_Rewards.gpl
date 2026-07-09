@@ -1,0 +1,58 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+expression #champs_mod 15
+	
+///////////////////////////////////////////////////////////////////////////////
+// This just checks for monsters with Champion rewards over them
+Function Check_Champion_Rewards (agent ThisAgent, integer Chance) is boolean
+declare
+	list wandering_monsters;
+	integer current_best_score;
+	agent current_best_monster;
+	integer temp_score;
+	agent monster;
+
+begin
+//	$debugout("Should I combat wandering monsters?");
+	if ($randomnumber(100) + 1 > chance) return FALSE;
+
+	current_best_score = 0;
+
+	$ListObjects(thisagent,"monster",-1, wandering_monsters);
+
+	foreach monster in wandering_monsters do
+		begin
+			//Does the monster have a champion icon over them?
+			If ($CheckEffector (Monster, "Champion_Icon"))
+				begin
+					//If yes, then target_eval them
+					temp_score = $target_eval(thisagent,monster);
+
+					temp_score += #champs_mod;
+
+					if (temp_score > current_best_score)
+						begin
+							current_best_score = temp_score;
+							current_best_monster = monster;
+						end
+
+				end
+
+		end
+
+	if (current_best_score > 0)
+		begin
+			thisagent's "activescript" = $Attack_object;
+			thisagent's "target" = current_best_monster;
+			$SpecifyIntent (ThisAgent, #Intent_Heeding_Champion_call);
+  //		$debugout("Yes");
+			return TRUE;
+		end
+
+//	$debugout("No");
+	return FALSE;
+
+end

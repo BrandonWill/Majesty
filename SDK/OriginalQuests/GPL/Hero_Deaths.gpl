@@ -1,0 +1,351 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+// this function is called by the in-game code when a hero is dismissed
+function Unit_Dismissed(agent thisagent)
+
+declare
+	agent Home;
+
+begin
+	//Take unit off membership list if they are on one
+	Home = ThisAgent's "Home";
+
+	If ($IsDead (Home) == False)
+
+		If ($HasAttribute ("Members", Home))
+
+			If ($AgentInList (ThisAgent, Home's "Members"))
+				begin
+
+					Home's "Members" -= ThisAgent;
+
+				end
+				
+	// change units script to "pissed-off, I'm leaving the map..."
+	thisagent's "home" = $getpalace(thisagent);
+
+	thisagent's "basicscript" = $flee_map;
+
+	//If this agent is in a building, they should $Exit_Building (which will also reset tasks)
+	If ($InsideBuilding (ThisAgent))
+		$Exit_Building (ThisAgent, ThisAgent's "Target");
+	Else
+		$Reset_Tasks (ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// this function is called by the in-game code when a unit's HP are set
+// to 0 or less
+function Unit_Call_Deathscript(agent thisagent)
+
+declare
+
+begin
+	// call the unit's deathscript
+	if ($validfunction(thisagent's "IGDeathScript") == TRUE)
+		(thisagent's "IGDeathScript")(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gravestone(agent thisagent)
+
+declare
+	integer grave_time;
+
+begin
+	grave_time = #gravestone_lifespan * (($getattribute(thisagent,#ATTRIB_experiencelevel) / 3) + 1);
+	if (grave_time > #Gravestone_lifespan_max)
+		grave_time = #gravestone_lifespan_max;
+
+	thisagent's "type" = "Dead";
+
+	$SpecifyIntent (ThisAgent, #intent_dead);
+
+	$MiniMapAnimation( ThisAgent, "hero_death" );
+
+	// NLS BUGFIX2
+	// need to do this to fix freeze spell gravestone bug
+	$ResumeThread(thisagent's "Activescript");
+
+	$stopmoving(thisagent);
+	// Drop some items, other will be dropped when be_dead is called.
+	$Hero_Drop_Immediate_Items(thisAgent);
+	thisagent's "Activescript" = $be_dead;
+	$setthreadinterval(thisagent's "ActiveScript",grave_time);
+	$performaction(thisagent,"basic_death",thisagent);
+
+	$LocalChatMessage( $GetUnitPlayerNumber( ThisAgent  ), #chat_character_died, ThisAgent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is called by the in-game code when a gravestone
+// is being dismissed
+function Unit_Dismiss_Gravestone(agent thisagent)
+
+declare
+
+begin
+	// set the thread interval to zero so it is run asap
+	$setthreadinterval( thisagent's "ActiveScript",0 );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is called by the in-game code when a gravestone
+// is being dismissed
+function Unit_Dismiss_Gravestone_Fast(agent thisagent)
+
+declare
+
+begin
+	// wack the grave stone
+	$Killthread(thisagent's "ActiveScript") ;
+	If ($HasAttribute ("ActiveScript", ThisAgent))
+		thisagent's "ActiveScript"( thisAgent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Healer_Death (agent ThisAgent)
+Declare
+
+Begin
+	// NLS BUGFIX2
+	// need to do this to fix freeze spell gravestone bug
+	$ResumeThread(thisagent's "Activescript");
+
+	ThisAgent's "Type" = "Dead";
+	$StopMoving (ThisAgent);
+
+	//this check will change their activescript if TRUE
+	if ($Healer_Reborn_Check (ThisAgent))
+		begin
+			$SpecifyIntent (ThisAgent, #intent_going_to_be_reborn);
+
+		   //Say "I will be reborn"
+			$Say (ThisAgent, "VFX_SPECIAL1");
+
+			$SetAttribute (ThisAgent, #ATTRIB_HasEffectInvisibility, 1);
+		   $GetProperUnitArt (ThisAgent);
+		end
+
+	Else
+		begin
+			$GraveStone (ThisAgent);
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function Guard_Death (agent ThisAgent)
+Declare
+	agent		Home;
+
+Begin
+	Home = ThisAgent's "Home";
+	$StopMoving (ThisAgent);
+
+	if ($isvalidgamepiece(home) == TRUE)
+		if ($isdead(home) == FALSE)
+			begin
+				Home's "Guards" -= ThisAgent;
+
+				If ($AgentInList (ThisAgent, Home's "Waiting_Guards"))
+					Home's "Waiting_Guards" -= ThisAgent;
+
+				(Home's "Num_Guards") --;
+
+				$RestartGuardSpawnThread(Home, #Guard_Spawn_Time);
+			end
+
+   thisagent's "type" = "Waiting_to_die";
+	$killthread(thisagent's "activescript");
+	$performaction(thisagent,"henchman_death",thisagent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function tax_collector_death(agent thisagent)
+
+declare
+	agent home;
+
+begin
+	home = thisagent's "home";
+
+	if ($isvalidgamepiece(home))
+		begin
+			home's "num_tax_collectors" --;
+			if (home's "num_tax_collectors" == 0)
+				begin
+					// clear all tax lists
+					$clearlist(home's "tax_route");
+					$clearlist(home's "tax_targets");
+				end
+			else
+				begin
+					if (thisagent's "target" != $nullagent())
+						if (thisagent's "target" != thisagent's "home")
+							begin
+								// the tax collector was on his way to a building
+								// make sure the palace knows that that building is free again
+								home's "tax_targets" -= thisagent's "target";
+							end
+				end
+
+
+			//Put taxman's pickup attribs on a list, so that the next one is spawned with those attributes
+			home's "spawn_taxman_return_list" << $GetAttribute (ThisAgent, #ATTRIB_ReturnAmount);
+			home's "spawn_taxman_pickup_list" << $GetAttribute (ThisAgent, #ATTRIB_PickupAmount);
+
+			if ($isrunning(home's "tax_spawn") == FALSE)
+				$RunThread(home's "tax_spawn",10000,home);
+
+		end
+
+
+	$dropgoldinradius(thisagent,$getattribute(thisagent,#ATTRIB_gold));
+
+	thisagent's "type" = "Waiting_to_die";
+
+	$killthread(thisagent's "activescript");
+	$performaction(thisagent,"henchman_death",thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_death(agent thisagent)
+
+declare
+	agent home;
+
+begin
+	home = thisagent's "home";
+
+	if ($isvalidgamepiece(home))
+		begin
+			home's "num_peasants" --;
+		//	if (home's "num_peasants" == 0)
+		//		begin
+		//		end
+		//	else
+				begin
+					if (thisagent's "target" != $nullagent())
+						if (thisagent's "target" != thisagent's "home")
+							if (thisagent's "target" != thisagent)
+							begin
+								// the peasant was on his way to a building
+								// make sure that building gets back on the list if neccessary
+		//						home's "buildings_under_construction" -= thisagent's "target";
+		//						home's "buildings_waiting" << thisagent's "target";
+								home's "busy_peasants"--;
+							end
+				end
+
+			if ($isrunning(home's "peasant_spawn") == FALSE)
+				$RunThread(home's "peasant_spawn",#Peasant_delay,home);
+
+		end
+   thisagent's "type" = "Waiting_to_die";
+
+	$killthread(thisagent's "activescript");
+
+	$performaction(thisagent,"henchman_death",thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Caravan_Death (agent ThisAgent)
+Declare
+	agent		Home;
+
+Begin
+   thisagent's "type" = "Waiting_to_die";
+
+	$killthread(thisagent's "activescript");
+
+	$performaction(thisagent,"henchman_death",thisagent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function Hooligan_Death (agent ThisAgent)
+Declare
+
+Begin
+	$Drop_QItems (ThisAgent);
+
+	thisagent's "type" = "Waiting_to_die";
+
+	$killthread(thisagent's "activescript");
+
+	$performaction(thisagent,"henchman_death",thisagent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function henchman_dead(agent thisagent, agent target)
+
+declare
+
+begin
+	$deletegamepiece(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function illusionary_death(agent thisagent)
+
+declare
+	agent parent;
+
+begin
+
+	parent = ThisAgent's "Leader";
+	$createeffector( Parent, "illusionary_hero_effector2", 0 );
+
+	$killthread(thisagent's "activescript");
+	$deletegamepiece(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function gets called when a hero dies (in Be_Dead). It dumps all the Hero's Epic Quest Items nearby.
+// This is only called by Characters that can pick up items.  Buildings use a similar function, Drop_QItems in Inventory.gpl
+Function Hero_Drop_Quest_Items (agent ThisAgent)
+Declare
+	integer	WhatItem;
+	string agentType;
+Begin
+	WhatItem = -1;
+
+	While ($AgentHasInventoryItem (WhatItem ,ThisAgent)) do
+		begin
+			
+			// Delete the item from the original owner
+			$DeleteInventoryItem (WhatItem, ThisAgent);
+			
+			// Don't drop the Magic Sword or some Marketplace items.
+			If (WhatItem != #QItem_Magic_Sword && WhatItem != #MarketItem_Ring_Protection && WhatItem != #MarketItem_Market3_Item)
+				begin
+					// Check the new inventory system if this item can be dropped
+					if ($CanDropInventoryItem(WhatItem) == True)
+						begin
+							// Get what type of agent the inventory item will be while it exists on the map
+							agentType = $GetInventoryItemAgentType(WhatItem);
+							// Create the item, adding a copy of its type to its attibute list for the inventory system to use.
+							$SpawnUnit (ThisAgent, agentType, "Override", $Concatenate($MakeInventoryAttribute( WhatItem ), 0) );
+						end
+				end
+			
+			//Reset WhatItem bask to -1 so that AgentHasInventoryItem can fill it up again.
+			WhatItem = -1;
+
+		end
+
+End
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// A special function to cause the hero to drop any inventory items that are marked as 
+// immediate drop.  If they are not, heroes will drop their items when their gravestone is removed.
+function Hero_Drop_Immediate_Items(agent ThisAgent)
+declare
+begin
+
+	// Just call the base drop code
+	$Drop_Immediate_Items(thisAgent);
+	
+end

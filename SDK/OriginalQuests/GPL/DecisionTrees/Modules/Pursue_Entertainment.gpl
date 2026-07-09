@@ -1,0 +1,228 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+Function Pursue_Entertainment (agent ThisAgent) is Boolean
+
+Declare
+	list	Buildings,Attractions,Fairgrounds;
+	agent	Target;
+
+Begin
+//	$DebugOut ("Shall I Pursue Entertainment?");
+
+	$listobjects(thisagent,"building",-1,buildings);
+	buildings = $listcompleted(buildings);
+	Attractions = $ListSubtypes (Buildings, "Entertainment");
+
+	If ($ListSize (Attractions) > 0)
+		begin
+			If ($Check_Brothels_and_GHalls (ThisAgent, Attractions) == True)
+				begin
+					Target = ThisAgent's "Target";
+
+					ThisAgent's "TaskName" = "visiting";
+					ThisAgent's "ActiveScript" = $Use_Building;
+
+					If (Target's "Title" == "Gambling_Hall")
+						begin
+
+							$SpecifyIntent (ThisAgent, #intent_going_to_gamble);
+
+						end
+
+					Else
+						begin
+
+							$SpecifyIntent (ThisAgent, #intent_visiting_elven_lounge);
+
+						end
+
+					return True;
+				end
+		end
+
+//	Fairgrounds = $ListCompletedTitles (ThisAgent, "Building", "Fairgrounds", -1);
+	Fairgrounds = $listtitles(buildings,"Fairgrounds");
+
+	If ($ListSize (Fairgrounds) > 0)
+		begin
+			If ($Check_For_Fairgrounds (ThisAgent, Fairgrounds) == True)
+				begin
+					ThisAgent's "TaskName" = "visiting";
+					ThisAgent's "ActiveScript" = $Use_Building;
+					$SpecifyIntent (ThisAgent, #intent_compete_at_fair);
+					return True;
+				end
+			end
+
+	return False;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Check_Brothels_and_GHalls (agent ThisAgent, list ThisList) is boolean
+Declare
+	integer Willpower_Roll;
+	integer Greed_Roll;
+	agent Best_One;
+
+Begin
+	Best_One = $ListMember (ThisList, 1);
+	//Best_One = $Pick_Closest (ThisAgent, ThisList);
+
+	WillPower_Roll = $RandomNumber (30) + 1;
+	If (Best_One's "title" == "Brothel")
+		begin
+			If ($Total_Gold (ThisAgent) >= #Brothel_Cost)
+				begin
+					//roll to see if they make a Distance Modified Willpower roll
+					If (Willpower_Roll > ($getattribute (ThisAgent, #ATTRIB_Willpower) + ($DistanceBetweenAgents (ThisAgent, Best_One) / 100)))
+						Begin
+//							$DebugOut ("Yeahh! I want to party at the BROTHEL!");
+							ThisAgent's "Target" = Best_One;
+							return True;
+						End
+				end
+		end
+	Else
+		begin
+			If (Best_One's "title" == "Gambling_Hall")
+				begin
+					If ($Total_Gold (ThisAgent) >= #Minimum_Wager)
+						begin
+							Greed_Roll = $RandomNumber (30) + 1;
+							If (Greed_Roll < (ThisAgent's "Greed" + ($DistanceBetweenAgents (ThisAgent, Best_One) / 100)))
+								begin
+									If (Willpower_Roll > ($getattribute (ThisAgent, #ATTRIB_Willpower) + ($DistanceBetweenAgents (ThisAgent, Best_One) / 100)))
+										begin
+											$DebugOut ("Yeahh! I want to party at the GAMBLING HALL!");
+											ThisAgent's "Target" = Best_One;
+											return True;
+										end
+								end
+						end
+				end
+		end
+	return False;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+//This function has Heroes look at the list of Fairgrounds that was passed as ThisList, and see if:
+//1. There are open tourneys
+//2. There is a tourney that applies to the Hero
+//3. The hero meets the ExperienceLevel req's
+//4. The hero thinks their stats merit entering the contest
+Function Check_For_Fairgrounds (agent ThisAgent, list ThisList) is boolean
+Declare
+	agent 	Best_One;
+	integer	Current_Event;
+	boolean  going_to_event;
+
+Begin
+	going_to_event = FALSE;
+
+	Best_One = $Pick_a_fairground (ThisAgent, ThisList);
+
+	//See if there is an event running. If Tournament hasn't been researched, then this should return 0
+	Current_Event = $GetAttribute (Best_One, #ATTRIB_CurrentEvent);
+
+	//Is there currently a tourney happening at the fairgrounds && are there still open entries?
+	If (Current_Event > 0)
+		If ($ListSize (Best_One's "Combatants") < #Max_Heroes_in_Tourney)
+			//True if the fairgrounds is in its resetscript
+			If (Best_One's "Cleaning_Combatants" == False)
+				//Can I afford a Tourney?
+				If ($Total_Gold (ThisAgent) >= #Tourney_Entrance_Fee)
+					//Are the Fairgrounds close enough to be attractive?
+					If ($DistanceBetweenAgents (ThisAgent, Best_One) < #Fairgrounds_Attraction_Range)
+						//Check to see which Tourney is being run, and see if I can go
+
+						If (Current_Event == 1)
+							begin
+								//Archer's Tourney! Do I want to go?
+								If ($getattribute (ThisAgent, #ATTRIB_Ranged) > $RandomNumber (100) + 1)
+									going_to_event = TRUE;
+							end
+						Else
+							If (Current_Event == 2)
+								begin
+									//Melee's Tourney! Do I want to go?
+									if (thisagent's "attack_action" != "do_nothing")
+										If ($getattribute (ThisAgent, #ATTRIB_HtoH) > $RandomNumber (100) + 1)
+											going_to_event = TRUE;
+								end
+							Else
+								If (Current_Event == 3)
+									begin
+										//MU Tourney! Do i want to go?
+										If ($GetAttribute (ThisAgent, #ATTRIB_Intelligence) * 2 > $RandomNumber (70) + 1)
+											going_to_event = TRUE;
+									end
+								Else
+									//Combo Tourney! Do I want to go?
+									If (Current_Event == 4)
+										begin
+											//Make check to see if ThisAgent wants to go to a Combo tourney
+											If (#Percent_Chance_Goto_Combo_Tourney >= ($RandomNumber (100) + 1))
+												going_to_event = TRUE;
+										end
+
+	if (going_to_event)
+		begin
+			ThisAgent's "Target" = Best_One;
+			Best_One's "Combatants" << ThisAgent;
+		end
+
+	return going_to_event;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Pick_a_fairground (agent ThisAgent, list ThisList) is agent
+
+declare
+	agent Dude;
+	agent closest_dude;
+	integer closest_dist;
+	integer temp_dist;
+	integer	Loyalty;
+
+begin
+	Loyalty = ThisAgent's "Loyalty";
+	closest_dist = 9000000;
+
+  	foreach Dude in Thislist do
+	 	begin
+			temp_dist = $distancebetweenAgents(thisagent,Dude);
+
+			//See if the Dude is on a different team, if so then make it less attractive
+			If ($GetPlayerTeamNumber (ThisAgent) != $GetPlayerTeamNumber (Dude))
+				begin
+			   	//If hero is loyal, then don't even consider this Dude
+					If (Loyalty > (#Loyalty_Other_Team_Roll) + 1)
+						begin
+							ThisList -= Dude;
+					   end
+					Else
+						//Crank up the temp_dist, so this building appears less attractive
+						Temp_Dist = Temp_Dist * #Loyalty_Dist_Diff_Team_Mod;
+				end
+			Else
+				begin
+					//See if the Dude is owned by a different player, if so them make it less attractive
+					If ( $UnitsAreSamePlayer (ThisAgent, Dude) == False )
+			  			begin
+							temp_dist = temp_dist / 2;
+						end
+				end
+
+			if (temp_dist < closest_dist)
+			 	begin
+					closest_dist = temp_dist;
+				  	closest_dude = dude;
+			  	end
+	  	end
+
+	return closest_dude;
+end

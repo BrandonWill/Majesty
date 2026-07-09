@@ -1,0 +1,86 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This function looks for heroes with ThisAgent's "Item". If they are out there, then it will try to kill them.
+// Otherwise it just wanders around attacking people within sightrange.
+Function Item_Hunter (agent ThisAgent)
+Declare
+	agent 	Target,item, Found_item;
+	list		Heroes,resources;
+
+Begin
+
+	Target = $FindInventoryItem (ThisAgent's "Target_Item");
+
+//	If ($IsDead (Target) == False && Target's "Type" == "Hero")
+	if ($Is_Valid_IHunter_Target (ThisAgent, Target))
+		begin
+			ThisAgent's "Target" = Target;
+			thisagent's "activeScript" = $monster_attack_object;
+		end
+	Else
+		begin
+			// look for nearby heroes
+			$ListObjects (ThisAgent, "hero", $GetAttribute (ThisAgent, #ATTRIB_SightRange), Heroes);
+
+			If ($ListSize (Heroes) > 0)
+				begin
+					ThisAgent's "Target" = $ListMember (Heroes, 1);
+					thisagent's "activeScript" = $monster_attack_object;
+				end
+			Else
+				begin
+				// wander near item and evaluate
+
+
+					If ($IsMoving (ThisAgent) == FALSE)
+						begin
+//							$ListObjects(thisagent,"Special_Item", -1 ,resources );
+
+//							if ($listsize(resources) > 0)
+//								foreach item in Resources do
+//  									begin
+
+//										if ( $HasAttribute( $MakeInventoryAttribute(  ThisAgent's "Target_Item" ), Item ) )
+//											begin
+
+//												//Found the item
+//												Found_item = Item;
+
+//											end
+//  									end
+
+//							If ($IsValidGamePiece (Found_Item))
+//								$Move (ThisAgent, $RandomCoord (Found_Item, $getAttribute (ThisAgent, #ATTRIB_SightRange)));
+
+//							Else
+								$Move (ThisAgent, $RandomCoord (ThisAgent, $getattribute (ThisAgent, #ATTRIB_SightRange)));
+
+
+						end
+
+					Else
+						$PC_Hunter_Eval_Enemies (ThisAgent);
+				end
+		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This makes sure that the hunter's target is alive and on a different team
+Function Is_Valid_IHunter_Target (agent ThisAgent, agent Target) is boolean
+Declare
+
+
+Begin
+	If ($NotValid (Target))
+		return False;
+
+	if ($getplayerteamnumber(target) == $getplayerteamnumber(thisagent))
+		return False;
+
+	return True;
+End

@@ -1,0 +1,73 @@
+<Majesty>
+	<Description type="Action" subType="1" ID="MD01" Name="Summon_Barbarian" Description="Summon Barbarian">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Rate min="0" max="800"/>
+			<Script type="0" cProc="0" GPLFunction="summon_barbarian"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="40000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="1" ID="MD02" Name="Summon_Roc" Description="Summon Roc">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Rate min="0" max="800"/>
+			<Script type="0" cProc="0" GPLFunction="summon_roc"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="30000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="1" ID="MD03" Name="Summon_Varg" Description="Summon Varg">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Rate min="0" max="800"/>
+			<Script type="0" cProc="0" GPLFunction="summon_varg"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="40000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="1" ID="MD04" Name="Summon_Bear" Description="Summon Bear">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Rate min="0" max="800"/>
+			<Script type="0" cProc="0" GPLFunction="summon_bear"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="60000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="1" ID="MD05" Name="Krolm_Teleport" Description="Krolm Teleport">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Short_Teleport"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Teleport_Short_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="20000"/>
+			<SpellType value="4"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+</Majesty>

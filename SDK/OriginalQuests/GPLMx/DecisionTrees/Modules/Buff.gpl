@@ -1,0 +1,67 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+//Run by monsters who want to buff allies before they fight...
+//Function MBuff_Eval_Enemies (agent ThisAgent)
+//Declare
+
+
+//Begin
+
+//	If ($MBuff_Check (ThisAgent) == False)
+//		$Monster_Eval_Enemies (ThisAgent);
+
+//End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This is the function monsters use to buff allies nearby. It is called by MBuff_Check.
+Function MBuff_Check (agent ThisAgent) is boolean
+Declare
+	string	spell_name;
+	list		Monsters, Monsters2;
+	agent 	Monster;
+
+Begin
+	spell_name = $getbestspell(thisagent, #List_Combat_Utility);
+
+	if (spell_name == "nothing")
+		begin
+
+			//No buff spells currently available
+			return False;
+
+		end
+	else
+		begin
+			//Find all monsters within castrange that have the same "family" as me...
+			$ListObjects (ThisAgent, "monster", ThisAgent's "CastingRange", Monsters);
+			Monsters = $ListFamily (Monsters, ThisAgent's "family");
+
+			//See if any monster allies need the spell buff that is available
+			Foreach Monster in Monsters do
+				begin
+					If ($CheckEffector (Monster, Spell_Name) == False)
+						begin
+
+							Monsters2 << Monster;
+
+						end
+
+				end
+
+			//Cast the spell on the closest monster
+			If ($ListSize (Monsters2) > 0)
+				begin
+
+					$CastSpell (ThisAgent, Spell_Name, $ListMember( Monsters2, 1 ) );
+
+					return True;
+				end
+		end
+
+	return False;
+
+End

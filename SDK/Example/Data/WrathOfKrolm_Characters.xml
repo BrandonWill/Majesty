@@ -1,0 +1,155 @@
+<Majesty>
+	<Description type="Unit" subType="Character" ID="BV01" Name="Krolm" Description="Avatar of Krolm">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="4"/>
+			<ImageIDBase value="BV01"/>
+			<Attachment kind="Movement" type="Walk" ID="Class 3"/>
+			<DefaultSound value="Avitar of Krolm"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Experience value="450"/>
+			<MaxHP value="1500"/>
+			<SightRange value="250"/>
+			<Speed value="2"/>
+			<AttackRange min="1" max="1"/>
+			<Intelligence value="10"/>
+			<Strength value="50"/>
+			<MagicResistance value="65"/>
+			<Attack value="100"/>
+			<Parry value="55"/>
+			<Dodge value="45"/>
+			<ArmorBasicDamage value="2"/>
+			<Gold value="500"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="Heals"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="NotSpellTarget"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="h200"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Character" ID="BV02" Name="Enemy_Barbarian" Description="Barbarian">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="5"/>
+			<ImageIDBase value="AVB1"/>
+			<Attachment kind="Movement" type="Walk" ID="Class 1"/>
+			<DefaultSound value="Barbarian"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Cost value="350"/>
+			<Experience value="1200"/>
+			<MaxHP value="20"/>
+			<SightRange value="180"/>
+			<Speed value="1"/>
+			<AttackRange min="1" max="1"/>
+			<Vitality value="20"/>
+			<Artifice value="9"/>
+			<WillPower value="8"/>
+			<Intelligence value="5"/>
+			<Strength value="25"/>
+			<MagicResistance value="20"/>
+			<Attack value="85"/>
+			<Parry value="45"/>
+			<Dodge value="55"/>
+			<ArmorBasicDamage value="2"/>
+			<RecruitDelay value="10000"/>
+			<NameGenType value="NM02"/>
+			<Flags value="Heals"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="h011"/>
+			<AllowedWeapon value="Axeclub"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Character" ID="BV03" Name="Krolm_Eagle" Description="Roc">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<Info value="BlockFlying"/>
+			<CanUse value="Monster"/>
+			<Menu value="5"/>
+			<ImageIDBase value="BVG1"/>
+			<Attachment kind="Movement" type="Walk" ID="Small Flyer"/>
+			<DefaultSound value="Eagle"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Experience value="150"/>
+			<MaxHP value="25"/>
+			<SightRange value="160"/>
+			<Speed value="3"/>
+			<AttackRange min="1" max="1"/>
+			<Intelligence value="8"/>
+			<Strength value="7"/>
+			<Attack value="25"/>
+			<Parry value="25"/>
+			<Dodge value="50"/>
+			<Gold value="30"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="h093"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Character" ID="BV04" Name="Krolm_Bear" Description="Hellbear">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="5"/>
+			<ImageIDBase value="BVF1"/>
+			<Attachment kind="Movement" type="Walk" ID="Class 1"/>
+			<DefaultSound value="Bear"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Experience value="450"/>
+			<MaxHP value="45"/>
+			<SightRange value="160"/>
+			<Speed value="1"/>
+			<AttackRange min="1" max="0"/>
+			<Intelligence value="8"/>
+			<Strength value="16"/>
+			<Attack value="50"/>
+			<Parry value="35"/>
+			<Dodge value="25"/>
+			<Gold value="40"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="h107"/>
+		</Game>
+	</Description>
+	<Description type="Unit" subType="Character" ID="BV05" Name="Krolm_Wolf" Description="Varg">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="5"/>
+			<ImageIDBase value="BVK1"/>
+			<Attachment kind="Movement" type="Walk" ID="Class 3"/>
+			<DefaultSound value="Wolf"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Experience value="400"/>
+			<MaxHP value="45"/>
+			<SightRange value="160"/>
+			<Speed value="3"/>
+			<AttackRange min="1" max="1"/>
+			<Intelligence value="8"/>
+			<Strength value="15"/>
+			<Attack value="50"/>
+			<Parry value="40"/>
+			<Dodge value="35"/>
+			<Gold value="35"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="h097"/>
+		</Game>
+	</Description>
+</Majesty>

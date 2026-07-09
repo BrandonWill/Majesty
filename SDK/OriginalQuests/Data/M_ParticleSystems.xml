@@ -1,0 +1,591 @@
+<Majesty>
+	<Description type="Unit" subType="ParticleSystem" ID="XL00" Name="placeholder_spell" Description="placeholder_spell">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="AllocateLocalID"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL00"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="magical_repair"/>
+			<DefaultSound value="Wizard_Curse_Repair"/>
+			<InitialParticles value="2"/>
+			<MaxParticles value="24"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="2000.0, 2000.0, 2000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.07"/>
+				<RadiusVariance value="3.0"/>
+				<DirectionVariance value="34.0"/>
+				<Rate value="8.0"/>
+				<Lifespan value="2200"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="10000"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="3.0"/>
+				<InitialSpeedVariance value="4.0"/>
+				<Gravity value="0.0, 0.0, -1.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="34.0"/>
+				<DeathSize value="1.0"/>
+				<SizeTime in="0.3" out="0.3"/>
+				<FadeTime in="0.3" out="0.1"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL20" Name="Meteor_Storm_attachment" Description="Meteor Storm">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL20"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="1000.0, 1000.0, 1000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.0, 0.0, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.05"/>
+				<RadiusVariance value="0.5"/>
+				<DirectionVariance value="90.0"/>
+				<Rate value="8.0"/>
+				<Lifespan value="4294967295"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="1000"/>
+				<LifespanVariance value="0.4"/>
+				<InitialSpeed value="3.0"/>
+				<InitialSpeedVariance value="0.4"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="0.1"/>
+				<MaxSize value="7.0"/>
+				<DeathSize value="0.2"/>
+				<SizeTime in="0.5" out="0.3"/>
+				<FadeTime in="0.1" out="0.5"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL21" Name="Meteor_Storm_Missile_attachment" Description="Meteor Storm">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL21"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="2"/>
+			<MaxParticles value="8"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="1000.0, 1000.0, 1000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.0, 0.0, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.04"/>
+				<RadiusVariance value="0.0"/>
+				<DirectionVariance value="360.0"/>
+				<Rate value="18.0"/>
+				<Lifespan value="4294967295"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="300"/>
+				<LifespanVariance value="0.5"/>
+				<InitialSpeed value="4.0"/>
+				<InitialSpeedVariance value="0.4"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="0.1"/>
+				<MaxSize value="7.0"/>
+				<DeathSize value="0.2"/>
+				<SizeTime in="0.5" out="0.3"/>
+				<FadeTime in="0.1" out="0.2"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL02" Name="fire_ball" Description="Fireball">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL02"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="fire_ball_unit_created"/>
+			<DefaultSound value="Fireball"/>
+			<InitialParticles value="8"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="1000.0, 1000.0, 1000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.9"/>
+				<RadiusVariance value="0.2"/>
+				<DirectionVariance value="0.5"/>
+				<Rate value="10.0"/>
+				<Lifespan value="1500"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="1000"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="1.0"/>
+				<InitialSpeedVariance value="0.0"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="1.0"/>
+				<DeathSize value="1.0"/>
+				<FadeTime in="0.2" out="0.7"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL14" Name="dragon_breath_splat" Description="Dragon Breath">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL14"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="8"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="2000.0, 2000.0, 2000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="1.0"/>
+				<RadiusVariance value="0.5"/>
+				<DirectionVariance value="0.5"/>
+				<Rate value="25.0"/>
+				<Lifespan value="500"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="700"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="8.0"/>
+				<InitialSpeedVariance value="0.3"/>
+				<Gravity value="0.0, 0.0, -2.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="2.0"/>
+				<MaxSize value="34.0"/>
+				<DeathSize value="1.0"/>
+				<SizeTime in="0.3" out="0.3"/>
+				<FadeTime in="0.2" out="0.7"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL15" Name="power_shock_effector" Description="Power Shock">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL15"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="4"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="1000.0, 1000.0, 1000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.4, 0.4, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.9"/>
+				<RadiusVariance value="0.2"/>
+				<DirectionVariance value="0.5"/>
+				<Rate value="16.0"/>
+				<Lifespan value="200"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="600"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="2.0"/>
+				<InitialSpeedVariance value="0.0"/>
+				<Gravity value="0.0, 0.0, -4.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="0.1"/>
+				<MaxSize value="3.0"/>
+				<DeathSize value="1.0"/>
+				<FadeTime in="0.1" out="0.7"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL16" Name="tower_blast_particle" Description="Tower Blast">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL16"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="2000.0, 2000.0, 2000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.6"/>
+				<RadiusVariance value="360.0"/>
+				<DirectionVariance value="34.0"/>
+				<Rate value="50.0"/>
+				<Lifespan value="200"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="600"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="2.0"/>
+				<InitialSpeedVariance value="0.8"/>
+				<Gravity value="0.0, 0.0, -1.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="34.0"/>
+				<DeathSize value="1.0"/>
+				<SizeTime in="0.3" out="0.3"/>
+				<FadeTime in="0.1" out="0.5"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL07" Name="FireBlast_particle" Description="Fire Blast">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL07"/>
+			<AttachmentPointID value="2"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="2000.0, 2000.0, 2000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="1.0"/>
+				<RadiusVariance value="0.5"/>
+				<DirectionVariance value="0.5"/>
+				<Rate value="25.0"/>
+				<Lifespan value="500"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="800"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="8.0"/>
+				<InitialSpeedVariance value="0.3"/>
+				<Gravity value="0.0, 0.0, -2.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="2.0"/>
+				<MaxSize value="34.0"/>
+				<DeathSize value="1.0"/>
+				<SizeTime in="0.3" out="0.3"/>
+				<FadeTime in="0.2" out="0.7"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL17" Name="Magical_Repair_Effector" Description="Magical Repair">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL17"/>
+			<AttachmentPointID value="2"/>
+			<Script type="0" cProc="0" GPLFunction="magical_repair"/>
+			<DefaultSound value="Wizard_Curse_Repair"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="2000.0, 2000.0, 2000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.2, 0.2, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.6"/>
+				<RadiusVariance value="360.0"/>
+				<DirectionVariance value="34.0"/>
+				<Rate value="50.0"/>
+				<Lifespan value="200"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="600"/>
+				<LifespanVariance value="0.0"/>
+				<InitialSpeed value="2.0"/>
+				<InitialSpeedVariance value="0.8"/>
+				<Gravity value="0.0, 0.0, -1.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="34.0"/>
+				<DeathSize value="1.0"/>
+				<SizeTime in="0.3" out="0.3"/>
+				<FadeTime in="0.1" out="0.5"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XL08" Name="energy_blast_particle" Description="Energy Blast">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="13"/>
+			<ImageIDBase value="XL08"/>
+			<AttachmentPointID value="13001"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="1"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-1000.0, -1000.0, -1000.0" max="1000.0, 1000.0, 1000.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.0, 0.0, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.1"/>
+				<RadiusVariance value="0.5"/>
+				<DirectionVariance value="90.0"/>
+				<Rate value="30.0"/>
+				<Lifespan value="300"/>
+				<Recycle value="0"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="800"/>
+				<LifespanVariance value="0.5"/>
+				<InitialSpeed value="4.0"/>
+				<InitialSpeedVariance value="0.4"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="0.1"/>
+				<MaxSize value="7.0"/>
+				<DeathSize value="0.2"/>
+				<SizeTime in="0.5" out="0.3"/>
+				<FadeTime in="0.1" out="0.4"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XLSH" Name="Smoke_Large_Heavy" Description="Smoke">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="12"/>
+			<ImageIDBase value="XLSL"/>
+			<AttachmentPointID value="0"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="0"/>
+			<MaxParticles value="20"/>
+			<Bounds min="-10.0, -10.0, 0.0" max="10.0, 10.0, 10.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.0, 0.0, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.5"/>
+				<RadiusVariance value="1.0"/>
+				<DirectionVariance value="25.0"/>
+				<Rate value="6.0"/>
+				<Lifespan value="4294967295"/>
+				<Recycle value="0"/>
+				<Flags value="IsPerformanceHog"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="4000"/>
+				<LifespanVariance value="0.2"/>
+				<InitialSpeed value="3.4"/>
+				<InitialSpeedVariance value="0.2"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="1.0"/>
+				<DeathSize value="1.0"/>
+				<FadeTime in="0.1" out="0.9"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="ParticleSystem" ID="XLSL" Name="Smoke_Large" Description="Smoke">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="DontBlock"/>
+			<Info value="NoGPLAgent"/>
+			<Menu value="12"/>
+			<ImageIDBase value="XLSL"/>
+			<AttachmentPointID value="0"/>
+			<DefaultSound value="0"/>
+			<InitialParticles value="0"/>
+			<MaxParticles value="10"/>
+			<Bounds min="-10.0, -10.0, 0.0" max="10.0, 10.0, 10.0"/>
+			<Emitter>
+				<Type value="Area"/>
+				<Type value="Column"/>
+				<Velocity value="0.0, 0.0, 0.0"/>
+				<Acceleration value="0.0, 0.0, 0.0"/>
+				<Offset value="0.0, 0.0, 0.0"/>
+				<SurfaceNormal value="0.0, 0.0, 1.0"/>
+				<Radius value="0.5"/>
+				<RadiusVariance value="1.0"/>
+				<DirectionVariance value="20.0"/>
+				<Rate value="3.0"/>
+				<Lifespan value="4294967295"/>
+				<Recycle value="0"/>
+				<Flags value="IsPerformanceHog"/>
+			</Emitter>
+			<Particle>
+				<Lifespan value="4000"/>
+				<LifespanVariance value="0.2"/>
+				<InitialSpeed value="3.0"/>
+				<InitialSpeedVariance value="0.2"/>
+				<Gravity value="0.0, 0.0, 0.0"/>
+				<BirthColor value="0.0, 0.0, 0.0, 0.0"/>
+				<MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>
+				<DeathColor value="0.0, 0.0, 0.0, 0.0"/>
+				<BirthSize value="1.0"/>
+				<MaxSize value="1.0"/>
+				<DeathSize value="1.0"/>
+				<FadeTime in="0.1" out="0.9"/>
+				<JitterOrientation value="0.0, 0.0, 0.0"/>
+				<JitterDisplacement value="0.0, 0.0, 0.0"/>
+				<BirthSpinRate value="0.0"/>
+				<MidlifeSpinRate value="0.0"/>
+				<DeathSpinRate value="0.0"/>
+			</Particle>
+		</Engine>
+	</Description>
+</Majesty>

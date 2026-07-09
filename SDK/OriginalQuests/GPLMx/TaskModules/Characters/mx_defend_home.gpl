@@ -1,0 +1,61 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function defend_home_task(agent thisagent)
+
+declare
+	agent target;
+	integer targetrange;
+	list enemies_near_home;
+
+begin
+	target = thisagent's "target";
+
+	if ($isdead(target))
+		begin
+			// go do something else
+			// like get revenge!
+			$debugout("I need to get revenge, my home is destroyed!");
+			thisagent's "target" = thisagent;
+			thisagent's "activescript" = $travel_to;
+			$move(thisagent,thisagent's "destination");
+			thisagent's "backscript" = $hero_wander;
+			thisagent's "counter" = 0;
+		end
+	else
+		begin
+			enemies_near_home = $list_enemies_seen(target,300);
+			if ($listsize(enemies_near_home) == 0)
+				begin
+					target's "in_danger" = FALSE;
+					thisagent's "activescript" = thisagent's "basicscript";
+					$debugout("No more enemies near home.");
+				end
+			else
+				begin
+					targetrange = $distanceBetweenAgents(thisagent,target);
+
+					if (targetrange > $gettargetrange(thisagent))
+						begin
+							// move towards target
+							thisagent's "destination" = $locationof(target);
+							thisagent's "activeScript" = $travel_to;
+							thisagent's "backScript" = $defend_home_task;
+//							$move(thisagent,thisagent's "destination");
+//							thisagent's "target" = target;
+							$move(thisagent,target);
+							$debugout("Moving towards home.");
+						end
+					else
+						begin
+//							thisagent's "target" = $nullagent();
+							thisagent's "target" = $listmember(enemies_near_home,1);
+							thisagent's "activescript" = $berserk_defend;
+							$debugout("I got home to defend it by going berserk!");
+						end
+				end
+		end
+end

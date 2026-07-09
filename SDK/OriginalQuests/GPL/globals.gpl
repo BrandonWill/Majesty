@@ -1,0 +1,886 @@
+/////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////
+
+// how much each statue boosts loyalty of heroes in town
+expression #statue_loyalty_boost 5
+expression #gardens_loyalty_boost 15
+
+// how close is too close for the purposes of fleeing to?
+expression #Near_home_dist 125
+
+expression #near_inn_dist 150
+
+// how much a hero's maxattackrange is reduced for following for bow support
+expression #follow_support_buffer 65
+
+// a hero starts with #hero_start_gold + randomnumber(#hero_start_gold) gold
+expression #hero_start_gold 50
+
+// override a buildings state
+expression #building_force_active 2
+expression #building_force_inactive 1
+expression #building_normal_state 0
+
+
+expression #Player_1 0 //This is the Human Player in epic quest/single-player freestyle games
+expression #Player_2 1 //Call this expression for access to Player 2
+expression #Player_3 2
+expression #Player_4 3
+expression #Monster_Player 7 //use this expression when spawning onto the Monster Player
+
+//Distance within which Guardhouse will fire arrows at bad guys
+expression #guardhouse_arrow_range 150
+
+// The hero level required to allow you to edit their name
+expression #HeroNameEditingLevel 10
+
+
+// mod much any extra range a character has is divided by in order
+// to give them an extra shot. was 45 but uppded to 65 to try to get rangers
+// more accurate
+expression #extra_shot_mod 65
+
+//General spawn cap for monsters (they won't spawn if this many monsters are already on the map) Overriden in some special
+//cases in EQuests
+expression #Monster_Spawn_Cap 85
+
+//Largest discrepancy between a unit's destination and the location of their moving target that a unit will
+//tolerate before they decide to issue another more accurate move order.
+expression #Destination_Target_Discrepency_Tolerance 75
+
+//Max number of followers the Priestess can have at a time
+expression #Max_Number_Priestess_Followers 3
+
+//Max number of followers the Cultist can have at a time
+expression #Max_Number_Cultist_Followers 3
+
+// how close a charcter needs to be to the edge of the screen before they think
+// they can leave the map
+expression #edge_buffer 64
+
+//Number of heroes that have to die before a Graveyard is created
+expression #Graveyard_limit 15
+
+// how long gravestones wait before disappearing
+expression #Gravestone_lifespan 10000
+expression #Gravestone_lifespan_max 90000
+// how long rubble waits before disappearing
+expression #RubbleCleanupPeriod 60000
+
+// period to check for recruiting a hero
+// will be recruited if individual recruitment delay is up
+expression #DelayRecruitCheckPeriod 1000
+
+// healing and poison values:
+// time interval that hitpoint deltas are checked
+expression #PeriodicHPDeltaPeriod 1000
+// frequency for poisoning and healing
+expression #PoisonInterval 1
+expression #HealingInterval 5
+
+//Duration that a Wizard's Tower enchantment lasts for
+expression #Wiz_Tower_Enchantment_Duration 90000
+
+// cost in crystals for a wizard's tower
+expression #WizTowerCrystalCost 100
+
+// cost in gold to upgrade a wizard's tower
+expression #WizTowerUpgradeCost 400
+
+// cost for guild skills
+expression #RageOfKrolmCost 1500
+expression #AssemblyCost 500
+expression #MoveCampCost 800
+
+// initial and delta values for reward flags
+expression #RewardInitial 0
+expression #RewardDelta 100
+
+// limits for auto spawned buildings in your kingdom
+// number of heroes that need to live in town before a general house is created
+expression #Population_waiting_limit 4
+
+// number of buildings built in a town before sewers need building
+expression #Sewer_building_limit 9
+
+// amout of gold that is 'vaporized' before spawning a troll in town
+expression #Troll_gold_limit 1000
+
+// amount of markets, blacksmiths and inns needed for a fountain to be build
+expression #fountain_building_limit 5
+
+// number of trips to the blacksmith before a minotaur autospawns
+expression #minotaur_blacksmith_limit 25
+
+
+//This is for Global Random Coord. Controls how close to the edge of the map
+//the function will allow the RandomCoord it returns to be
+expression #Edge_Tolerance 200
+
+//Execution time for 'normal' activescripts/threads (Hero's activescripts, for instance)
+expression #Normal_Cycle 300
+expression #Henchmen_Cycle 500
+expression #Flag_Cycle 500
+expression #Lair_cycle 1200
+expression #Fairgrounds_Cycle 1100
+
+//Amount of time Fairgrounds run Dump_Contestants for before they return to normal polling/running tourneys
+//used to make sure Heroes get reset properly when Tourney changes
+expression #Fairgrounds_Reset_Time 10000
+
+expression #palace_revenue_cycle 20000
+expression #palace_revenue_amount 5
+
+expression #Housing_revenue 8
+expression #housing_random 8
+
+// fairgrounds globals
+expression #Number_of_Tourney_Rolls 10
+expression #Max_Heroes_In_Tourney 8
+expression #fairgrounds_gold_winner 10
+expression #Tourney_Entrance_Fee 10
+expression #Percent_Chance_Goto_Combo_Tourney 60
+
+
+//The distance at which a healer will be ressurected by their Home Guild
+expression #Healer_Reborn_Distance 50
+
+//Distance within which Heroes will find Fairgrounds attractive enough to consider participating in a Tourney
+expression #Fairgrounds_Attraction_Range 1500
+
+//Duration heroes stay in the fairgrounds for
+expression #Compete_at_Fair_Duration 25000
+
+//The delay that a Fairgrounds waits to open again after running a Tourney
+expression #Fairgrounds_Open_Delay 60000
+
+//Percent Chance that a Hero will look for Fairgrounds to Raise Stats
+expression #Percent_Chance_To_Buy_Stats 50
+
+//This is multiplied by a Hero's level and rolled against d100 to see if the Hero gets a bonus count in a Magic tourney
+expression #Magic_Tourney_Level_Bonus 8
+
+//The amount of gold that the Brothel charges per visit
+expression #Brothel_Cost 200
+
+//These are for the Gambling Hall, per visit
+expression #Minimum_Wager 1
+expression #Maximum_Wager 10
+
+//How much it costs to visit an Inn. NOTE: if heroes don't have this, they will give what they have.
+//It does not influence the decision to go the the Inn
+expression #Price_Per_Inn_Visit 12
+
+// Prices of marketplace items
+expression #Heal_Potion_Price 25
+expression #Ring_Protection_Price 500
+expression #Market3_Item_Price 1000
+
+//MAx number of Healing Potions that a Hero will carry
+expression #Max_Heal_Potions 5
+
+//Amount of Healing each Heal Potion gives
+expression #Heal_Potion_Recovery 30
+
+// how many healing herbs are required for a ranger to make a healing potion
+expression #healing_herb_limit 5
+
+expression #Poison_plant_limit 5
+
+//Time that a Ranger will stay offmap before returning back --- called in Journey_Offmap
+expression #Journey_Offmap_Duration 90000
+
+//A $RandomNumer, this is how much Gold the Ranger gets when he Journey offmap
+expression #Offmap_Gold 700
+
+//Amount of gold that prompts Taxman to return to the Palace
+expression #TaxMan_Return_Gold_Threshold 200
+
+//Caravan's arrivedist
+expression #Caravan_Arrivedist 30
+
+//Duration that market day lasts for
+expression #Market_Day_Duration 45000
+//Amount of gold a market gets for "Market Day" -- Base + $RandomNumber (Random)
+//expression #Level_1_Marketday_Base 200
+//expression #Level_1_Marketday_Random 50
+//expression #Level_2_Marketday_Base 300
+//expression #Level_2_Marketday_Random 100
+//expression #Level_3_Marketday_Base 500
+//expression #Level_3_Marketday_Random 200
+
+expression #market_day_bonus 75
+
+//When a caster charms a monster, this is the duration the monster is frozen before they come under the caster's control
+expression #Charm_Delay_Time 3300
+
+//The delay that takes place before a creature stops being controlled (usually after their Leader dies)
+expression #Stop_Being_Controlled_Delay 3300
+
+//Distance to closest building at which Lairs become "Annoyed", and pump up their spawn rate.
+//expression #Lair_Annoyed_Distance 200
+
+
+//Max speed that lairs will spawn monsters
+expression #Max_Lair_Spawn_Time 15000
+
+//Millisecond rate at which "Annoyed" Lairs spawn
+//expression #Lair_Annoyed_Spawn_Rate 5000
+
+//Subtacted from a Lair's Spawn Rate every time a creature is spawned, so the longer the game, the faster the Spawn Rate
+//This gets overriden if the Lair in question's Lair_History_Mod attrib is greater than 0
+expression #Lair_History_Modifier 2
+
+// max amount of gold a lair 'regenerates' (gains) each time it spawns a monster
+expression #lair_gold_regen 5
+
+// the chance ( * difficulty) a destroyed lair will reward a hero with somethine
+expression #lair_armor_chance 4
+expression #lair_weapon_chance 5
+
+//This is mult by the Dist To Closest building and added to the Sleeper_Base_Callback to arrive at the Callback time for a Sleeper
+expression #Sleeper_Callback_Mod 50
+//This is the Base time that a sleeper stays out for
+expression #Sleeper_Base_Callback 20000
+
+//Percent chance that a Bomber will pick a new building target after it makes and attack
+expression #Bomber_Pick_New_Target_Chance 20
+
+
+//Percent Chance that Fervus will spawn an Animal for Cultist that do not have their full complement of Animals.
+expression #Percent_Chance_Fervus_Spawns_Animal 50
+
+//These pertain to the Trading Post sending Caravans. The first one is the base delay,
+//the second is a random that is added on top of that
+expression #Caravan_Base_Send_Interval  60000
+expression #Caravan_Random_Send_Mod		70000
+expression #Min_Dist_to_Market_For_Caravan_Spawn 1000
+// what the distance to market is divided by to come up with a gold amount
+expression #caravan_gold_mod 5
+
+expression #caravan_random_gold 100
+
+//Number of times a City Guard will wander around his Guardhouse
+expression #Guard_Wander_Number 10
+
+// time before spawning (or waking) the following:
+expression #initial_peasant_delay 5000
+expression #initial_tax_collector_delay 17000
+expression #initial_Palace_guard_delay 500
+expression #peasant_delay 10000
+expression #tax_collector_delay 18000
+expression #Guard_Spawn_Time 17000
+expression #Peasant_sleep_time 15000
+expression #Tax_collector_sleep_time 17000
+
+expression #gnome_camp_delay 15000
+expression #Brothel_delay 29300
+expression #gambling_hall_delay 31500
+expression #gazebo_delay 27600
+
+//If the number of times the Garrisoner has moved around the guardhouse is evenly divisble by
+//this expression, then they enter the Guardhouse
+//expression #Garrison_Divisible_By_to_Enter 4
+//Max number of times a Garrisoner will wander around a Guardhouse before they re-execute their
+//decision tree
+//expression #Max_Garrison_Wanders 30
+
+//percent chance that a hero will just stop garrisoning a Guardhouse
+expression #Stop_Garrisoning_Chance 5
+
+
+//Used in Visit_Building, this is the max number of farthest buildings a hero will consider
+expression #Max_Farthest_Building_Choices 3
+
+//Amount of Gold an Elf gets when they Visit an Inn (Elves don't pay anything to visit)
+expression #Elf_Visits_Inn_Gold 30
+
+//Amount Elves make when they Entertain a Market
+expression #Elf_Entertains_Shop_Gold 25
+
+//Duration that Heroes will stay at buildings while they do stuff
+//Duration Hero will stay at a Level2 Rogue's Guild when Poisoning their weapons
+expression #Poison_visit_duration 12000
+//Duration Hero will stay at an Inn or garden
+expression #Inn_visit_duration 15000
+expression #Garden_Visit_Duration 17500
+expression #Sulk_Duration 45000
+//Duration Heroes will stay at a Marketplace when buying Potions
+expression #Buy_Potion_Visit_Duration 10000
+//Duration Heroes will stay at a Marketplace when buying a Ring of Protection
+expression #Buy_Prot_Ring_Visit_Duration 15000
+//Duration Heroes stay at the Market when purchasing a Marketplace Level 3 Item
+expression #Buy_Market3_Item_Visit_Duration 20000
+//Duration Heroes will stay at a WizGuild when enchanting equipment
+expression #Enchant_Equipment_Visit_Duration 17000
+//Duration Heroes will stay at a BlackSmith when upgrading equipment
+expression #Upgrade_Equipment_Visit_Duration 19000
+//Duration Heroes stay at Fairgrounds to upgrade equipment
+expression #Boost_Stats_Fairgrounds_Duration 15000
+//This is how long Elves stay at a Market when they are Entertaining it
+expression #Entertain_Shop_Duration 10000
+
+//Amount Heroes spend per Weapon/Armor upgrade at the Blacksmith
+expression #Cost_Per_Struct_Upgrade1 100
+expression #Cost_Per_Struct_Upgrade2 200
+expression #Cost_Per_Struct_Upgrade3 300
+
+// how much to multiply above cost for armor
+expression #armor_multiplier 3
+
+//Amount Heroes spend per Weapon/Armor enchantment at the Wizard's Guild
+expression #Cost_Per_Magic_Enchantment1 200
+expression #Cost_Per_Magic_Enchantment2 400
+expression #Cost_Per_Magic_Enchantment3 800
+
+//How much it costs to raise a stat at the Fairgrounds
+expression #Stat_Boost_Price 400
+
+// the radius around a monster which it 'drops' its gold to characters
+expression #gold_drop_radius 350
+
+// number of times in a row a hero will wander
+expression #wander_limit 6
+// max distance the hero may wander from its present spot
+expression #wander_dist 100
+
+expression #explore_flag_dist 75
+
+// how many points are removed for each other hero attempting a flag
+// when a hero evaluates how much they want to go to the flag
+expression #explore_flag_mod 10
+
+// how many points are removed for each other hero attempting a flag
+// when a hero evaluates how much they want to go to the flag
+expression #attack_flag_mod 2
+
+// how much a hero's loyalty is multiplied by when they are trying to attack
+// their own buildings, etc // was 2000
+expression #attack_flag_loyalty_mod 85
+
+//Minimum distance that must be between Marketplaces for them to Auto_Revenue at full effectiveness
+expression #Marketplace_Revenue_Threshold 500
+
+//Percentage that markets pay if there is another Market that is too close
+expression #Market_Too_Close_Revenue_Percent 25
+
+//
+expression #Extra_market_bonus 5
+expression #General_house_bonus 3
+expression #Palace2_bonus 25
+expression #Palace3_bonus 75
+
+//SIGHTRANGE MODIFIERS
+//all use the syntax $getattribute (agent, #ATTRIB_SightRange) * EXPRESSION
+
+//Mod for Distance that Monsters will pursue units within. If target gets further than this, they get away.
+expression #Mon_Atck_Obj_Pursuit_Range_Mod 2
+
+
+//Mod for Distance that Monsters will pursue units tha ARE ON THEIR HOSTILES LIST. Used in Monster_Attack_Object
+expression #Mon_Atck_Hostiles_Pursuit_Range_Mod 10
+
+//Mod for Distance Returning Guardian will Pursure units that ARE ON THEIR HOSTILES LIST
+expression #Guardian_Atck_Hostiles_Pursuit_Range_Mod 5
+
+//Mod for radius Priestess searches in to Control Undead
+expression #Control_Undead_Mod 3
+
+//Mod for radius Cultist searches in to Charm Monsters
+expression #Charm_Animal_Mod 3
+
+//Mod for radius to plant a resource in
+expression #Seed_Resource_Mod 5
+
+//Mod to look for Fairgrounds to boost stats at
+expression #Purchase_Stats_Sight_Mod 5
+
+//Mod for radius Looters search for Lootables in
+expression #Lootables_Search_Mod 5
+
+//If there aren't any lootables around, this Mods the distance they look for a random coord to wander to
+expression #Looter_Wander_Mod 4
+
+//Mod for radius PCHunter searches for targets in
+expression #PCHunter_Find_Target_Mod 10
+//Mod for PCHunter looking for henchmen
+expression #PCHunter_Find_Hench_Mod 3
+
+//Range that a Bomber tries to find a target in before they search the whole map
+expression #Bomber_Preferred_Range 1500
+
+
+// how many chars a hero can have as supporting bowmen
+expression #support_max 3
+// mod radius chars look in for targets to support with ranged attacks
+expression #Follow_support_Check_Mod 6
+//Mod for radius that Healer looks for targets to Follow and Heal in
+expression #Follow_Heal_Check_Mod 5
+
+//Mod for Radius around Guardian's "coord_home" that Hooligans pick a coordinate to move to within
+expression #Hooligan_Wander_Mod 3
+
+//Mod for Radius within which units wander around the object they are guarding/defending
+expression #Def_Object_Wander_Mod 3
+
+//Mod on how difficult a Solarii thinks a Lair is. Higher numbers make them estimate it as easier
+expression #Solarii_Raid_Find_Lair_Mod 2
+
+
+//Mod for radius within which call to arms will make heroes go berserk
+//expression #Assembly_Go_Berserk_Mod 3
+
+//Mod for how far a hero will search for libraries. Multiplied by their SgtRng.
+expression #Library_Search_Mod 4
+
+// amount of experience rewarded for certain non-combat tasks
+expression #Healer_spell_exp_bonus 3
+expression #spell_exp 100
+expression #explore_exp 250
+expression #Tourney_exp 1000
+expression #Steal_exp 200
+expression #lair_exp 75
+expression #resource_exp 50
+expression #offmap_exp 3000
+expression #garrison_exp 250
+expression #build_exp 75
+expression #Elf_Visits_Inn_Exp 175
+expression #Elf_Entertains_Shop_Exp 175
+expression #attack_hero_exp 150
+expression #attack_other_exp 120
+expression #familiar_explore_exp 200
+expression #familiar_fight_exp 150
+expression #Wiz_Learn_at_Library_Exp 100
+expression #Gen_Hero_Learn_at_Library_Exp 50
+expression #Open_Chest_Exp 50
+expression #Library_Study_Exp_Base 100
+expression #Library_Study_Exp_Mod 100
+
+// bonus per level to attackrange and sightrange if a hero has 'rangeincrease'
+expression #level_range_increase 10
+expression #range_increase_max 550
+
+expression #familiar_range 1000
+
+// what the xplevel of a hero is divided by before the combat exp is divided by the result
+expression #combat_exp_div 2
+
+// how much a hero's vitality is divided by for gaining HP on Levelup
+expression #vitality_div 4
+
+// how much a hero's strength is divided by to give a damage bonus
+expression #strength_div 8
+
+// how much a hero's intelligence is divided by to give a spell damage bonus
+expression #intelligence_div 4
+
+// how much a hero's greed is divided by for attraction to reward flags
+expression #greed_div 4
+
+// how much a reward on a flag is multiplied in order to overcome the distance factor
+expression #reward_multiplier 10
+
+// how much the armor_magic_bonus of a hero is multiplied by in order to reduce damage to them from magical attacks
+expression #armor_magic_mult 2
+
+// the delay between activescripts of magically building buildings.
+expression #magical_build_delay 450
+// amount of building HP added per magical cycle
+expression #magical_build_amount 5
+expression #Deathmatch_magical_build_amount 2
+
+//expression for how much buildings magical-repair for (like the Wiz Guild in Wiz Curse)
+expression #magical_repair_amount 10
+
+// amount of HP added per hammer swing by peasants
+expression #basic_build_amount 4
+expression #Deathmatch_repair_amount 2
+
+// a bonus added to the strength of a hero when building, per hammer swing
+expression #hero_build_bonus 3
+expression #Deathmatch_Hero_Repair_Cap 6
+
+// the time intervals between when the palace checks to see if it is upgraded yet
+expression #palace_upgrade_check 15000
+
+// the number of gnome camps you can have in your city
+expression #max_gnome_camps 2
+
+//Number of times to execute tourney before winners/leaders are decreed
+expression #Fairgrounds_Rolls_For_Winner 5
+
+// the range spells can be cast around the wizard's guilds/towers
+expression #SpellCastRange		800
+// the bonus range around each upgraded guild
+// (e.g. if is 100, and base is 800, level 2 is 900 and level 3 is 1000)
+expression #LevelSpellRangeBonus	250
+
+// the distance within which there must be another wiz tower or wiz guild
+// in order to place a wiz tower
+expression #wiz_tower_range 800
+
+expression #ballista_tower_range 800
+
+expression #think_bubble_time 1000
+expression #home_bubble_time 3000
+expression #danger_bubble_time 1000
+expression #talk_bubble_time 2500
+
+expression #Elf_Auto_Revenue_Mod 2
+
+expression #Deathmatch_Elf_Auto_Revenue_Mod 1.5
+
+//integer amount to modify distances by when a hero succeeds at their Loyalty roll when target is owned by a diff. player
+expression #Loyalty_Dist_Diff_Player_Mod 3
+//integer amount to modify distances by when target is owned by a diff. team
+expression #Loyalty_Dist_Diff_Team_Mod 10
+//RandomNumber to roll against loyalty if building is owned by another PLAYER. If failed, not loyal.
+expression #Loyalty_Other_Player_Roll 30
+//RandomNumber to roll against loyalty if building is owned by another TEAM. If failed, not loyal.
+expression #Loyalty_Other_Team_Roll 20
+
+// the amount subtracted from d100 when rolling against loyalty to determine if a hero steals froma build of the same player as its self
+expression #steal_player_mod 85
+
+// the amount subtracted from a d100 when rolling against loyalty to determine if a hero will steal from a building on its same team
+expression #steal_team_mod 60
+
+// list types for parameterized spell casting
+expression #List_None 0
+expression #List_Attack 1
+expression #List_Combat_Utility 2
+expression #List_Other 3
+expression #List_Travel 4
+
+
+expression #chest_random_gold 100
+expression #chest_starting_gold 50
+
+//Library evaluation constants
+
+//Max magic resist level that a Library will train a hero in Magic Resistance
+expression #max_library_train_max_resist 50
+//Intel mod for checking to see if a hero will learn a gen spell at the library (neg. mod)
+expression #libary_Learn_Genspell_Intel_Mod 10
+//Mod for intel to see whether a wizard will train. Makes roll harder.
+expression #Wiz_Train_Intel_Mod 2
+
+//Amount that a library will boost a hero's intel
+expression #Library_Intel_Boost 1
+//Amount that a library will boost a hero's magic resistance
+expression #Libary_Magic_Resist_Boost 5
+
+//cost per training intel at library
+expression #Library_Train_Wiz_Intel_Price 250
+//cost per training MResist at library
+expression #Library_Train_MResist_Price 300
+//Cost to learn Power Shock at the library
+expression #Library_Power_Shock_Price 300
+//Cost to learn Flame Shield at the library
+expression #Library_Flame_Shield_Price 300
+
+//percent that extortion deducts from all taxable gold before the player receives it
+expression #extortion_percent_deduction 35
+//percent that extortion deducts from all hero's gold
+expression #Extortion_Hero_Percent 20
+
+//duration of Rage of Krolm
+expression #Rage_Krolm_Duration 25000
+expression #Deathmatch_Rage_Krolm_Duration 45000
+
+
+//boosts associated with Rage of Krolm. These are applied when it is started, and decremented when it ends
+expression #Rage_Strength_Boost 10
+expression #Rage_HtoH_Boost 10
+expression #Rage_Dodge_Boost 10
+expression #Rage_Parry_Boost 10
+expression #Rage_MaxHP_Boost 10  //HP are also boosted by this
+expression #Rage_Self_Est_Boost 1
+expression #Deathmatch_Rage_Armor_Bonus 4
+
+// cost for player-cast spells
+expression #SpellCost_Farseeing			200
+expression #SpellCost_Invisibility		400
+expression #SpellCost_LightningBolt		400
+expression #SpellCost_AntiMagicShield	500
+expression #SpellCost_SuperCharge		500
+expression #SpellCost_LightningStorm	1600
+expression #SpellCost_FireStrike		350
+expression #SpellCost_SunScorch			1200
+expression #SpellCost_WingedFeet		400
+expression #SpellCost_WindStorm			1000
+expression #SpellCost_AgrelaHealing		200
+expression #SpellCost_Blessing			100
+expression #SpellCost_Resurrection		1500
+expression #SpellCost_AnimateBones		800
+expression #SpellCost_Wither			300
+expression #SpellCost_ReAnimate			2000
+expression #SpellCost_StoneSkin			200
+expression #SpellCost_Petrify			1500
+expression #SpellCost_Vigilance			800
+expression #SpellCost_FervusHealing		400
+expression #SpellCost_Vines				1000
+expression #SpellCost_IllusionaryHero	500
+
+// ranges for teleport spells
+expression #Teleport_Range				1400
+expression #Teleport_Short_Range		500
+expression #Teleport_Forced_Range		450
+expression #Teleport_Windstorm_Range	550
+
+//Required levels for Wizard Spells. Checked in Check_Library
+expression #FireBlast_Required_Level 3
+expression #MeteorStorm_Required_Level 7
+
+
+//This is expression is used when
+expression #Allow_Cloned_Quest_Item 1
+
+//These are for Epic Quest Specific stuff. They are stored in the AIRootAgent's "Quest_Number", and set up in
+//Epic Quest Scripts
+expression #QNumber_Barren_Waste 1
+expression #QNumber_Bell_Book 2
+expression #QNumber_Holy_Chalice 3
+expression #QNumber_Crown 4
+expression #QNumber_Dark_Forest 5
+expression #QNumber_Day_Reckoning 6
+expression #QNumber_Deal_Demon 7
+expression #QNumber_Slay_Dragon 8
+expression #QNumber_Tomb_Dragon 9
+expression #QNumber_Elven_Treachery 10
+expression #QNumber_Fertile_Plain 11
+expression #QNumber_Forsaken_Lands 12
+expression #QNumber_Goblin_Hordes 13
+expression #QNumber_Liche_Queen 14
+expression #QNumber_Save_Prince 15
+expression #QNumber_Magic_Ring 16
+expression #QNumber_Slave_Pits 17
+expression #QNumber_Brashnard 18
+expression #QNumber_Wizards_Curse 19
+//For the Demo
+expression #QNumber_DEMO 500
+
+//For the various Freestyle Victory Conditions
+expression #QNumber_Eliminate_Enemies 501
+expression #QNumber_Survive_Time 502
+expression #QNumber_Gather_Gold 503
+expression #QNumber_Last_Palace 504
+
+//QUEST SPECIFIC GLOBALS
+//number of B-Phantoms spawned in Magic Ring
+expression #Blk_Phants_Spawned_In_Magic_Ring 3
+//Distance that heroes will follow Hooligans when arresting in Wizard's Curse
+expression #Arrest_Hooligan_Dist 50
+//Base length it takes chests to respawn in Holy Chalice
+expression #HChalice_Chest_Respawn_Base 90000
+//Mod for length it takes for chests to respawn in Holy Chalice
+expression #HChalice_Chest_Respawn_Mod  90000
+//Amount of Intel subtracted from Heroes
+expression #WCurse_Dumb_Penalty 5
+
+// Research times
+expression #ResearchTimeWeaponLevel_2		15000
+expression #ResearchTimeArmorLevel_2		15000
+expression #ResearchTimeWeaponLevel_3		20000
+expression #ResearchTimeArmorLevel_3		20000
+expression #ResearchTimeWeaponLevel_4		25000
+expression #ResearchTimeArmorLevel_4		25000
+expression #ResearchTimeTournament			18000
+expression #ResearchTimeArrows				10000
+expression #ResearchTimeGoodGuard			12000
+expression #ResearchTimeWizardFireBlast	10000
+expression #ResearchTimeMagicResistance	10000
+expression #ResearchTimeTrainIntelligence	20000
+expression #ResearchTimeWizardMeteorStorm	30000
+expression #ResearchTimeEnergyBlast			10000
+expression #ResearchTimeFireShield			10000
+expression #ResearchTimeMarketDay			12000
+expression #ResearchTimeHealPotions			10000
+expression #ResearchTimeRingsofProtection	15000
+expression #ResearchTimePowerfulItem		20000
+expression #ResearchTimeTradePostHealing	10000
+
+// Research costs
+expression #ResearchCostWeaponLevel_2		200
+expression #ResearchCostArmorLevel_2		200
+expression #ResearchCostWeaponLevel_3		300
+expression #ResearchCostArmorLevel_3		300
+expression #ResearchCostWeaponLevel_4		400
+expression #ResearchCostArmorLevel_4		400
+expression #ResearchCostTournament			250
+expression #ResearchCostArrows				250
+expression #ResearchCostGoodGuard			300
+expression #ResearchCostWizardFireBlast	500
+expression #ResearchCostMagicResistance	250
+expression #ResearchCostTrainIntelligence	250
+expression #ResearchCostWizardMeteorStorm	1500
+expression #ResearchCostEnergyBlast			500
+expression #ResearchCostFireShield			500
+expression #ResearchCostMarketDay			200
+expression #ResearchCostHealPotions			300
+expression #ResearchCostRingsofProtection 750
+expression #ResearchCostPowerfulItem		1000
+expression #ResearchCostTradePostHealing	300
+
+// taxman stuff
+expression #Max_Return_Amount	1000
+expression #Max_Pickup_Amount	1000
+expression #Taxman_increment	25
+
+expression #taxman_return_start 250
+expression #taxman_pickup_start 0
+
+expression #tax_route_dead_limit 2
+//How often the music playing scripts execute after kickoff
+expression #Track_Change_Frequency 540000
+
+//Expressions for music track number
+expression #early_theme 3
+expression #midgame_theme 4
+expression #endgame_theme 5
+
+
+//how fast in miliseconds that the miviview will cycle
+expression #miniview_cycle_rate 1500
+
+//gambling settings
+expression #gambling_min_bet 25
+expression #gambling_max_bet 1000
+expression #gambling_interval 500
+expression #gambling_bet 25
+
+
+//Freestyle settings settings
+expression #freestyle_Starting_Gold_Increment 1000
+expression #freestyle_Starting_Gold_Minimum 1000
+expression #freestyle_Starting_Gold_Maximum	100000
+expression #freestyle_Required_Gold_Increment 1000
+expression #freestyle_Required_Gold_Minimum 40000
+expression #freestyle_Required_Gold_Maximum 160000
+expression #freestyle_Gold_Delta 30000
+expression #freestyle_Required_Time_Increment 5
+expression #freestyle_Required_Time_Minimum 15
+expression #freestyle_Required_Time_Maximum 365
+
+
+//Expressions for modifiying freestyle difficulty
+//Starting gold is divided by this number and then subtracted form the total diff rating
+expression #Starting_Gold_Diff_Divider 1000
+//This is subtracted from Starting gold/The gold diff divider, so we have a threshold
+expression #Starting_Gold_Diff_Threshold 20
+
+expression #starting_gold_very_easy 30000
+expression #starting_gold_easy 20000
+expression #starting_gold_normal 15000
+expression #starting_gold_hard 10000
+
+expression #required_gold_easy 40000
+expression #required_gold_normal 80000
+expression #required_gold_hard 160000
+
+expression #required_time_easy 15
+expression #required_time_normal 30
+expression #required_time_hard 60
+
+
+
+expression #sewer_close_chance 80
+
+
+//Default distance from palace that random treasure gets spawned
+expression #default_spawn_treasure_dist 500
+
+//Radius around a lait revealed by a Solarii when they "Find a Lair"
+expression #reveal_found_lair_dist 300
+
+
+//Range people use for Is_Free_Task to look for others with the same intentions
+expression #Is_Free_Task_Range 2000
+
+expression #is_free_task_max_heroes 2
+
+// Played if (now - last_timeout) > timeout && (conditions met)
+// timeout in milli-seconds
+expression #advisor_timeout_low_treasury 180000
+expression #advisor_trigger_amount_low_treasury 1000
+
+expression #advisor_timeout_need_heroes  60000
+
+// How often to poll looking for when Elves and Dwarves Buildings are available to play the advisor sound.
+// Referenced in: game_level.c
+expression #advisor_timeout_elves_available   20000
+expression #advisor_timeout_dwarves_available 20000
+
+// The minimum percent of building tiles that must be revealed to allow a construction.
+// Referenced in: construct.c
+expression #construction_minpercent_notblocked 85
+
+expression #force_raider 1
+expression #force_overlay 2
+expression #force_guardian 3
+expression #force_bomber 4
+
+// special case: "Last Palace Standing" increases the cost of ballista towers
+// UPDATE 1.3 THIS IS NO LONGER THE CASE --CBT
+//expression #BallistaSpecialCost 3000
+
+// end-game pause delay
+expression #EndGameFadeDelay 1500
+
+// message box scrolling
+expression #MessageBoxScrollSpeed 3000
+
+// supercharge time
+expression #SuperChargeDuration 30000
+
+expression #followBored 20
+
+expression #palace_revenue_cap 300
+
+expression #max_tohit 95
+expression #max_toavoid 95
+
+expression #Deathmatch_max_toavoid 85
+expression #Deathmatch_Hero_Magic_Resist 30
+
+expression #level_div 1
+
+expression #Lightning_Storm_Min_Damage 8
+expression #Lightning_Storm_Max_Damage 25
+
+expression #Deathmatch_Lightning_Storm_Min_Damage 5
+expression #Deathmatch_Lightning_Storm_Max_Damage 14
+
+expression #Agrella_Healing_Multiplier 8
+
+expression #Deathmatch_Agrella_Healing_Multiplier 4
+expression #Deathmatch_Agrella_Healing_Cap 24
+
+expression #Deathmatch_Temple_Heal 30
+
+// This expression controls the reducing rate of returns on marketplaces and
+// trading posts in deathmatch mode.  The higher it is set, the better the
+// rate of returns on additional markets/tradeposts.
+// IT SHOULD NEVER BE SET TO A VALUE OF LESS THAN 2!!!
+expression #Deathmatch_income_modifier 3
+
+
+// special case: "Last Palace Standing" increases the cost multiplier for some buildings
+// UPDATE 1.3 THIS IS NEW CODE FOR THIS PATCH RELEASE --CBT
+// Note: because we need fractional multipliers and there is no C-interface
+//		 for floating point GPL expressions, the below values are divided
+//		 by 10 when used (e.g. 12 is actually 1.2, or 4 is actually 0.4)
+expression #LPS_BallistaMultiplier	25
+expression #LPS_WizTowerMultiplier	18
+expression #LPS_GuardhseMultiplier	15
+expression #LPS_RylGardnMultiplier	12
+expression #LPS_InnMultiplier		12
+
+expression #Deathmatch_Building_Damage_Multiplier 1.5
+expression #Deathmatch_Sewer_Limit 3
+expression #Deathmatch_Graveyard_Limit 2
+expression #Deathmatch_Housing_Limit 6
+expression #Deathmatch_Small_Trade_Radius 1700
+expression #Deathmatch_Large_Trade_Radius 2800

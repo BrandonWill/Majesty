@@ -1,0 +1,30 @@
+[Flag_Attack]
+	{RewardFlag
+		(type RewardFlag)
+		(subtype Flag_Attack)
+		(title Flag_Attack)
+		(birthscript 	attack_Flag_Birth)
+		(activescript attack_flag_poll)
+		(deathscript attack_flag_death)
+ 	}
+[end]
+
+[Flag_Explore]
+	{RewardFlag
+		(type RewardFlag)
+		(subtype Flag_Explore)
+		(title Flag_Explore)
+		(birthscript 	Explore_Flag_Birth)
+		(activescript explore_flag_poll)
+		(deathscript explore_flag_death)
+  	}
+[end]
+
+[Flag_Guard]
+	{RewardFlag
+		(type RewardFlag)
+		(subtype Flag_Guard)
+		(title Flag_Guard)
+		(birthscript 	RewardFlag_Birth)
+  	}
+[end]

@@ -1,0 +1,463 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_basic(agent thisagent)
+
+declare
+	agent palace,old_target;
+
+begin
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	palace = $getpalace(thisagent);
+	old_target = thisagent's "target"; // the last place they went
+
+	// reconstruct the palace lists, to account for a player hitting those
+	// darn repair queue buttons
+	$reconstruct_lists(palace);
+
+	if ($listsize(palace's "buildings_waiting") > 0)
+		begin
+			thisagent's "target" = $listmember(palace's "buildings_waiting",1);
+			palace's "buildings_waiting" -= thisagent's "target";
+			palace's "buildings_under_construction" << thisagent's "target";
+			palace's "busy_peasants"++;
+			thisagent's "Activescript" = $peasant_go_build;
+
+			if ($isvalidgamepiece(old_target))
+			if ($hasattribute("occupants",old_target))
+				if ($agentinlist(thisagent,old_target's "occupants"))
+					old_target's "occupants" -= thisagent;
+
+			$debugout("Going to build",thisagent's "target");
+//			$say(thisagent,"VFX_SPECIAL3");
+		end
+	else
+		if ($listsize(palace's "buildings_under_construction") > 0)
+			begin
+				// go help someone else or go take over an abandoned construction
+				thisagent's "target" = $listmember(palace's "buildings_under_construction",1);
+//				// re arrange the list
+				palace's "buildings_under_construction" -= thisagent's "target";
+				palace's "buildings_under_construction" << thisagent's "target";
+				palace's "busy_peasants"++;
+				thisagent's "Activescript" = $peasant_go_build;
+
+//				$say(thisagent,"VFX_SPECIAL2");
+			if ($isvalidgamepiece(old_target))
+				if ($hasattribute("occupants",old_target))
+					if ($agentinlist(thisagent,old_target's "occupants"))
+						old_target's "occupants" -= thisagent;
+
+				$debugout("Going to help build",thisagent's "target");
+			end
+		else
+			begin
+				// peasant has nothing to do
+
+//				thisagent's "Target" = palace;
+				thisagent's "target" = $nearest_city_building(thisagent);
+				thisagent's "activescript" = $Peasant_go_home;
+				thisagent's "backscript" = $peasant_basic;
+
+				$debugout("Nothing to do, staying home.");
+
+					begin
+						$hide(thisagent,thisagent's "target");
+					end
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function reconstruct_lists(agent palace)
+
+declare
+	agent bldg;
+	list buildings,newlist;
+
+begin
+	// check lists for buildings who shouldn't be on them
+	buildings = palace's "buildings_under_construction";
+
+	foreach bldg in buildings do
+		begin
+			If ($IsDead (Bldg) == False)
+				begin
+					if ($building_level_complete(bldg))
+						if (($getattribute(bldg,#ATTRIB_isrepaired) == 0) && ($getattribute(bldg,#ATTRIB_QuickRepair) == 0))
+							palace's "buildings_under_construction" -= bldg;
+				end
+			else
+				palace's "buildings_under_construction" -= bldg;
+		end
+
+	// check all existing buildings, to see if they are damaged and need to be added
+	$listobjects(palace,"building",-1,buildings,#MyPLayer);
+	buildings = $listcompleted(buildings);
+	buildings << palace; // the palace wasn't getting checked before!!!
+
+	foreach bldg in buildings do
+		begin
+			If ($IsDead (Bldg) == False)
+				if ($building_level_complete(bldg))
+					if ($getattribute(bldg,#ATTRIB_HP) < $getattribute(bldg,#ATTRIB_MAXHP))
+						if ($agentinlist(bldg,palace's "buildings_under_construction") == FALSE)
+							if (($getattribute(bldg,#ATTRIB_isrepaired) == 1) || ($getattribute(bldg,#ATTRIB_QuickRepair) == 1))
+								palace's "buildings_under_construction" << bldg;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_go_build(agent thisagent)
+
+declare
+	agent building, palace, AIRootAgent;
+	integer HP,MAXHP;
+
+begin
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	building = thisagent's "target";
+	palace = $getpalace(thisagent);
+
+//	$debugout($getattribute(building,#ATTRIB_HP),$getattribute(building,#ATTRIB_MAXHP));
+//	HP = $getattribute(building,#ATTRIB_HP);
+//	if (HP == 0) $setattribute(building,#ATTRIB_HP,1);
+
+//	if ($ishidden(thisagent))
+//	if ($insidebuilding(thisagent))
+	$unhide(thisagent);
+
+	if ($isdead(building))
+		begin
+			$reset_tasks(thisagent);
+			palace's "busy_peasants"--;
+			palace's "buildings_under_construction" -= building;
+		end
+	else
+		if ($getattribute(building,#ATTRIB_HP) == $getattribute(building,#ATTRIB_MAXHP))
+			begin
+				$reset_tasks(thisagent);
+				palace's "busy_peasants"--;
+				palace's "buildings_under_construction" -= building;
+			end
+		else
+		if ($offrepair(building))
+			begin
+				$reset_tasks(thisagent);
+				$stopmoving(thisagent);
+				palace's "busy_peasants"--;
+			end
+		else
+
+			if (($listsize(palace's "buildings_waiting") > 0) && ($listsize(palace's "Buildings_under_construction") < palace's "busy_peasants") && $Closest_Peasant_Building (ThisAgent) == False)
+				begin
+					// go to a new waiting building
+					thisagent's "target" = $listmember(palace's "buildings_waiting",1);
+					// re arrange the list
+					palace's "buildings_waiting" -= thisagent's "target";
+					palace's "buildings_under_construction" << thisagent's "target";
+					thisagent's "Activescript" = $peasant_go_build;
+				end
+			else
+				if ($isadjacent(thisagent,thisagent's "target") == FALSE)
+					begin
+						$say(thisagent,"VFX_SPECIAL3");
+						thisagent's "destination" = $locationof(thisagent's "Target");
+						thisagent's "Activescript" = $Peasant_travel_build;
+						thisagent's "backscript" = $peasant_go_build;
+						$move(thisagent,thisagent's "target");
+					end
+				else
+					begin
+						// build building
+						$performaction(thisagent,"basic_build",building);
+//						$adjustattribute(building,#ATTRIB_HP,1);
+						HP = $getattribute(building,#ATTRIB_HP);
+
+						AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+						if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+							begin
+								if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+									begin
+										if (( $GetAttribute ( building, #ATTRIB_FirstStageBuilt ) == 1 ) && ( $GetAttribute ( building, #ATTRIB_CurrentStageBuilt ) == 1 ) )
+											HP += #Deathmatch_repair_amount;
+										else
+											HP += #basic_build_amount;
+									end
+								else
+									HP += #basic_build_amount;
+							end
+						else
+							HP += #basic_build_amount;
+
+						MAXHP = $getattribute(building,#ATTRIB_MAXHP);
+
+						if (HP > MAXHP)
+							HP = MAXHP;
+
+						$setattribute(building,#ATTRIB_HP,HP);
+
+						if ($getattribute(building,#ATTRIB_HP) == MAXHP)
+							begin
+								$BuildingReachedMaxHP(building);
+								palace's "buildings_under_construction" -= building;
+								thisagent's "activescript" = $peasant_basic;
+								palace's "busy_peasants"--;
+							end
+					end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_go_home(agent thisagent)
+
+declare
+	agent palace,target;
+
+begin
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	if ($isdead(thisagent's "target"))
+		$reset_tasks(thisagent);
+	else
+	if ($ismoving(thisagent) == FALSE)
+		begin
+//			if ($isadjacent(thisagent,thisagent's "target") == FALSE)
+			if ($insidebuilding(thisagent) == FALSE)
+				begin
+					$say(thisagent,"VFX_SPECIAL2");
+
+					$hide(thisagent,thisagent's "target");
+				end
+			else
+				begin
+					ThisAgent's "Type" = "Hidden";
+//					$hide(thisagent,thisagent's "target");
+					thisagent's "activescript" = $peasant_sleep;
+					$setthreadinterval(thisagent's "activescript",#Peasant_sleep_time);
+
+					target = thisagent's "target";
+					if (target's "title" != "Palace")
+						if ($agentinlist(thisagent,target's "occupants") == FALSE)
+							target's "occupants" << thisagent;
+
+
+					$debugout("Peasant going to sleep.");
+				end
+		end
+	else
+		begin
+			palace = $getpalace(thisagent);
+
+			$reconstruct_lists(palace);
+
+			if ($listsize(palace's "buildings_waiting") > 0 || $ListSize (Palace's "Buildings_under_construction") > 0)
+				begin
+					//$stopmoving(thisagent);
+					thisagent's "activescript" = thisagent's "backscript";
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_spawner(agent thisagent)
+
+declare
+	integer num_p;
+
+begin
+	num_p = thisagent's "num_peasants";
+	if (num_p < thisagent's "max_peasants")
+		begin
+			//Spawn either a female or a male peasant
+			If ($RandomNumber (2) == 0)
+				begin
+					$spawnunit(thisagent,"Peasant");
+				end
+
+			Else
+				$SpawnUnit (ThisAgent, "Peasant_Female");
+
+			$runthread(thisagent's "Peasant_spawn",#peasant_delay,thisagent);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Peasant_travel_build(agent thisagent)
+
+declare
+	agent building,palace;
+
+begin
+	building = thisagent's "target";
+	palace = $getpalace(thisagent);
+
+	if ($palace_check(thisagent) == TRUE)
+		return;
+
+	if ($isdead(building))
+		begin
+			$reset_tasks(thisagent);
+			$stopmoving(thisagent);
+			palace's "busy_peasants"--;
+		end
+	else
+	if ($offrepair(building))
+		begin
+			$reset_tasks(thisagent);
+			$stopmoving(thisagent);
+			palace's "busy_peasants"--;
+		end
+	else
+		if ($getattribute(building,#ATTRIB_HP) == $getattribute(building,#ATTRIB_MAXHP))
+			begin
+				$reset_tasks(thisagent);
+				$stopmoving(thisagent);
+				thisagent's "activescript" = $peasant_basic;
+				palace's "busy_peasants"--;
+			end
+		else
+			if (($listsize(palace's "buildings_waiting") > 0) && ($listsize(palace's "Buildings_under_construction") < palace's "busy_peasants") && $Closest_Peasant_Building (ThisAgent) == False)
+				begin
+					// go to a new waiting building
+					thisagent's "target" = $listmember(palace's "buildings_waiting",1);
+					// re arrange the list
+					palace's "buildings_waiting" -= thisagent's "target";
+					palace's "buildings_under_construction" << thisagent's "target";
+					thisagent's "Activescript" = $peasant_go_build;
+				end
+			Else
+				if ($has_arrived(thisagent,false) == FALSE)
+					$ClearList (ThisAgent's "Hostiles");
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function offrepair(agent thisagent) is boolean
+
+declare
+
+begin
+	if ($building_level_complete(thisagent))
+		if (($getattribute(thisagent,#ATTRIB_isrepaired) == 0) && ($getattribute(thisagent,#ATTRIB_QuickRepair) == 0))
+			return TRUE;
+
+	return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function building_level_complete(agent thisagent) is boolean
+
+declare
+
+begin
+	if (($getattribute(thisagent,#ATTRIB_FirstStageBuilt) == 1) && ($getattribute(thisagent,#ATTRIB_CurrentStageBuilt) == 1))
+		return TRUE;
+	else
+		return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function peasant_sleep(agent thisagent)
+
+declare
+
+begin
+//	$unhide(thisagent);
+	ThisAgent's "Type" = "Hero";
+	thisagent's "activescript" = thisagent's "basicscript";
+	$setthreadinterval(thisagent's "activescript",#Henchmen_Cycle);
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This checks to see if ThisAgent is the closest Peasant with the intention of building their target
+Function Closest_Peasant_Building (agent ThisAgent) is boolean
+Declare
+	list		Peasants;
+	agent		Peasant, Target;
+	integer	My_Dist, Their_Dist;
+	boolean closest_flag;
+
+Begin
+	closest_flag = true;
+
+	Target = ThisAgent's "Target";
+	My_Dist = $DistanceBetweenAgents (ThisAgent, Target);
+
+	$ListObjects (ThisAgent, "hero", -1, Peasants, #myplayer);
+	Peasants = $ListTitles (Peasants, "Peasant");
+
+	//$DebugOut (911, "Listsize of Peasants:", $ListSize (Peasants));
+
+//	If ($ListSize (Peasants) > 0)
+//		begin
+			Foreach Peasant in Peasants do
+				begin
+					If (Peasant's "Target" == Target)
+						begin
+							Their_Dist = $DistanceBetweenAgents (Peasant, Target);
+							If (Their_Dist <= My_Dist)
+								begin
+									//$DebugOut (911, "Their dist is less than or equal to my dist.");
+									//return False;
+									closest_flag = FALSE;
+								end
+						end
+				end
+//		end
+
+	//$DebugOut (911, "I am the closest Peasant with the intention of building this building.");
+	//return True;
+	return closest_flag;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function palace_check(agent thisagent) is boolean
+
+declare
+	agent palace;
+
+begin
+	palace = $getpalace(thisagent);
+	if ($isdead(palace))
+		begin
+			// I have no palace! I must wander;
+			$stopmoving(thisagent);
+			thisagent's "activeScript" = $henchman_wander;
+			thisagent's "basicScript" = $henchman_wander;
+			return TRUE;
+		end
+	else
+		return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function henchman_wander(agent thisagent)
+
+declare
+
+begin
+
+	if ($ismoving(thisagent) == False)
+		begin
+			if ($randomNumber(100) > 98)
+				$performaction(thisagent,thisAgent's "Idle_action",$locationof(thisagent));
+			else
+				begin
+					if ($ishidden(thisagent) == FALSE)
+						$Move(thisagent,$randomCoord(thisagent,300));
+					else
+						$unhide(thisagent);
+				end
+		end
+
+end

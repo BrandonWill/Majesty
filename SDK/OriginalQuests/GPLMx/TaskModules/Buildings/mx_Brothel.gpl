@@ -1,0 +1,45 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This needs be put in the Brothel's 'Visited_Script', so Heroes can request and then run it.
+Function Brothel (agent ThisAgent)
+Declare
+	agent Target;
+
+Begin
+	Target = ThisAgent's "Target";
+
+	$SpecifyIntent (ThisAgent, #intent_relaxing_in_lounge);
+
+	//if the unit isn't already hidden
+	//if ($IsHidden (ThisAgent) == False)
+		//begin
+	$Enter_Building (ThisAgent, Target);
+			//$DebugOut (thisagent's "title","is entering",Target's "Title");
+		//end
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", Target's "Sleep_For");
+
+	//assign their activescript Exit_Brothel
+	ThisAgent's "ActiveScript" = $Exit_Brothel;
+
+	// indicate for statistical purposes that a "gutter" has been visited
+	$IncrementStatCounter( thisagent, "gutter" );
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Exit_Brothel (agent ThisAgent)
+Declare
+	agent ThisBuilding;
+
+Begin
+	ThisBuilding = ThisAgent's "Target";
+
+	if ($isdead(thisbuilding) == FALSE)
+		$Hero_Pay_Distractor (ThisAgent, ThisBuilding, #Brothel_Cost);
+
+	$Exit_Building (ThisAgent, ThisAgent's "Target");
+End

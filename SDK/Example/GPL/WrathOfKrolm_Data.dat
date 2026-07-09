@@ -1,0 +1,136 @@
+[Krolm]
+	{Monster
+		(type 			Monster)
+		(subtype 		xx)
+		(title 			Krolm)
+		(original_type 		Monster)
+		(EnemyType 		Hero)
+		(idle_action		Monster_idle)
+		(attack_action 		basic_attack_with_stand)
+		(Friend 		xx)
+		(max_followers 		4)
+		(resist_critical 	1)
+		(speed 			1)
+		(attacktype 		1)
+		(Raider_Respond 	1)
+		(Guardian_Mod 		5)
+		(castingrange 		180)
+		(activeScript		Wandering)
+		(basicScript          	Wandering)
+		(backscript 		Wandering)
+	  	(evaluationScript 	monster_eval_enemies)
+		(birthScript		Krolm_Birth)
+		(IGdeathscript	 	Krolm_Death)
+	}
+[end]
+
+[Krolm_Altar]
+	{Lair
+		(type 			Lair)
+		(subtype 		xx)
+		(title 			Krolm_Altar)
+		(difficulty 		2)
+		(Dispersion_Range	300)
+		(Spawn_Type		Enemy_Barbarian)
+		(Special_Spawn_Type	xx)
+		(Spawn_Function		Spawn)
+		(Base_Spawn_Rate	15000)
+		(activeScript		Lair_brains)
+		(birthScript		Lair_Birth)
+		(IGdeathscript	       	Krolm_Altar_death)
+	}
+[end]
+
+[Enemy_Barbarian]
+	{Monster
+		(type 			Monster)
+		(subtype 		xx)
+		(title 			Barbarian)
+		(original_type 		Monster)
+		(EnemyType 		Hero)
+		(idle_action		Monster_idle)
+		(attack_action 		basic_attack_with_stand)
+		(Friend 		xx)
+		(max_followers 		4)
+		(speed 			1)
+		(attacktype 		1)
+		(Raider_Respond 	1)
+		(Guardian_Mod 		5)
+		(castingrange 		180)
+		(activeScript		Temple_Raider)
+		(basicScript          	Temple_Raider)
+		(backscript 		Temple_Raider)
+	  	(evaluationScript 	monster_eval_enemies)
+		(birthScript		temple_raider_birth)
+		(IGdeathscript	 	monster_gravestone)
+	}
+[end]
+
+[Krolm_Eagle]
+	{Monster
+		(type 			monster)
+		(subtype 		xx)
+		(title 			Krolm_Eagle)
+		(original_type 		Monster)
+		(EnemyType 		Hero)
+		(idle_action		Monster_idle)
+		(attack_action 		basic_attack_with_stand)
+		(Friend 		Cultist)
+		(speed 			3)
+		(attacktype 		1)
+		(Guardian_Mod 		5)
+		(activeScript		animal)
+		(basicScript          	animal)
+		(backscript 		animal)
+	  	(evaluationScript 	monster_eval_enemies)
+		(birthScript		Monster_Birth)
+		(IGdeathscript		monster_gravestone)
+		(StartingScript		Animal)
+	}
+[end]
+
+[Krolm_Wolf]
+	{Monster
+		(type 			monster)
+		(subtype 		xx)
+		(title 			Krolm_Wolf)
+		(original_type 		Monster)
+		(EnemyType 		Hero)
+		(idle_action		Monster_idle)
+		(attack_action 		basic_attack)
+		(Friend 		Cultist)
+		(speed 			3)
+		(attacktype 		1)
+		(Guardian_Mod 		5)
+		(activeScript		Animal)
+		(basicScript          	Animal)
+		(backscript 		Animal)
+		(StartingScript		Animal)
+	  	(evaluationScript 	monster_eval_enemies)
+		(birthScript		Monster_Birth)
+		(IGdeathscript		monster_gravestone)
+	}
+[end]
+
+[Krolm_Bear]
+	{Monster
+		(type 			monster)
+		(subtype 		xx)
+		(title 			Krolm_Bear)
+		(original_type 		Monster)
+		(EnemyType 		Hero)
+		(idle_action		Monster_idle)
+		(attack_action 		basic_attack)
+		(Friend 		Cultist)
+		(speed 			1)
+		(attacktype 		1)
+		(Guardian_Mod 		5)
+		(activeScript		Animal)
+		(basicScript          	Animal)
+		(backscript 		animal)
+		(StartingScript		Animal)
+	  	(evaluationScript 	monster_eval_enemies)
+		(birthScript		Monster_Birth)
+		(IGdeathscript		monster_gravestone)
+	}
+[end]

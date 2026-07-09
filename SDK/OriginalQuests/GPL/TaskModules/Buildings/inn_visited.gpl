@@ -1,0 +1,139 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Inn_visited(agent thisagent)
+
+declare
+	agent		Target;
+	integer  Current_Intent, New_Intent;
+
+begin
+	Target = ThisAgent's "Target";
+
+	Current_Intent = $GetAttribute (ThisAgent, #ATTRIB_AIIntentionString);
+
+	$enter_building(thisagent, target);
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Inn_Visit_Duration);
+
+	//Give the Inn some gold - but not gazebos
+	if (target's "subtype" == "Inn")
+		If (thisagent's "title" != "Elf")
+			$Pay_Inn (ThisAgent, target, #Price_per_Inn_Visit);
+
+	if (thisagent's "home" == $nullagent() &&
+			(thisagent's "taskname" == "sulking"))
+			begin
+				thisagent's "Activescript" = $sulk;
+				$SetThreadInterval (ThisAgent's "ActiveScript", #Sulk_Duration);
+			end
+
+	else
+		//Rest at the inn and specify an intent that says resting at gazebo/inn or barding depending on target and title
+		begin
+			//Are they performing a minstrel show?
+			If (Current_Intent == #intent_going_to_bard)
+				begin
+
+					New_Intent = #intent_performing_minstrel;
+
+				end
+
+			Else
+				begin
+					//See if the hero was fleeing or just going to visit, and check to see if
+					//the taret is an Inn or Gazebo
+					If (Current_Intent == #intent_flee_scared)
+						begin
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_seeking_refuge_inn;
+
+							Else
+								New_Intent = #intent_seeking_refuge_gazebo;
+
+						end
+
+					//They must have been visiting
+					Else If (Current_Intent == #intent_flee_lowHP)
+						begin
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_recuperating_inn;
+
+							Else
+								New_Intent = #intent_recuperating_gazebo;
+						End
+
+				  Else
+						begin
+
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_resting_inn;
+
+							Else
+								New_Intent = #intent_resting_gazebo;
+
+						end
+				end
+
+			thisagent's "Activescript" = $rest_at_inn;
+
+			$SpecifyIntent (ThisAgent, New_Intent);
+
+		end
+			
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rest_at_inn(agent thisagent)
+
+declare
+
+begin
+	$setattribute(thisagent,#ATTRIB_HP,$getattribute(thisagent,#ATTRIB_MaxHP));
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+	ThisAgent's "ActiveScript" = $Done_resting_inn;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function done_resting_inn(agent thisagent)
+
+declare
+
+begin
+	$exit_building(thisagent,thisagent's "target");
+
+	//If the hero's intention was to play a minstrel show, than they make some money
+	If ($GetAttribute (ThisAgent, #ATTRIB_AIIntentionString) == #intent_performing_minstrel)
+		begin
+			$Give_Gold (ThisAgent, #Elf_Visits_Inn_Gold);
+			$Give_Exp (ThisAgent, #Elf_Visits_Inn_Exp);
+		end
+
+	ThisAgent's "ActiveScript" = ThisAgent's "BasicScript";
+	thisAgent's "taskname" = "";
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function sulk(agent thisagent)
+
+declare
+	integer loyalty;
+
+begin
+	// make a loyalty check -- if failed, leave map
+	// otherwise, sulk more
+	loyalty = thisagent's "loyalty";
+
+	if ($randomnumber(100) > loyalty)
+		begin
+			ThisAgent's "ActiveScript" = $done_resting_inn;
+			thisagent's "basicScript" = $flee_map;
+			$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+		end
+
+	// otherwise nothing happens - run thread again
+end

@@ -1,0 +1,106 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function raid_lair(agent thisagent,integer chance) is Boolean
+
+declare
+
+	list lairs;
+	agent lair;
+	integer easiest_lair_score;
+	agent easiest_lair;
+	integer score;
+
+begin
+//	$debugout("Should I raid a monster lair?");
+
+	if ($randomnumber(100) + 1 > chance) return;
+
+	$ListObjects(thisagent,"lair",-1, lairs);
+
+	if ($listsize(lairs) > 0)
+		begin
+			easiest_lair_score = 90000;
+			easiest_lair = $NullAgent();
+			foreach lair in lairs do
+				begin
+					score = lair's "difficulty";
+					score = score * $distancebetweenagents(thisagent,lair);
+//					$debugout(score);
+					if (score < easiest_lair_score)
+						begin
+							easiest_lair_score = score;
+							easiest_lair = lair;
+						end
+				end
+
+			// modify easiest_lair score by thisagent's enemy_estimation
+
+  //			$debugout("final score - ",easiest_lair_score);
+
+			if (easiest_lair_score < $getattribute(thisagent,#ATTRIB_experienceLevel) * 100 * thisagent's "Self_estimation")
+				begin
+					thisagent's "ActiveScript" = $Attack_object;
+					thisagent's "Target" = easiest_lair;
+
+					$SpecifyIntent (ThisAgent, #Intent_Raiding);
+//					$debugout("Yes.");
+					return True;
+				end
+		end
+
+//	$debugout("No.");
+	return False;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function raid_enemy_building(agent thisagent,integer chance) is Boolean
+
+declare
+
+	list buildings;
+	agent building;
+	integer easiest_building_score;
+	agent easiest_building;
+	integer score;
+
+begin
+//	$debugout("Should I raid a monster lair?");
+
+	if ($randomnumber(100) + 1 > chance) return;
+
+	$ListObjects(thisagent,"building",-1,buildings,#NotMyTeam);
+
+	if ($listsize(buildings) > 0)
+		begin
+			easiest_building_score = 90000;
+			easiest_building = $NullAgent();
+			foreach building in buildings do
+				begin
+					score = $getattribute(building,#ATTRIB_HP) / 100;
+					if (score < 1) score = 1;
+
+					score = score * $distancebetweenagents(thisagent,building);
+
+					if (score < easiest_building_score)
+						begin
+							easiest_building_score = score;
+							easiest_building = building;
+						end
+				end
+
+			if (easiest_building_score < $getattribute(thisagent,#ATTRIB_experienceLevel) * 100 * thisagent's "Self_estimation")
+				begin
+					thisagent's "ActiveScript" = $Attack_object;
+					thisagent's "Target" = easiest_building;
+
+					$SpecifyIntent (ThisAgent, #Intent_attacking_enemy_building);
+					return True;
+				end
+		end
+
+	return False;
+end

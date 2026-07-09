@@ -1,0 +1,217 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function raider(agent thisagent)
+
+declare
+
+	list buildings, lairs, targets;
+	agent target, closest_building, closest_lair;
+	boolean casting;
+	integer attackrange, search_dist;
+	string spell_name;
+
+begin
+	target = thisagent's "target";
+
+	if ($notvalid(thisagent's "target"))
+		begin
+			$debugout(thisagent's "title"," picking a target.");
+
+			search_dist = 50000;
+			if ($hasattribute("relentless",thisagent))
+				begin
+					If (ThisAgent's "Relentless")
+						search_dist = -1;
+				end
+
+			//Find the closest enemy building (if any)
+			If ($ListObjects( thisagent,"building",search_dist, buildings,#NotMyTeam ) > 0)
+				begin
+
+					Closest_Building = $ListMember (Buildings, 1);
+
+					targets << Closest_Building;
+
+				end
+
+			//Find the closest enemy lair (if any)
+			If ($ListObjects( thisagent,"lair",search_dist,lairs, lairs, #NotMyTeam ) > 0)
+				begin
+
+					Closest_Lair = $ListMember (Lairs, 1);
+
+					targets << Closest_Lair;
+
+				end
+
+
+			if ($listsize(targets) > 0)
+				begin
+					ThisAgent's "Target" = $Pick_Closest (ThisAgent, Targets);
+					//thisagent's "target" = $pick_closest(thisagent,buildings);
+				end
+			else
+				begin
+					// raider wanders because it has no targets
+					thisagent's "activescript" = $wandering;
+				end
+		end
+	else
+		begin
+			// pick weapon or spell
+			spell_name = $getbestspell(thisagent,#list_attack);
+			$debugout("raider spell:",spell_name);
+
+			if (spell_name == "nothing")
+				begin
+					attackrange = $getattribute(thisagent,#ATTRIB_maxattackrange);
+					casting = FALSE;
+				end
+			else
+				begin
+					attackrange = thisagent's "castingrange";
+					casting = TRUE;
+				end
+
+			$raider_eval_enemies(thisagent);
+
+			if ($distancebetweenagents(thisagent,thisagent's "target") < attackrange)
+				begin
+					// check for peasants nearby who are repairing buildings
+					if ($peasants_near(thisagent) == FALSE)
+						begin
+							if (casting)
+								$castspell(thisagent,spell_name,target, "");
+							else
+								if ($randomnumber(1000) <= 995)
+									$PerformAction (ThisAgent, ThisAgent's "Attack_Action", ThisAgent's "Target");
+								else
+									$PerformAction (ThisAgent, thisAgent's "Idle_action", ThisAgent's "Target");
+						end
+				end
+			else
+				begin
+					thisagent's "destination" = $locationof(thisagent's "target");
+ 					thisagent's "activescript" = $monster_travel_to;
+					thisagent's "backscript" = $raider;
+					$move(thisagent,thisagent's "target");
+				end
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function raider_eval_enemies(agent thisagent)
+declare
+	list in_sight,newl;
+	agent tempagent;
+
+begin
+	$cleanse_hostiles(thisagent);
+
+	If ($MBuff_Check (ThisAgent) == False)
+		begin
+
+			if (($listsize(thisagent's "hostiles") > 0) && (thisagent's "raider_respond" == TRUE))
+				begin
+					in_sight = $list_enemies_seen(thisagent,$getattribute(thisagent,#ATTRIB_Sightrange));
+
+					If (ThisAgent's "Friend" != "xx")
+						$Cull_Titles (In_Sight, ThisAgent's "Friend");
+
+					// add hostiles to in_sight;
+					newl = $addlists(in_sight,thisagent's "Hostiles");
+					in_sight = newl;
+
+					in_sight = $possibly_remove_target(thisagent,in_sight);
+
+ 					if ($listsize(in_sight) > 0)
+						begin
+							// pick the closest guy to attack
+							tempagent = $pick_closest(thisagent,in_sight);
+							if (tempagent != thisagent's "target")
+								begin
+									//Only change target is the new tempagent is valid
+									If ($NotValid (TempAgent) == False)
+										begin
+
+											thisagent's "Target" = tempagent; //$pick_closest(thisagent,in_sight);
+											thisagent's "ActiveScript" = $Monster_Attack_object;
+
+										end
+								end
+							$Clearlist (ThisAgent's "Hostiles");
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cleanse_hostiles(agent thisagent)
+
+declare
+	agent enemy;
+	list newlist;
+
+begin
+	if ($listsize(thisagent's "hostiles") > 0)
+		begin
+			foreach enemy in thisagent's "hostiles" do
+				begin
+					if ($isvalidgamepiece(enemy))
+						newlist << enemy;
+				end
+
+			thisagent's "hostiles" = newlist;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function peasants_near(agent thisagent) is boolean
+
+declare
+	list peasants,helpers;
+	agent peasant,helper;
+	boolean do_it;
+
+begin
+	//$listobjects(thisagent's "target","hero",$getattribute(thisagent,#ATTRIB_sightrange),peasants, #CheckTitles, "Peasant", #myplayer);
+	//peasants = $listtitles(peasants,"peasant");
+
+	// remove peasants who some one else is closer to
+
+	if ($listobjects(thisagent's "target","hero",$getattribute(thisagent,#ATTRIB_sightrange),peasants, #CheckTitles, "Peasant", #myplayer) > 0)
+		begin
+			peasant = $listmember(peasants,1);
+
+			$listobjects(peasant,"monster",$getattribute(thisagent,#ATTRIB_sightrange),helpers,#Notmyplayer);
+			//$debugout(911,helpers);
+
+			do_it = TRUE;
+
+			if ($listsize(helpers) > 0)
+				begin
+					helper = $listmember(helpers,1);
+					if (helper != thisagent)
+//						do_it = FALSE;
+//					else
+						if ($distancebetweenagents(helper,peasant) < $distancebetweenagents(thisagent,peasant))
+							do_it = FALSE;
+				end
+
+			if (do_it)
+				begin
+					thisagent's "target" = peasant;
+					thisagent's "ActiveScript" = $Monster_Attack_object;
+					return TRUE;
+				end
+			else
+				return FALSE;
+		end
+
+	return False;
+end

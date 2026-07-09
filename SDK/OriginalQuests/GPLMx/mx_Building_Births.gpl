@@ -1,0 +1,1214 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Goblin_Watchtower_Birth ( agent thisagent )
+Declare
+
+
+begin
+	//Set up attribs with GPL values if they are initialalized to 0
+	$NewThread ( ThisAgent's "ActiveScript", #Normal_Cycle, ThisAgent );
+end
+
+
+Function Outpost_Birth ( agent ThisAgent )
+Declare
+
+Begin
+
+	thisagent's "in_danger" = FALSE;
+	$clearlist ( thisagent's "tax_route" );
+	$clearlist ( thisagent's "tax_targets" );
+	if ( $getunitplayernumber ( thisagent ) != #monster_player )
+		begin
+			$NewThread ( thisagent's "activeScript", #palace_revenue_cycle, thisagent );
+			$NewThread ( ThisAgent's "Guard_Function",#Normal_Cycle, ThisAgent );
+			$RunThread ( ThisAgent's "Guard_Spawn_Function", #initial_Palace_guard_delay, ThisAgent );
+			$runThread ( ThisAgent's "Tax_spawn",#initial_tax_collector_delay, thisagent );
+			$runThread ( thisagent's "peasant_spawn", #initial_peasant_delay, thisagent );
+		end
+
+	//Check stray heroes - pass "hero" as it is a special case
+	// the player number check is so that if you want this to be
+	// 'rescuable' it needs to not adopt right away!
+	if ( $getunitplayernumber ( thisagent ) != #monster_player )
+		begin
+			$check_strays ( thisagent, "hero", #MyPlayer );
+			$check_strays ( thisagent, "hero", #NotMyPlayer );
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Embassy_Birth ( agent ThisAgent )
+Declare
+
+
+Begin
+
+	$NewThread ( ThisAgent's "ActiveScript", #Embassy_Min_Spawn_Hero_Time +
+	$RandomNumber ( #Embassy_Max_Spawn_Hero_Time - #Embassy_Min_Spawn_Hero_Time ), ThisAgent );
+
+	$Building_Birth ( ThisAgent );
+
+	//Embassy allows the player to see everything that their allied team-member can see
+	$SetShareReveal ( $GetUnitPlayerNumber ( ThisAgent ), True );
+
+	//Check stray heroes - pass "hero" as it is a special case
+	// the player number check is so that if you want this to be
+	// 'rescuable' it needs to not adopt right away!
+	if ( $getunitplayernumber ( thisagent ) != #monster_player )
+		begin
+			$check_strays ( thisagent, "hero", #MyPlayer );
+			$check_strays ( thisagent, "hero", #NotMyPlayer );
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is called by the in-game code when a building is upgraded
+function building_upgraded ( agent thisagent )
+
+declare
+
+begin
+
+	$runthread ( thisagent's "upgradescript", 1, thisagent );
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is called by the in-game code to determine the number
+// of henchmen a palace supports
+function GetSupportedHenchmen ( agent thisagent, integer index ) is integer
+
+declare
+	integer retval,num_fount;
+	list fountains;
+
+begin
+	retval = 0;
+
+	if ( index == 0 )
+		retval = thisagent's "max_peasants";
+	else if ( index == 1 )
+		begin
+			$listobjects ( thisagent, "building", -1, fountains, #CheckTitles, "Fountain", #Myplayer );
+			//fountains = $listtitles(fountains,"fountain");
+
+			num_fount = $listsize ( fountains );
+
+			retval = thisagent's "max_tax_collectors" + num_fount;
+		end
+	else if ( index == 2 )
+		retval = thisagent's "Max_guards";
+
+	return retval;
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Common code used by heroes, henchmen, and cheats for finishing up
+// a building's upgrade or construction process
+function BuildingReachedMaxHP ( agent theBuilding )
+
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	//$DebugOut(911, "BuildingReachedMaxHP() for ", theBuilding);
+
+	if ( $getattribute ( theBuilding, #ATTRIB_FirstStageBuilt ) != 1 )
+	begin
+		if ( $hasattribute ( "birthscript2", theBuilding ))
+			begin
+				//Have advisor say that a building has been upgraded
+				$PlaySound ( TheBuilding, "Advisor_Building_Complete", "VFX_ADVISOR" );
+				$LocalChatMessage ( $GetUnitPlayerNumber ( TheBuilding  ), #chat_building_complete, TheBuilding );
+
+				$runthread ( theBuilding's "birthscript2", 1, theBuilding );
+
+				//$DebugOut(911, " ran 'birthscript2'.");
+			end
+		//else
+			//$DebugOut(911, " COULDN'T run 'birthscript2'.");
+	end
+	else
+		// is being repaired or upgraded?
+		if ( $getattribute ( theBuilding, #ATTRIB_currentstagebuilt ) != 1 )
+			begin
+				$UpgradeAgentAttributes ( theBuilding );
+
+				If ( AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes )
+					begin
+						$SetAttribute ( theBuilding, #ATTRIB_MaxGuildMembers, 1 );
+
+						If (TheBuilding's "Subtype" == "Palace")
+							If (TheBuilding's "Level" == 2)
+								TheBuilding's "heroes_to_upgrade" = 4;
+
+					end
+
+				If ( TheBuilding's "Title" == "Palace" )
+					begin
+
+						//Play the special Palace voice line
+						$PlaySound ( TheBuilding, "Advisor_Palace_Upgrade", "VFX_ADVISOR" );
+
+						// special case for palace
+						$setattribute ( TheBuilding, #ATTRIB_Upgrade_herosNeeded, TheBuilding's "heroes_to_upgrade" );
+					end
+
+				Else
+					begin
+						//Have advisor say that a building has been upgraded
+						$PlaySound ( TheBuilding, "Advisor_Building_Upgraded", "VFX_ADVISOR" );
+						$LocalChatMessage ( $GetUnitPlayerNumber ( TheBuilding ), #chat_building_upgraded, TheBuilding );
+						
+						If (TheBuilding's "Title" == "Guardhouse")
+							begin
+								// Max_Guards might have changed when the attributes were updated.
+								$RestartGuardSpawnThread(TheBuilding, 1);
+							end						
+					end
+
+				//$DebugOut(911, " ran $UpgradeAgentAttributes.");
+			end
+		else
+			begin
+				// done repairing
+				if ( $getattribute ( thebuilding, #ATTRIB_quickRepair ) == 1 )
+					$setattribute ( thebuilding, #ATTRIB_quickRepair, 0 );
+			end
+
+	$setattribute ( theBuilding, #ATTRIB_HP, $getattribute ( theBuilding, #ATTRIB_MaxHP ));
+	$setattribute ( theBuilding, #ATTRIB_currentstagebuilt, 1 );
+	$setattribute ( theBuilding, #ATTRIB_FirstStageBuilt, 1 );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function basic_upgrade ( agent thisagent )
+
+declare
+	agent	AIRootAgent;
+	agent palace;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	If ( AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes )
+		begin
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxGuildMembers, 1 );
+		end
+
+	palace = $gettruepalace ( thisagent );
+	palace's "buildings_waiting" << thisagent;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function magical_upgrade ( agent thisagent )
+
+declare
+	agent palace, AIRootAgent;
+	integer HP, Maxhp, build_rate;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If ( AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes )
+		begin
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxGuildMembers, 1 );
+		end
+
+	HP = $getattribute ( thisagent, #ATTRIB_HP );
+	MaxHP = $getattribute ( thisagent, #ATTRIB_MAXHP );
+	build_rate = thisagent's "magical_build_rate";
+
+	if (HP != MAXHP)
+		begin
+  			if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+				begin
+					if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+						HP += #Deathmatch_magical_build_amount;
+					else
+						HP += build_rate;
+				end
+			else
+				HP += build_rate;
+
+			if ( HP > MAXHP )
+				HP = MAXHP;
+
+			$setattribute ( thisagent, #ATTRIB_HP, HP );
+			$runthread ( thisagent's "upgradescript", #magical_build_delay, thisagent );
+		end
+	else
+		begin
+			$UpgradeAgentAttributes ( thisagent );
+
+			If ( AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes )
+				begin
+					$SetAttribute ( ThisAgent, #ATTRIB_MaxGuildMembers, 1 );
+				end
+
+			$setattribute ( thisagent, #ATTRIB_currentstageBuilt, 1 );
+			//$setattribute(thisagent,#ATTRIB_firststageBuilt,1);
+			$playsound ( thisagent, "Advisor_Building_Upgraded", "VFX_ADVISOR" );
+
+			//Chat to the message area
+			$LocalChatMessage ( $GetUnitPlayerNumber ( ThisAgent ), #chat_building_upgraded, ThisAgent );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function palace_upgrade ( agent thisagent )
+
+declare
+
+begin
+	$basic_upgrade ( thisagent );
+	$runthread ( thisagent's "upgradescript2", #palace_upgrade_check, thisagent );
+
+	// these following are so that we insure the new limits are enacted, even if the player
+	// upgrades the palace again right away
+	$RunThread ( ThisAgent's "Guard_Spawn_Function", #initial_Palace_guard_delay, ThisAgent );
+	$runThread ( ThisAgent's "Tax_spawn", #initial_tax_collector_delay, thisagent );
+	$runThread ( thisagent's "peasant_spawn", #initial_peasant_delay, thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function palace_upgrade2 ( agent thisagent )
+
+declare
+
+begin
+	if ( $getattribute ( thisagent, #ATTRIB_currentStageBuilt ) != 1 )
+		$runthread ( thisagent's "upgradescript2", #palace_upgrade_check, thisagent );
+	else
+		begin
+			// run the spawners so the new henchman limits are enacted
+			$RunThread ( ThisAgent's "Guard_Spawn_Function", #initial_Palace_guard_delay, ThisAgent );
+			$runThread ( ThisAgent's "Tax_spawn", #initial_tax_collector_delay, thisagent );
+			$runThread ( thisagent's "peasant_spawn", #initial_peasant_delay, thisagent );
+//			$setattribute(thisagent,#ATTRIB_Upgrade_herosNeeded,thisagent's "heroes_to_upgrade");
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function basic_birth ( agent thisagent )
+
+declare
+	agent palace;
+	integer HP,Maxhp;
+
+begin
+	HP = $getattribute ( thisagent, #ATTRIB_HP );
+	MaxHP = $getattribute ( thisagent, #ATTRIB_MAXHP );
+
+	thisagent's "in_danger" = FALSE;
+
+	if ( HP != MAXHP )
+	// if (thisagent is not completed)
+		begin
+		//put thisagent on the palace's list of buildings needing
+			palace = $gettruepalace ( thisagent );
+			palace's "buildings_waiting" << thisagent;
+		end
+	else
+		$runthread ( thisagent's "birthscript2", 1, thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function magical_birth ( agent thisagent )
+
+declare
+	agent palace, AIRootAgent;
+	integer HP, Maxhp, build_rate;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	HP = $getattribute ( thisagent, #ATTRIB_HP );
+	MaxHP = $getattribute ( thisagent, #ATTRIB_MAXHP );
+	build_rate = thisagent's "Magical_Build_Rate";
+
+	if ( HP != MAXHP )
+		begin
+  			if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+				begin
+					if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+						HP += #Deathmatch_magical_build_amount;
+					else
+						HP += build_rate;
+				end
+			else
+				HP += build_rate;
+
+			if ( HP > MAXHP ) HP = MAXHP;
+			$setattribute ( thisagent, #ATTRIB_HP, HP );
+
+			if (HP > 0)
+				$runthread ( thisagent's "birthscript", #magical_build_delay, thisagent );
+		end
+	else
+		begin
+			if ( $getattribute ( thisagent, #ATTRIB_firststageBuilt ) == 0 )
+				begin
+					$playsound ( thisagent, "Advisor_Building_Complete", "VFX_ADVISOR" );
+
+					//Chat to the message area
+					$LocalChatMessage ( $GetUnitPlayerNumber( ThisAgent ), #chat_building_complete, ThisAgent);
+				end
+
+			$setattribute ( thisagent, #ATTRIB_currentstageBuilt, 1 );
+			$setattribute ( thisagent, #ATTRIB_firststageBuilt, 1 );
+			$runthread ( thisagent's "birthscript2", 1, thisagent );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function auto_birth ( agent thisagent )
+
+declare
+
+begin
+	$count_building ( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Add the building to the owner's Palace building count.
+// This can cause other units to be auto-created, such as sewers.
+function count_building ( agent thisagent )
+
+declare
+	agent palace, bldg, AIRootAgent;
+	list bldgs;
+	integer i;
+	boolean flag;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	palace = $gettruepalace ( thisagent );
+	flag = TRUE;
+
+	if ( $isvalidgamepiece ( palace ))
+		begin
+			palace's "total_buildings" ++;
+			palace's "buildings_lately" ++;
+
+			if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+				if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+					begin
+						$listobjects ( palace, "AutoBuilding", -1, bldgs, #CheckTitles, "Sewers", #MyPlayer );
+						if ( $ListSize ( bldgs ) >= #Deathmatch_Sewer_Limit )
+							flag = FALSE;
+					end
+
+			//If this is Valley of the Serpents, then no infrastructure
+			Else if ( AIRootAgent's "Quest_Number" == #QNumber_Vale_Serpents )
+				begin
+
+					Flag = False;
+
+				end
+
+
+			if ( Flag == TRUE )
+				if ( palace's "buildings_lately" >= #sewer_building_limit )
+					begin
+						palace's "buildings_lately" = 0;
+
+						$listobjects ( palace, "building", -1, bldgs, #MyPlayer, #ATTRIB_FirstStageBuilt, 1 );
+
+						bldgs << palace;
+
+						i = $listsize ( bldgs );
+
+						bldg = $listmember ( bldgs, $randomnumber ( i ) + 1 );
+
+						$spawnunit ( bldg, "sewers", "maxhp" );
+					end
+
+			if (( thisagent's "title" == "marketplace" ) || ( thisagent's "title" == "blacksmith" ) ||
+				( thisagent's "title" == "inn" ))
+				begin
+					palace's "fountain_buildings" ++;
+					if ( palace's "fountain_buildings" == #fountain_building_limit )
+						begin
+							palace's "fountain_buildings" = 0;
+							$spawnunit ( palace, "fountain", "maxhp" );
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Changed for outpost functionality, so that if "hero" is passed, then check_strays does a global search
+// for heroes.
+function check_strays ( agent thisagent, string what_hero, integer player )
+
+declare
+	list new_strays,strays;
+	agent stray;
+
+begin
+	// check map for strays
+	//
+	$ListObjects ( thisagent, "hero", -1, strays, player, #insideOtherUnits );
+
+	//If What_hero == "hero", then check by subtype (this is for the outpost)
+	//otherwise, check by the title that is passed as what_hero
+	If ( what_hero == "hero" )
+		strays = $ListSubtypes ( strays, what_hero );
+
+	Else
+		strays = $listtitles ( strays, what_hero );
+
+	foreach stray in strays do
+		begin
+			if (( stray's "home" ) == $nullagent ())
+				new_strays << stray;
+		end
+
+	while (( $listsize ( new_strays ) > 0 ) && $GuildHasOpenSlots ( thisagent )) do
+		begin
+
+			stray = $pick_closest ( thisagent, new_strays );
+			new_strays -= stray;
+
+			if ( player == #Notmyplayer )
+				begin
+					if ( $randomnumber ( 100 ) > stray's "loyalty" )
+						$adopt ( thisagent, stray );
+				end
+			else
+				$adopt ( thisagent, stray );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function adopt( agent thisguild, agent stray )
+
+declare
+
+begin
+	//If the hero has Rage of Krolm on them, then turn it off...otherwise the call back will call the wrong palace,
+	//as $GetPalace will return a different palace when Rage_End gets called by the effector
+	If ( $CheckEffector ( Stray, "Rage_Icon" ))
+		begin
+
+			$DeleteEffector ( Stray, "Rage_Icon" );
+
+		end
+
+	thisguild's "members" << stray;
+	stray's "home" = thisguild;
+	$setparent ( stray, thisguild );
+	stray's "basicScript" = stray's "startingScript";
+	$setunitplayernumber ( stray, $getunitplayernumber ( thisguild ));
+
+	if ( $IsDead ( stray ) == FALSE ) // If the unit is dead, it doesn't need or want its tasks reset.
+		$reset_tasks ( stray );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function guild_birth ( agent thisagent )
+
+declare
+	agent	AIRootAgent;
+	list 	strays,new_strays;
+	agent stray;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ( "GPLAIRoot" );
+
+	If ( AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes )
+		begin
+
+
+			$SetAttribute ( ThisAgent, #ATTRIB_MaxGuildMembers, 1 );
+
+		end
+
+	thisagent's "in_danger" = FALSE;
+
+	//$count_building(thisagent);
+
+	// the player number check is so that if you want this to be
+	// 'rescuable' it needs to not adopt right away!
+	if ( $getunitplayernumber ( thisagent ) != #monster_player )
+		begin
+			$check_strays ( thisagent, thisagent's "member_title", #MyPlayer );
+			$check_strays ( thisagent, thisagent's "member_title", #NotMyPlayer );
+		end
+
+	$setattribute ( thisagent, #ATTRIB_gold, 0 );
+
+	// start the guild's activescript if it has one
+	If ( $HasAttribute ( "ActiveScript", ThisAgent ))
+		$NewThread ( ThisAgent's "ActiveScript", #Normal_Cycle, ThisAgent );
+
+	$Building_Birth ( ThisAgent );
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function warriors_guild_birth(agent thisagent)
+
+declare
+	list strays,strays2,strays3,total_strays,new_strays;
+	agent stray, AIRootAgent;
+	string title;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes)
+		begin
+		
+			$SetAttribute (ThisAgent, #ATTRIB_MaxGuildMembers, 1);
+
+		end
+
+	thisagent's "in_danger" = FALSE;
+
+	//$count_building(thisagent);
+	// check map for strays
+	//
+	$check_strays(thisagent,"Warrior",#myplayer);
+	$check_strays(thisagent,"Paladin",#myplayer);
+	$check_strays(thisagent,"Warrior_of_discord",#myplayer);
+	$check_strays(thisagent,"Warrior",#Notmyplayer);
+	$check_strays(thisagent,"Paladin",#Notmyplayer);
+	$check_strays(thisagent,"Warrior_of_Discord",#Notmyplayer);
+
+	$setattribute(thisagent,#ATTRIB_gold,0);
+
+	$Building_Birth (ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function built_or_auto_birth(agent thisagent)
+
+declare
+	list list1;
+
+begin
+	//$ListObjects(thisagent,"building",-1,list1,#CheckTitles, ThisAgent's "Title",#MyPlayer);
+	//list1 = $listtitles(list1,thisagent's "title");
+
+	if ($ListObjects(thisagent,"building",-1,list1,#CheckTitles, ThisAgent's "Title",#MyPlayer) < 1)
+		$basic_birth(thisagent);
+	else
+		begin
+			$auto_birth(thisagent);
+			$runthread(thisagent's "birthscript2",1,thisagent);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gnome_camp_birth(agent thisagent)
+
+declare
+	agent palace;
+	list 	list1;
+	agent AIRootAgent;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes)
+		begin
+
+			$SetAttribute (ThisAgent, #ATTRIB_MaxGuildMembers, 1);
+
+		end
+
+	palace = $gettruepalace(thisagent);
+
+	$ListObjects(thisagent,"building",-1,list1,#CheckTitles,"Gnome_Hovel",#MyPlayer);
+	//list1 = $listtitles(list1,"gnome_hovel");
+
+	if ($isvalidgamepiece(palace))
+		if ($listsize(list1) < #max_gnome_camps)
+			if ($isrunning(palace's "gnome_camp_spawner") != TRUE)
+				$runthread(palace's "gnome_camp_spawner",#gnome_camp_delay,palace);
+
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gnome_camp_spawn(agent thisagent)
+
+declare
+
+begin
+	$spawnunit(thisagent,"gnome_hovel", "maxhp");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function krypta_birth(agent thisagent)
+
+declare
+	integer scripttime;
+	agent palace;
+
+begin
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function fervus_birth(agent thisagent)
+
+declare
+	integer scripttime;
+	agent palace;
+
+begin
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function agrela_birth(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function dauros_birth(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function bungalow_birth(agent thisagent)
+
+declare
+	agent palace, AIRootAgent;
+	list list1;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes)
+		begin
+
+			$SetAttribute (ThisAgent, #ATTRIB_MaxGuildMembers, 1);
+
+		end
+
+	palace = $gettruepalace(thisagent);
+
+	if ($isvalidgamepiece(palace))
+		begin
+			// start the brothel timer
+			$runthread(thisagent's "spawn_1",#brothel_delay,thisagent);
+
+			//$ListObjects(thisagent,"building",-1,list1,#CheckTitles,"rogues_guild",#MyPlayer);
+			//list1 = $listtitles(list1,"rogues_guild");
+
+			if ($ListObjects(thisagent,"building",-1,list1,#CheckTitles,"rogues_guild",#MyPlayer) > 0)
+				begin
+					if (palace's "gambling_hall_building" == FALSE)
+						begin
+							$runthread(thisagent's "spawn_2",#gambling_hall_delay,thisagent);
+							palace's "gambling_hall_building" = TRUE;
+						end
+				end
+		end
+
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function brothel_timer(agent thisagent)
+
+declare
+
+begin
+	$spawnunit($gettruepalace(thisagent),"brothel","maxhp");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gambling_hall_timer(agent thisagent)
+
+declare
+
+begin
+	$spawnunit($gettruepalace(thisagent),"Gambling_hall","maxhp");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gambling_hall_birth(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	$auto_birth(thisagent);
+	palace = $gettruepalace(thisagent);
+	if ($isdead(palace) == FALSE)
+		palace's "gambling_hall_building" = FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rogues_guild_birth(agent thisagent)
+
+declare
+	list list1;
+	agent bungalow, AIRootAgent;
+	agent palace;
+
+begin
+	//TODO: PERHAPS FIND A BETTER PLACE FOR THE FOLLOWING QUEST-SPECIFIC CHECK
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If (AIRootAgent's "Quest_Number" == #QNumber_Legendary_Heroes)
+		begin
+
+			$SetAttribute (ThisAgent, #ATTRIB_MaxGuildMembers, 1);
+
+		end
+
+
+	//$ListObjects(thisagent,"building",-1,list1,#CheckTitles, "elven_bungalow",#MyPlayer);
+	//list1 = $listtitles(list1,"elven_bungalow");
+
+	if ($ListObjects(thisagent,"building",-1,list1,#CheckTitles, "elven_bungalow",#MyPlayer) > 0)
+		begin
+			palace = $gettruepalace(thisagent);
+			if ($isvalidgamepiece(palace))
+				if (palace's "gambling_hall_building" == FALSE)
+					begin
+						$runthread(thisagent's "spawn_1",#gambling_hall_delay,thisagent);
+						palace's "gambling_hall_building" = TRUE;
+					end
+		end
+	$guild_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function building_birth(agent thisagent)
+
+declare
+
+begin
+	//	$NewThread( thisagent's "activeScript", #Normal_Cycle, thisagent );
+
+	If ($HasAttribute ("RevenueScript", ThisAgent))
+		begin
+			If ($ValidFunction (ThisAgent's "RevenueScript"))
+				$NewThread (ThisAgent's "RevenueScript", ThisAgent's "revenue_time", ThisAgent);
+		end
+
+	$count_building(thisagent);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function hideout_birth(agent thisagent)
+
+declare
+
+begin
+	$NewThread (thisagent's "activeScript", 60000, thisagent);
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Birth script for "Quest for the Magic Ring" quest specific building, Hidden_Ring_Site
+// This checks to see if Quest Flag 1 is true. If it is, that means that the first Hidden Ring Site is gone,
+// and this one needs to spawn w/o a magic ring in it
+Function Hidden_Ring_Birth (agent ThisAgent)
+Declare
+	agent	RootAgent;
+	agent	Palace, Temp_Palace;
+	list	Palaces;
+
+Begin
+	RootAgent = $RetrieveAgent ("GplAIRoot");
+
+	//If true, then this is the second ring site.
+	If (RootAgent's "Quest_Flag_1" == True)
+		begin
+
+			//This unit is not flaggable and not targettable by spells
+			$SetAttribute (ThisAgent, #ATTRIB_NotFlaggable, 1);
+			$SetAttribute (ThisAgent, #ATTRIB_NotSpellTarget, 2);
+
+			Palaces = $ListPalaces ();
+
+			//Get the Player 1 palace
+			Foreach Temp_Palace in Palaces do
+				begin
+					If ($GetUnitPlayerNumber (Temp_Palace) == #Player_1)
+		   			Palace = Temp_Palace;
+				end
+
+			$MessageFlag (ThisAgent, #Message_Magic_Ring_Show_Site_2);
+
+			//reveal the area
+			$revealArea(Palace,$LocationOf (ThisAgent),400);
+
+			//Spawn at full HP
+			$SetAttribute (ThisAgent, #ATTRIB_HP, $GetAttribute (ThisAgent, #ATTRIB_MaxHP));
+
+			//This is to set it apart from the first ring site
+			ThisAgent's "Title" = "Hidden_Ring_Site2";
+
+			ThisAgent's "Type" = "Special";
+		end
+
+	$Lair_Birth (ThisAgent);
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Birth script for "Quest for the Holy Chalice" quest specific building, Hidden_Chalice_Site
+// This just spawns Rrongol so that he know this is his parent, and when he runs Guardian_Birth, he will
+// patrol it
+Function Hidden_Chalice_Birth (agent ThisAgent)
+
+Declare
+
+Begin
+	$SpawnUnit (ThisAgent, "Rrongol", "Override");
+
+	$Lair_Birth (ThisAgent);
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+function Broken_sewer_Birth(agent thisagent)
+
+declare
+	integer team;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $retrieveAgent("GplAIRoot");
+	if (AIRootAgent's "quest_number" == #qnumber_clash_empires)
+		team = #player_3;
+	else
+		team = #monster_player;
+
+	$setunitplayernumber(thisagent,team);
+	$rat_spawn(thisagent);
+	$lair_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function lair_birth(agent thisagent)
+
+Declare
+
+begin
+	//Set up attribs with GPL values if they are initialalized to 0
+	If ($GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate) == 0)
+		$SetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate, ThisAgent's "Base_Spawn_Rate");
+
+	If ($GetAttribute (ThisAgent, #ATTRIB_Lair_History_Mod) == 0)
+		$SetAttribute (ThisAgent, #ATTRIB_Lair_History_Mod, #Lair_History_Modifier);
+
+	$NewThread (ThisAgent's "Spawn_Function", $GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate), ThisAgent);
+
+	$NewThread (thisagent's "activeScript", #Lair_Cycle, thisagent);
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+function city_lair_birth(agent thisagent)
+
+declare
+	integer time_to_spawn;
+
+begin
+	$auto_birth(thisagent);
+	$lair_birth(thisagent);
+
+	Time_To_Spawn = $GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate);
+	time_to_spawn = $random_time(time_to_spawn);
+	$SetThreadInterval (ThisAgent's "Spawn_Function", Time_To_Spawn);
+
+	// set the built flag so that the sound isn't "under construction"
+	$setattribute(thisagent,#ATTRIB_FirstStageBuilt,1);
+
+	if (thisagent's "title" == "graveyard")
+		begin
+			// set up a random number of spawns this graveyard has before it
+			// decays and leaves the map
+			// store it in difficulty
+			thisagent's "difficulty" = $randomnumber(5) + 10;
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function guardhouse_birth(agent thisagent)
+declare
+//	agent	AIRootAgent;
+
+begin
+//	$NewThread (ThisAgent's "RevenueScript", ThisAgent's "revenue_time", ThisAgent);
+
+	//$count_building(thisagent);
+
+	$NewThread (ThisAgent's "Guard_Function", #Normal_Cycle, ThisAgent);
+	$RunThread (ThisAgent's "Guard_Spawn_Function", 1, ThisAgent);
+
+	$Building_Birth (ThisAgent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is called before the first frame of the game
+// it is needed to force the palace's upgrade button to be correct
+// IT ALSO  sets thisagent to title palace if it is an outpost
+
+// This is run AFTER all the birthscripts for units have run
+
+function Palace_Pre_Birth( agent thisagent )
+declare
+begin
+
+	//If ThisAgent is an outpost, then change its title to Palace
+	If (ThisAgent's "Title" == "Outpost")
+		begin
+
+			ThisAgent's "Title" = "Palace";
+
+		end
+
+	Else
+		$setattribute(thisagent,#ATTRIB_Upgrade_herosNeeded,thisagent's "heroes_to_upgrade");
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Palace_Birth (agent ThisAgent)
+Declare
+
+Begin
+
+	thisagent's "in_danger" = FALSE;
+	$clearlist(thisagent's "tax_route");
+	$clearlist(thisagent's "tax_targets");
+	$NewThread( thisagent's "activeScript", #palace_revenue_cycle, thisagent );
+	$NewThread( ThisAgent's "Guard_Function",#Normal_Cycle, ThisAgent);
+	$RunThread (ThisAgent's "Guard_Spawn_Function", #initial_Palace_guard_delay, ThisAgent);
+	$runThread( ThisAgent's "Tax_spawn",#initial_tax_collector_delay, thisagent);
+	$runThread(thisagent's "peasant_spawn",#initial_peasant_delay, thisagent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Tower_Birth	(agent ThisAgent)
+Declare
+
+
+Begin
+	//$count_building(thisagent);
+
+//	If ($ValidFunction (ThisAgent's "RevenueScript"))
+//		$NewThread (ThisAgent's "RevenueScript", ThisAgent's "revenue_time", ThisAgent);
+
+	// if it is a ballista tower (or guardhouse?) run an activescript
+
+	If ((ThisAgent's "Title" == "Ballista_Tower") || (ThisAgent's "Title" == "Guardhouse"))
+		$NewThread (ThisAgent's "ActiveScript", #Normal_Cycle, ThisAgent);
+
+	if (thisagent's "Title" == "wizards_tower")
+		$setattribute(thisagent,#ATTRIB_enchantmentLevel,0);
+
+	$Building_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Fairgrounds_Birth (agent ThisAgent)
+Declare
+
+Begin
+//	$count_building(thisagent);
+
+	$NewThread (ThisAgent's "ActiveScript", #Fairgrounds_Cycle, ThisAgent);
+
+	$Building_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Trading_Post_Birth (agent ThisAgent)
+Declare
+
+Begin
+	$RunThread (ThisAgent's "ActiveScript", #Henchmen_Cycle, ThisAgent);
+
+	$Building_Birth (ThisAgent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function statue_birth(agent thisagent)
+
+declare
+	list guys;
+	agent guy;
+
+begin
+	$listobjects(thisagent,"hero",-1,guys,#MyPlayer,#insideOtherUnits);
+
+	$debugout(911,"Guys seen by statue",$listsize(guys));
+	foreach guy in guys do
+		if (guy's "subtype" == "hero")
+			guy's "loyalty" += #statue_loyalty_boost;
+
+	$building_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gardens_birth(agent thisagent)
+
+declare
+	list guys;
+	agent guy;
+
+begin
+	//$count_building(thisagent);
+	$listobjects(thisagent,"hero",-1,guys,#MyPlayer,#insideOtherUnits);
+
+	foreach guy in guys do
+		if (guy's "subtype" == "hero")
+			guy's "loyalty" += #gardens_loyalty_boost;
+
+	$Building_Birth (ThisAgent);
+
+	$runthread(thisagent's "spawn_1",#gazebo_delay,thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gazebo_timer(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+	palace = $gettruepalace(thisagent);
+
+	if ($isvalidgamepiece(palace))
+		$spawnunit(palace,"gazebo","maxhp");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function fountain_birth(agent thisagent)
+
+declare
+	agent palace;
+
+begin
+//	$building_birth(thisagent);
+	$count_building(thisagent);
+	palace = $gettruepalace(thisagent);
+
+	// run the tax spawn function to get a new tax collector
+	if ($isvalidgamepiece(palace))
+		if ($isrunning (palace's "tax_spawn") == False)
+			$runthread(palace's "tax_spawn",#tax_collector_delay,palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gazebo_birth(agent thisagent)
+
+declare
+
+begin
+	$building_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This has a Lair Become Reborn if it was destroyed (run from a special DeathScript)
+Function Respawn_Lair (agent ThisAgent)
+Declare
+
+Begin
+	//Refill HP's and become active again
+	$SetAttribute (ThisAgent, #ATTRIB_HP, $GetAttribute (ThisAgent, #ATTRIB_MaxHP));
+	ThisAgent's "Type" = "Lair";
+
+	//This Lair can be flagged and cast on again, and re-appears on the minimap
+	$SetAttribute (ThisAgent, #ATTRIB_NotFlaggable, 0);
+	$SetAttribute (ThisAgent, #ATTRIB_NotSpellTarget, 0);
+	$ShowMinimap  (ThisAgent, True);
+
+	//Give the agent some gold again
+	$SetAttribute (ThisAgent, #Attrib_Gold, $RandomNumber (500) + 250);
+
+	//Set up attribs with GPL values if they are initialalized to 0
+	If ($GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate) == 0)
+		$SetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate, ThisAgent's "Base_Spawn_Rate");
+
+	If ($GetAttribute (ThisAgent, #ATTRIB_Lair_History_Mod) == 0)
+		$SetAttribute (ThisAgent, #ATTRIB_Lair_History_Mod, #Lair_History_Modifier);
+
+	//Reset ThisAgent's "History_Modifier"
+	ThisAgent's "History_Modifier" = 0;
+
+	$NewThread (ThisAgent's "Spawn_Function", $GetAttribute (ThisAgent, #ATTRIB_Lair_BaseSpawnRate), ThisAgent);
+
+	ThisAgent's "Type" = "Lair";
+
+	ThisAgent's "ActiveScript" = $Lair_Brains;
+
+	$NewThread (thisagent's "activeScript", #Lair_Cycle, thisagent);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Birth script for "Tomb of the Dragon King" quest specific building, Dragon_Tomb
+function tomb_birth(agent thisagent)
+
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "quest_flag_2" = FALSE; // this tells the victory script
+														// it is okay to check for victory!!!
+
+	$setattribute(thisagent,#ATTRIB_HP,$getattribute(thisagent,#ATTRIB_MaxHP));
+
+	$lair_birth(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function GuildHasOpenSlots(agent guild) is Boolean
+// used to check if a hero can join a guild
+
+declare
+	integer list_size, list_capacity;
+
+begin
+
+	// check to see if the guild has any free slots
+	list_size = $listsize(guild's "members");
+	list_capacity = $getattribute(guild,#ATTRIB_MaxGuildMembers);
+
+	// either has an 2 or more open slots, or isn't recruiting
+	return (	(( list_size < list_capacity ) && ($BuildingIsRecruiting(guild) == FALSE) )
+			 ||	( list_size < (list_capacity -1) ));
+
+end

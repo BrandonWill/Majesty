@@ -1,0 +1,59 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Priestess_tree (agent thisagent)
+
+declare
+
+begin
+
+//	$debugout("I'm deciding what to do!");
+	$createeffector(thisagent,"thought_bubble_think",#think_bubble_time);
+	$SpecifyIntent (ThisAgent, #Intent_Thinking);
+
+   if ($Build_Horde(ThisAgent,95) == False)
+
+	if ($check_nearby(thisagent) == False)
+
+	if ($Check_rewards(thisagent,FALSE) == False)
+
+	if ($Defend_home(thisagent) == False)
+
+	if ($rest(thisagent) == False)
+
+	if ($Purchase_equipment(thisagent) == False)
+
+	if ($Purchase_bazaar(thisagent, 70) == False)
+
+	if ($pursue_entertainment(thisagent) == False)
+
+	if ($Hall_Champs_Check(thisagent, 40) == False)
+
+	if ($Combat_wandering(thisagent,75) == False) //Priestesses never attack undead-- they try to control them
+
+	if ($combat_wandering_heroes(thisagent,70) == False)
+
+	if ($Raid_Lair(ThisAgent,40) == False)
+
+	if ($raid_enemy_building(thisagent,30) == FALSE)
+
+	if ($Explore_Map(thisagent,50) == False)
+
+	if ($Visit_Building(ThisAgent, "Royal_gardens", 15) == False)
+
+	if ($check_library(thisagent,45, "Train_magic_resist") == FALSE)
+
+	if ($check_library(thisagent,70, "Learn_generic_spell") == FALSE)
+
+	if ($Go_home(thisagent,80) == False)
+
+		begin
+			$SpecifyIntent (ThisAgent, #intent_wandering);
+			thisagent's "counter" = 0;
+			thisagent's "activescript" = $hero_wander;
+		end
+
+end

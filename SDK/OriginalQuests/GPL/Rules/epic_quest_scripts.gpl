@@ -1,0 +1,4358 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function istitlealive(agent palace,string title) is boolean
+	
+declare
+	list monsters,l2;
+	
+begin
+	$ListObjects( palace,"monster",-1,monsters, #NoHiddenMap );
+	$listobjects( palace,"invisible",-1,l2, #nohiddenMap);
+
+	monsters = $addlists(monsters,l2);
+	monsters = $listtitles(monsters,title);
+
+	if ($listsize(monsters) > 0)
+		return true;
+	else
+		return false;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Barren Waste Quest entry point
+function BARREN_WASTE()
+
+declare
+	agent AIRootAgent,palace,sign;
+	list palaces,signs;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Barren_Waste;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	// what can't be used in this quest?
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+	$disableunittype("fairgrounds");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+	// setup starting messages
+	$messageflag(palace,#Message_Barren_start);
+
+	// setup special things
+	$setup_random_treasure(20, #default_spawn_treasure_dist);
+
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"Banner_wood");
+	sign = $listmember(signs,1);
+	$post_message(sign,#sign_barren);
+
+	// start all scripts that need to be run
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "VictoryCondition" = $barren_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function barren_victory()
+
+declare
+	agent AIRootAgent,palace,bldg;
+	list palaces,bldgs;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+
+	if (AIRootAgent's "Quest_Flag_1" == False)
+		begin
+			// has the player built a guild yet?
+			$listobjects(palace,"building",-1,bldgs,#MyPlayer);
+			bldgs = $listsubtypes(bldgs,"guild");
+			bldgs = $listcompleted(bldgs);
+			if ($listsize(bldgs) > 0)
+				begin
+					$messageflag($listmember(bldgs,1),#message_barren_guild_built);
+					AIRootAgent's "Quest_flag_1" = TRUE;
+				end
+		end
+	else
+	if (AIRootAgent's "Quest_Flag_2" == False)
+		begin
+			// has the palace been upgraded yet?
+			if ((palace's "level" == 2) && ($getattribute(palace,#ATTRIB_currentstagebuilt) == 1))
+				begin
+					$messageflag(palace,#message_barren_Palace_Upgraded);
+					AIROOTAgent's "Quest_flag_2" = TRUE;
+				end
+		end
+	else
+	if (AIRootAgent's "Quest_Flag_3" == False)
+		begin
+			// has the palace been upgraded to level 3?
+			if ((palace's "level" == 3) && ($getattribute(palace,#ATTRIB_currentstagebuilt) == 1))
+				begin
+					$messageflag(palace,#message_barren_Palace_third);
+					AIROOTAgent's "Quest_flag_3" = TRUE;
+				end
+		end
+	else
+	if (AIRootAgent's "Quest_Flag_4" == False)
+		begin
+			// has the player knocked over the special location
+			$listobjects(palace,"lair",-1,bldgs,#NotMyPlayer,#NoHiddenMap);
+			bldgs = $listtitles(bldgs,"Dark_castle");
+			if ($listsize(bldgs) == 0)
+				begin
+					// display the message : go build the fairgrounds.
+					$messageflag(palace,#message_barren_fairground);
+					$enableunittype("fairgrounds");
+					AIRootAgent's "Quest_Flag_4" = TRUE;
+
+					//Stop playing current music, and play the last music track
+					$Play_Endgame_Music (AIRootAgent);
+				end
+
+		end
+	else
+	if (AIRootAgent's "Quest_Flag_5" == False)
+		begin
+			// has the player built a fairgrounds?
+			$listobjects(palace,"building",-1,bldgs,#MyPlayer);
+			bldgs = $listtitles(bldgs,"fairgrounds");
+			bldgs = $listcompleted(bldgs);
+			if ($listsize(bldgs) > 0)
+				begin
+
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,$listmember(bldgs,1));
+					$KillThread( AIRootAgent's "VictoryCondition" );
+
+					AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+					$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+
+					AIRootAgent's "Quest_Flag_5" = TRUE;
+				end
+
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Bell, Book and Candle Quest entry point
+function BELL_BOOK_CANDLE ()
+
+declare
+	agent AIRootAgent;
+	agent palace,booksite,bellsite,candlesite;
+	list palaces,lairs,lairs2,buildings,chests;
+
+begin
+	// what can't be used in this quest?
+	$disableunittype("Warriors_guild");
+	$disableunittype("Wizards_guild1");
+
+
+	// start all scripts that need to be run
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "VictoryCondition" = $bbc_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "Quest_Number" = #QNumber_Bell_Book;
+
+	// overwrite the death scripts + titles of the 3 lairs
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap);
+
+	lairs2 = $listtitles(lairs,"ruined_altar1");
+	booksite = $listmember(lairs2,1);
+
+	booksite's "title" = "booksite";
+	//booksite's "Epic_Quest_Item" = #QItem_book;
+	$CreateNewInventoryItem (#QItem_Book, Booksite);
+
+	lairs2 = $listtitles(lairs,"ruined_shrine1");
+	bellsite = $listmember(lairs2,1);
+
+	bellsite's "title" = "bellsite";
+	//bellsite's "Epic_Quest_Item" = #QItem_bell;
+	$CreateNewInventoryItem (#QItem_Bell, Bellsite);
+
+	lairs2 = $listtitles(lairs,"ruined_keep1");
+	candlesite = $listmember(lairs2,1);
+
+	candlesite's "title" = "candlesite";
+	//candlesite's "Epic_Quest_Item" = #QItem_candle;
+	$CreateNewInventoryItem (#QItem_Candle, Candlesite);
+
+	// set up other things like messages
+	$messageflag(palace,#message_bbc_intro);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,100,100);
+
+	// reset global flags to be used by this quest
+	AIRootAgent's "Quest_Flag_1" = False;
+	AIRootAgent's "Quest_Flag_2" = False;
+	AIRootAgent's "Quest_Flag_3" = False;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function bbc_victory()
+
+declare
+	list palaces,lairs,lairs2,buildings;
+	agent palace,booksite,bellsite,candlesite,bldg,lair;
+	agent AIRootAgent;
+	integer sites_gone;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap );
+
+	$ListObjects(palace,"building",-1, buildings, #NoHiddenMap);
+
+	//Init message flags so they get placed in the correct order
+
+	//Make sure we haven't placed this flag yet
+	If (AIRootAgent's "Message_Check_1" == False)
+		begin
+			//If current message is gone, set up the next one
+			If ($IsMessageFlagPresent (#message_bbc_intro) == False)
+				begin
+					buildings = $listtitles(buildings,"blacksmith");
+
+					If ($ListSize (buildings) > 0)
+						begin
+							bldg = $listmember(buildings,1);
+							$messageflag(bldg,#message_bbc_blacksmith);
+						end
+
+					AIRootAgent's "Message_Check_1" = True;
+				end
+
+		end
+
+	Else
+		begin
+			If (AIRootAgent's "Message_Check_2" == False)
+				begin
+					If ($IsMessageFlagPresent (#message_bbc_blacksmith) == False)
+						begin
+							buildings = $listtitles(buildings,"guardhouse");
+
+							If ($ListSize (Buildings) > 0)
+								begin
+									bldg = $listmember(buildings,1);
+									$messageflag(bldg,#message_bbc_guardhouse);
+								end
+
+							AIRootAgent's "Message_Check_2" = True;
+						end
+				end
+			Else
+				begin
+					If (AIRootAgent's "Message_Check_3" == False)
+						begin
+							If ($IsMessageFlagPresent (#message_bbc_guardhouse) == False)
+								begin
+									buildings = $listtitles(buildings,"Inn");
+
+									If ($ListSize (Buildings) > 0)
+										begin
+											bldg = $listmember(buildings,1);
+											$messageflag(bldg,#message_bbc_inn);
+										end
+
+									AIRootAgent's "Message_Check_3" = True;
+								end
+						end
+					Else
+						begin
+							If (AIRootAgent's "Message_Check_4" == False)
+								begin
+									If ($IsMessageFlagPresent (#message_bbc_inn) == False)
+										begin
+											buildings = $listtitles(buildings,"Trading_post");
+
+											If ($ListSize (Buildings) > 0)
+												begin
+													bldg = $listmember(buildings,1);
+													$messageflag(bldg,#message_bbc_trading_post);
+												end
+
+											AIRootAgent's "Message_Check_4" = True;
+
+										end
+								end
+
+						end
+				end
+		end
+
+
+
+
+	lairs2 = $listtitles(lairs,"booksite");
+	if ($listsize(lairs2) > 0)
+		booksite = $listmember(lairs2,1);
+	else
+		sites_gone += 1;
+
+	lairs2 = $listtitles(lairs,"bellsite");
+	if ($listsize(lairs2) > 0)
+		bellsite = $listmember(lairs2,1);
+	else
+		begin
+			sites_gone += 1;
+
+			//Stop playing current music, and play the last music track
+			$Play_Endgame_Music (AIRootAgent);
+
+		end
+
+	lairs2 = $listtitles(lairs,"candlesite");
+	if ($listsize(lairs2) > 0)
+		candlesite = $listmember(lairs2,1);
+	else
+		sites_gone += 1;
+
+	if (sites_gone == 3)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			// player has won!
+			$declarevictory(palace);
+			$KillThread( AIRootAgent's "VictoryCondition" );
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+		end
+	else
+		begin
+			if (AIRootAgent's "Quest_flag_4" == FALSE)
+				if (sites_gone == 2)
+					begin
+						// make the last lair have a special spawn
+						// of a giant rat, so it doesn't seem anticlimactic
+						// to win with a monster nearby.
+						lair = $listmember(lairs,1);
+						lair's "special_spawn_type" = "Giant_rat";
+						AIRootAgent's "Quest_flag_4" = True;
+					end
+			// check to see if new messages need to be placed on the map
+			// check to see if the hero has 'discovered' new lairs
+			$ListObjects(palace,"lair",-1,lairs );
+
+			If (AIRootAgent's "Quest_Flag_1" == False)
+				begin
+					lairs2 = $listtitles(lairs,"booksite");
+					if ($listsize(lairs2) > 0)
+						begin
+							bldg = $listmember(lairs2,1);
+							$messageflag(bldg,#message_bbc_found_book);
+							AIRootAgent's "Quest_flag_1" = True;
+						end
+				end
+
+			If (AIRootAgent's "Quest_Flag_2" == False)
+				begin
+					lairs2 = $listtitles(lairs,"bellsite");
+					if ($listsize(lairs2) > 0)
+						begin
+							bldg = $listmember(lairs2,1);
+  							$messageflag(bldg,#message_bbc_found_bell);
+							AIRootAgent's "Quest_flag_2" = True;
+						end
+				end
+
+			If (AIRootAgent's "Quest_Flag_3" == False)
+				begin
+					lairs2 = $listtitles(lairs,"candlesite");
+					if ($listsize(lairs2) > 0)
+						begin
+							bldg = $listmember(lairs2,1);
+	 						$messageflag(bldg,#message_bbc_found_candle);
+							AIRootAgent's "Quest_flag_3" = True;
+						end
+				end
+
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Quest for the Holy Chalice entry point
+function HOLY_CHALICE ()
+declare
+	agent AIRootAgent;
+	list	Palaces, Lairs, Chests;
+	agent	Palace, Chalice_Site;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Holy_Chalice;
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	$SetUp_Rescue_Heroes (Palace, "Warriors_Guild", "Paladin", 3);
+	$SetUp_Rescue_Heroes (Palace, "Warriors_Guild", "Paladin", 3);
+	$SetUp_Rescue_Heroes (Palace, "Warriors_Guild", "Paladin", 4);
+	$SetUp_Rescue_Heroes (Palace, "Warriors_Guild", "Paladin", 4);
+	$SetUp_Rescue_Buildings (Palace);
+	$SetUp_Respawning_Lairs (Palace);
+
+	//Give the Chalice to the Chalice Site
+	$ListObjects (Palace, "Lair", -1, Lairs, #NoHiddenMap);
+
+	Lairs = $ListTitles (Lairs, "Hidden_Chalice_Site");
+	Chalice_Site = $ListMember (Lairs, 1);
+	$CreateNewInventoryItem (#QItem_Holy_Chalice, Chalice_Site);
+	AIrootAgent's "end_coord" = $locationof(chalice_site);
+
+	//Create a signpost by the Chalice_site
+	$Create_Sign (Palace, "Sign_wood", #sign_chalice_no_trespass, $RandomCoord (Chalice_Site, 500));
+
+
+	//Reset the Chalice_Site's IGDeathScript back to Hidden_Chalice_Death (For VC.)
+	//This was overwritten in $Setup_Respawning_Lairs
+	Chalice_Site's "IGDeathScript" = $Hidden_Chalice_Death;
+
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$Setup_Special_Chests (chests, $Holy_Chalice_Chest_Birth, $Holy_Chalice_Chest_Death);
+	$setup_starting_treasure(chests,250,500);
+
+
+	AIRootAgent's "VictoryCondition" = $Holy_Chalice_Victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "VictoryCondition2" = $Holy_Chalice_Victory_2;
+	$NewThread (AIRootAgent's "VictoryCondition2", 1800000);
+
+	//Player can't build markets in this quest - they have to rely on the respawning treasure chests
+	$disableunittype("Marketplace1");
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Holy_Chalice_Victory ()
+Declare
+	agent AIRootAgent, Rrongol, Palace, Chalice_Site;
+	list	Palaces, Lairs;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//If this is TRUE, then player recovered the Chalice
+	If (AIRootAgent's "Quest_Flag_1")
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "End_coord");
+
+			//Kill BOTH victory condition scripts
+			$KillThread( AIRootAgent's "VictoryCondition");
+			$KillThread( AIRootAgent's "VictoryCondition2" );
+
+			//setup a small thread for if a player wants to keep playing!
+			// rescue buildings and such need to be checked for
+			AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+			$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+		end
+
+
+	//Flag the Chalice Site the first time it appears
+	If (AIRootAgent's "Quest_Flag_2" == False)
+		begin
+
+			$ListObjects (Palace, "Lair", -1, Lairs);
+			Lairs = $ListTitles (Lairs, "Hidden_Chalice_Site");
+
+			If ($ListSize (Lairs) > 0)
+				begin
+
+					Chalice_Site = $ListMember (Lairs, 1);
+					$MessageFlag (Chalice_Site, #Message_Chalice_Site_Found);
+
+					//Don't enter this logic again
+					AIRootAgent's "Quest_Flag_2" = True;
+
+					//Stop playing current music, and play the last music track
+					$Play_Endgame_Music (AIRootAgent);
+
+				end
+		end
+
+
+
+	$Rescue_Buildings (Palace);
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function runs will declare loss if it runs twice and the player doesn't have the chalice
+Function Holy_Chalice_Victory_2 ()
+declare
+	list palaces;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+
+//	if (AIRootAGent's "Quest_flag_5" == FALSE)
+//		begin
+//			// this is to get around the time limit of 1.8 million millseconds
+//			AIRootAgent's "Quest_flag_5" = TRUE;
+//		end
+//	else
+//		begin
+
+			//If this flag is true, then the player recovered the Chalice
+			If (AIRootAgent's "Quest_Flag_1")
+				begin
+					$KillThread( AIRootAgent's "VictoryCondition" );
+					$KillThread( AIRootAgent's "VictoryCondition2" );
+
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,AIRootAgent's "End_coord");
+
+					//setup a small thread for if a player wants to keep playing!
+					// rescue buildings and such need to be checked for
+					AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+					$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+				end
+			else
+				begin
+					// player lost
+					$KillThread( AIRootAgent's "VictoryCondition" );
+					$KillThread( AIRootAgent's "VictoryCondition2" );
+					$declareloss(palace);
+				end
+
+//		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+function rescue_keep_playing()
+
+declare
+	list palaces;
+	agent palace;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$Rescue_Buildings (Palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Quest for the Crown entry point
+function QUEST_FOR_CROWN()
+
+declare
+	agent AIRootAgent;
+	list palaces,chests,lairs,signs;
+	agent palace,lair,bldg;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,800,300);
+
+	$setup_rescue_buildings(palace);
+	$setup_random_treasure(65, #default_spawn_treasure_dist);
+
+	$listobjects(palace,"lair",-1,lairs,#NoHiddenMap);
+	foreach lair in lairs do
+		begin
+			if (lair's "special_spawn_type" == "vampire")
+				lair's "special_spawn_type" = "werewolf";
+		end
+
+	lairs = $listtitles(lairs,"Crown_site");
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "end_coord" = $locationof($listmember(lairs,1));
+
+	AIRootAgent's "VictoryCondition" = $crown_victory;
+
+	// setup sepcial things - like signs
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"monster_marker");
+
+	bldg = $listmember(signs,1);
+	$post_message(bldg, #sign_crown1 );
+
+	bldg = $listmember(signs,2);
+	$post_message(bldg, #sign_crown2 );
+
+	bldg = $listmember(signs,3);
+	$post_message(bldg, #sign_crown3 );
+
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIRootAgent's "Quest_Number" = #QNumber_Crown;
+
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function crown_victory()
+
+declare
+	list palaces,lairs;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	//TODO: ADD FINAL MUSIC CALL
+
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap );
+	lairs = $listtitles(lairs,"Crown_site");
+
+	if ($listsize(lairs) == 0)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "End_coord");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+
+			AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+			$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_medium;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(450000));
+		end
+
+	$rescue_buildings(palace);
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Dark Forest Quest entry point
+function DARK_FOREST()
+
+declare
+	agent AIRootAgent,palace,fervus;
+	list palaces,chests,buildings;
+	coordinate coord;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// what can't be used in this quest?
+	$disableunittype("Warriors_guild");
+	$disableunittype("Rangers_guild");
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Rogues_guild1");
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+
+	// find the temple to Fervus
+	$listobjects(palace,"building",-1,buildings,#Nohiddenmap);
+	buildings = $listtitles(buildings,"Temple_Fervus");
+	fervus = $listmember(buildings,1);
+
+	// what needs special setup
+	$gold_bonus(palace,"trading_post",8000);
+	$setup_rescue_buildings(palace);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,200,400);
+
+	$setup_random_treasure(20, #default_spawn_treasure_dist);
+
+	// what scripts need to be run during the game?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIRootAgent's "Quest_Number" = #QNumber_Dark_Forest;
+
+	AIRootAgent's "VictoryCondition" = $Dark_forest_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	AIRootAgent's "VictoryCondition2" = $Dark_forest_events;
+	$NewThread( AIRootAgent's "VictoryCondition2", $random_to_percent(240000,3) );
+
+	// put in 3 note stumps
+	coord = $avg_coords($locationof(palace),$locationof(fervus));
+	$create_sign(palace,"note_stump",#sign_DF_Note_1,coord);
+
+	// messages
+	$messageflag(palace,#message_dark_forest_start);
+
+	// flags
+	AIRootAgent's "Quest_Flag_1" = False; // has player found temple to fervus?
+	// quest flag 2 = has the end game music been cued?
+	AIRootAgent's "end_coord" = $locationof(palace); // this is in case the game ends very quickly.
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function avg_coords(coordinate coord1, coordinate coord2) is coordinate
+
+declare
+	integer x1,y1,x2,y2,x3,y3;
+	coordinate coord3;
+
+begin
+	x1 = $getX(coord1);
+	y1 = $getY(coord1);
+
+	x2 = $getX(coord2);
+	Y2 = $getY(coord2);
+
+	x3 = (x1 + x2) / 2;
+	y3 = (y1 + y2) / 2;
+
+	coord3 = $makecoord(x3,y3);
+
+	return coord3;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gold_bonus(agent palace,string what_building,integer bonus_amount)
+
+declare
+	list bldgs;
+	agent bldg;
+
+begin
+	$ListObjects(palace,"building",-1,bldgs, #NoHiddenMap );
+	bldgs = $listtitles(bldgs,what_building);
+
+	foreach bldg in bldgs do
+		begin
+			$adjustattribute(bldg,#ATTRIB_gold,bonus_amount);
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function dark_forest_victory()
+
+declare
+	list palaces,lairs,monsters,bldgs;
+	agent palace,bldg;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// is the witch king's tower on the map?
+	$ListObjects(palace,"lair",-1, lairs, #NoHiddenMap);
+	lairs = $listtitles(lairs,"Witch_king_tower");
+
+	if ($listsize(lairs) == 0)
+		begin
+
+			if (AIRootAgent's "Quest_flag_2" == FALSE)
+				begin
+					// cue end game music
+					$Play_Endgame_Music (AIRootAgent);
+					AIRootAgent's "Quest_flag_2" = TRUE;
+				end
+
+			$ListObjects( palace,"monster",-1,monsters, #NoHiddenMap );
+			monsters = $listtitles(monsters,"Witch_king");
+
+//			if ($listsize(monsters) == 0)
+			if ($istitlealive(palace,"witch_king") == FALSE)
+				begin
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,AIRootagent's "end_coord");
+					$KillThread( AIRootAgent's "VictoryCondition" );
+
+					AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+					$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+					// let's make sure there is nothing in VictoryCOndition2
+					$killthread(AIRootAGent's "VictoryCondition2");
+
+					AIRootAgent's "VictoryCondition2" = $end_game_script_medium;
+					$newthread(AIRootAgent's "VictoryCondition2",$random_time(450000));
+				end
+			else
+				if ($listsize(monsters) > 0)
+					AIRootAgent's "end_coord" = $locationof($listmember(monsters,1));
+		end
+
+  $rescue_buildings(palace);
+
+	if (AIRootAgent's "Quest_Flag_1" == False)
+		begin
+			$listobjects(palace,"Building",-1,bldgs);
+			bldgs = $listtitles(bldgs,"temple_fervus");
+			if ($listsize(bldgs) > 0)
+				begin
+					// activate all the buildings in the game
+					$enableunittype("Warriors_guild");
+					$enableunittype("Rangers_guild");
+					$enableunittype("Wizards_guild1");
+					$enableunittype("Rogues_guild1");
+					$enableunittype("Temple_fervus1");
+					$enableunittype("Temple_agrela1");
+					$enableunittype("Temple_Krolm");
+					$enableunittype("Temple_krypta1");
+					$enableunittype("Temple_Dauros1");
+					$enableunittype("Temple_helia1");
+					$enableunittype("Temple_lunord1");
+					$enableunittype("Elven_bungalow");
+					$enableunittype("Dwarven_settlement");
+					$enableunittype("Gnome_hovel");
+					$ElvesVoice_setOperative(1);
+					$dwarvesVoice_setOperative(1);
+
+					bldg = $listmember(bldgs,1);
+					$messageflag(bldg,#message_dark_forest_heal);
+
+					$MiniMapAnimation( bldg, "event_beacon" );
+
+					AIRootAgent's "Quest_Flag_1" = TRUE;
+				end
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function dark_forest_events()
+
+declare
+	list palaces;
+	agent palace,AIRootAgent;
+	coordinate dest;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	if (AIRootagent's "Quest_flag_3" == FALSE)
+		begin
+			if (AIRootAgent's "quest_flag_1" == False) // was the temple discovered
+				begin
+					// a ranger has appeared out of the woods - he was resting in a makeshift vamp
+					if ($getnearesthiddencoord(palace,dest) == FALSE)
+						dest = $locationof(palace);
+
+					$messageflag(dest,#message_DF_ranger_appears);
+
+					$minimapanimation(dest,"event_beacon");
+					$spawnunit(palace,"ranger",dest);
+
+					$SetThreadInterval( AIRootAgent's "VictoryCondition2", $random_to_percent(240000,3) );
+				end
+			AIRootAgent's "Quest_flag_3" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_4" == FALSE)
+		begin
+			if (AIRootAgent's "quest_flag_1" == False) // was the temple discovered
+				begin
+					// a rogue was recovering in the care of a healer in the castle
+					$messageflag(palace,#message_DF_Rogue_appears);
+					$minimapanimation(palace,"event_beacon");
+					$spawnunit(palace,"rogue");
+				end
+			AIRootAgent's "Quest_flag_4" = TRUE;
+			$killthread(AIRootAGent's "VictoryCondition2");
+		end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Day of Reckoning Quest entry point
+function DAY_OF_RECKONING()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces;
+	integer i;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Day_Reckoning;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	// run victory scripts
+	AIRootAgent's "VictoryCondition" = $DOR_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", 90000 );
+	AIRootAgent's "VictoryCondition2" = $DOR_victory2;
+	$NewThread( AIRootAgent's "VictoryCondition2", 5000 );
+
+	// disable all the temples
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+	// setup a message
+	$messageflag(palace,#message_DOR_start);
+
+	// modify exiting units to be cooler
+	$setup_hero_level(palace,50);
+
+	$setup_rescue_buildings(palace);
+
+	$setup_rescue_pets(palace,"Daemonwood");
+
+	// spawn lots of peasant houses to get destroyed
+	i = 30;
+	while (i > 0) do
+		begin
+			$spawnunit(Palace, "general_housing", $RandomCoord (Palace, 525, 1500),"MaxHP");
+			i -= 1;
+		end
+	// reset global flags to be used by this quest
+	AIRootAgent's "Quest_Flag_1" = False;
+	AIRootAgent's "Quest_Flag_2" = False;
+	AIRootAgent's "Quest_Flag_3" = False;
+	AIRootAgent's "Quest_Flag_4" = False;
+	AIRootAgent's "Quest_Flag_5" = False;
+	AIRootAgent's "Quest_Flag_6" = False;
+	AIRootAgent's "Quest_Flag_7" = False;
+	AIRootAgent's "Quest_Flag_8" = False;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function DOR_victory()
+
+declare
+	agent AIRootAgent,palace;
+	list palaces;
+	integer edge;
+	coordinate spawn_loc;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	if (AIRootAgent's "Quest_flag_1" == FALSE)
+		begin
+			// witch King + evil occulusses
+			edge = $randomnumber(4);
+			spawn_loc = $Randomedgecoord(edge);
+
+			$spawnunit(palace,"witch_king",spawn_loc,#monster_player);
+			$spawnunit(palace,"Evil_Oculus",spawn_loc,#monster_player);
+			$spawnunit(palace,"Evil_Oculus",spawn_loc,#monster_player);
+			$spawnunit(palace,"Evil_Oculus",spawn_loc,#monster_player);
+
+			$debugout(911,"revealed area!");
+			$revealArea(palace,spawn_loc,300);
+			$setthreadinterval(AIRootagent's "VictoryCondition",300000);
+
+			AIRootAgent's "Quest_flag_1" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_2" == FALSE)
+		begin
+			// black phantoms
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$setthreadinterval(AIRootagent's "VictoryCondition",300000);
+
+			AIRootAgent's "Quest_flag_2" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_3" == FALSE)
+		begin
+			// liche queen + vampire host
+			$spawnunit(palace,"Liche_queen",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Vampire",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$setthreadinterval(AIRootagent's "VictoryCondition",240000);
+
+			AIRootAgent's "Quest_flag_3" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_4" == FALSE)
+		begin
+			// rongol the hunter + more black phantoms
+			$spawnunit(palace,"RRongol",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$setthreadinterval(AIRootagent's "VictoryCondition",240000);
+
+			AIRootAgent's "Quest_flag_4" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_5" == FALSE)
+		begin
+			//Stop playing current music, and play the last music track
+			$Play_Endgame_Music (AIRootAgent);
+
+			// url shekk and vendral + final black phantoms
+			$spawnunit(palace,"Url_shekk",$Randomedgecoord($randomnumber(4)),#monster_player,"Clear");
+			$spawnunit(palace,"Vendral",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Black_phantom",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			$setthreadinterval(AIRootagent's "VictoryCondition",#VictoryCondition_callback_frequency );
+
+			AIRootAgent's "Quest_flag_5" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_6" == FALSE)
+		begin
+			// see if all enemies dead
+			if ($all_enemies_dead(palace))
+				begin
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace);
+					$KillThread( AIRootAgent's "VictoryCondition" );
+
+					$killThread(AIRootAgent's "VictoryCOndition2");
+					AIRootAgent's "VictoryCondition2" = $end_game_script_Expert;
+					$newthread(AIRootAgent's "VictoryCondition2",$random_time(300000));
+				end
+//			else
+//				$setthreadinterval(AIRootagent's "VictoryCondition",#VictoryCondition_callback_frequency );
+
+//			AIRootAgent's "Quest_flag_6" = TRUE;
+		end
+//	else
+//	if (AIRootAgent's "Quest_flag_7" == FALSE)
+//		begin
+//			AIRootAgent's "Quest_flag_7" = TRUE;
+//		end
+//	else
+//	if (AIRootAgent's "Quest_flag_8" == FALSE)
+//		begin
+//		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function DOR_Victory2()
+
+declare
+	list palaces,mainlist,list1,list2,list3;
+	agent palace,AIRootAgent,target;
+	integer i;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	$Rescue_Buildings (Palace);
+
+	$Rescue_pets(palace);
+	// make lightning bolts cast down randomly from the heavens!
+	if ($randomnumber(100) < 75)
+		begin
+			$listobjects(palace,"monster",-1,list1,#NoHiddenMap);
+			$listobjects(palace,"hero",-1,list2,#NoHiddenMap);
+			$listobjects(palace,"building",-1,list3,#NoHiddenMap);
+
+			mainlist = $addlists(list1,list2);
+			mainlist = $addlists(mainlist,list3);
+
+			i = $listsize(mainlist);
+			if (i > 0)
+				begin
+					target = $listmember(mainlist,$randomnumber(i) + 1);
+					$lightning_bolt_hit(target);
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function setup_hero_level(agent thisagent,integer explevel)
+
+declare
+	list heroes;
+	agent hero;
+
+begin
+	$listobjects(thisagent,"hero",-1,heroes,#MyPlayer,#NoHiddenMap);
+
+	foreach hero in heroes do
+		begin
+			$advance_to_level(hero,explevel);
+			$setattribute(hero,#ATTRIB_StartedwithThisUnit,1);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function all_enemies_dead(agent thisagent) is boolean
+
+declare
+	list buildings,heroes,monsters,lairs,l4,l5,masterlist,newlist;
+	agent thing;
+
+begin
+	$listobjects(thisagent,"building",-1,buildings,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(thisagent,"lair",-1,lairs,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(thisagent,"monster",-1,monsters,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(thisagent,"hero",-1,heroes,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(thisagent,"Invisible",-1,l4,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	$listobjects(thisagent,"camouflaged",-1,l5,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+
+	l4 = $addlists(l4,l5);
+
+	masterlist = $addlists(buildings,lairs);
+	masterlist = $addlists(masterlist,monsters);
+	masterlist = $addlists(masterlist,heroes);
+	masterlist = $addlists(masterlist,l4);
+
+	foreach thing in masterlist do
+		if (thing's "title" != "ratman" && thing's "title" != "Giant_rat" && thing's "title" != "sewer"
+			&& thing's "title" != "graveyard" && thing's "title" != "skeleton" && thing's "title" != "zombie"
+			&& thing's "title" != "troll")
+			newlist << thing;
+
+	masterlist = newlist;
+
+	if ($listsize(masterlist) == 0)
+		return TRUE;
+	else
+		return FALSE;
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Deal with the Demon Quest entry point
+function DEAL_DEMON()
+
+declare
+	agent AIRootAgent,palace,guild,lair;
+	list guilds,palaces,lairs;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Deal_Demon;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	// what is restricted in this quest?
+
+	// special setup
+	$ListObjects (Palace, "Building", -1, Guilds, #NotMyPlayer, #NoHiddenMap);
+	Guilds = $ListSubtypes (Guilds, "Guild");
+
+	$setup_random_treasure(30, #default_spawn_treasure_dist);
+
+	Foreach Guild in Guilds do
+		begin
+			Guild's "SpecialScript" = $Hero_Generator;
+			$NewThread( Guild's "SpecialScript", 60000 + $randomnumber(60000), Guild );
+		end
+
+	$listobjects(palace,"lair",-1,lairs,#NoHiddenMap);
+	foreach lair in lairs do
+		begin
+			if (lair's "special_spawn_type" == "vampire")
+				lair's "special_spawn_type" = "werewolf";
+		end
+
+
+	// what scripts need to be run during the game?
+	AIRootAgent's "VictoryCondition" = $Demon_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	AIRootAgent's "VictoryCondition2" = $Demon_victory2;
+	$newThread( AIRootAgent's "VictoryCondition2", 1200000);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function demon_victory()
+
+declare
+	agent AIRootAgent,palace;
+	list palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+
+   //TODO: ADD FINAL MUSIC CALL
+
+	// does the player have 190000 gold?
+	if ($getplayerdata(palace,"Gold") >= 100000)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace);
+			$KillThread( AIRootAgent's "VictoryCondition" );
+			$KillThread( AIRootAgent's "VictoryCondition2" );
+			$adjustplayerdata(palace,"gold",-100000);
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_medium;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(450000));
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function demon_victory2()
+
+// you lose if you don't have 100,000 gold!
+
+declare
+	list palaces;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+
+	if (AIRootAGent's "Quest_flag_1" == FALSE)
+		begin
+			// this is to get around the time limit of 1.8 million millseconds
+			AIRootAgent's "Quest_flag_1" = TRUE;
+		end
+	else
+		// does the player have 100000 gold?
+		if ($getplayerdata(palace,"Gold") >= 100000)
+			begin
+				//Set quest music back to bounce between early and mid game tracks
+				$Reset_Quest_Music (AIRootAgent);
+
+				$declarevictory(palace);
+				$KillThread( AIRootAgent's "VictoryCondition" );
+				$KillThread( AIRootAgent's "VictoryCondition2" );
+				$adjustplayerdata(palace,"gold",-100000);
+
+				AIRootAgent's "VictoryCondition2" = $end_game_script_medium;
+				$newthread(AIRootAgent's "VictoryCondition2",$random_time(450000));
+			end
+		else
+			begin
+				// player lost
+				$KillThread( AIRootAgent's "VictoryCondition" );
+				$KillThread( AIRootAgent's "VictoryCondition2" );
+				$declareloss(palace);
+			end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Slay the Dragon Quest entry point
+function SLAY_DRAGON()
+declare
+	agent AIRootAgent, Palace;
+	list 	Palaces;
+
+begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	//Setup random treasure in the game
+	$setup_random_treasure(40, #default_spawn_treasure_dist);
+
+	// what scripts need to be run during the game?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_Slay_Dragon;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	//Setup Rescue Heroes
+	$SetUp_Rescue_Heroes (Palace, "Warriors_Guild", "Warrior", 25);
+	$SetUp_Rescue_Heroes (Palace, "Wizards_Guild", "Wizard", 20);
+	$SetUp_Rescue_Heroes (Palace, "Rogues_Guild", "Rogue", 30);
+	$SetUp_Rescue_Heroes (Palace, "Temple_Agrela", "Healer", 25);
+	$SetUp_Rescue_Heroes (Palace, "Dwarven_Settlement", "Dwarf", 25);
+	$SetUp_Rescue_Heroes (Palace, "Temple_Lunord", "Adept", 25);
+
+	$SetUp_Rescue_Buildings (Palace);
+
+	//NO GUILDS OR TEMPLES IN THIS QUEST!
+	$disableunittype("Warriors_guild");
+	$disableunittype("Rangers_guild");
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Rogues_guild1");
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+
+	AIRootAgent's "VictoryCondition" = $slay_dragon_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	//Spawn Vendral every once in awhile
+	AIRootAgent's "SpecialSpawnScript" = $Vendral_Spawner;
+	$RunThread (AIRootAgent's "SpecialSpawnScript", $RandomNumber (200000) + 280000);
+
+	AIRootAgent's "victoryCondition2" = $slay_dragon_delay; // don't run this!!!
+
+	//This quest flag is used so that vendral only comes out for a short time the first time he
+	//attacks
+
+	//Note: This quest uses flags 1-9
+
+	AIRootAgent's "Quest_Flag_8" = False;
+
+	AIRootAgent's "end_coord" = $locationof(palace);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Slay_Dragon_Victory ()
+
+Declare
+	list palaces,dsettles,heroes, Monsters;
+	agent palace,hero,Vendral;
+	agent AIRootAgent;
+	list	Vendrals;
+
+Begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	If (AIRootAgent's "Quest_Flag_8" == False)
+		begin
+			//Make Vendral sleep early the first time
+			$ListObjects (Palace, "Monster", -1, Monsters, #NoHiddenMap);
+			monsters = $listtitles(monsters,"vendral");
+			Vendral = $ListMember (Monsters, 1);
+
+			$setthreadinterval(Vendral's "sleeperScript",90000);
+
+			//Don't enter this logic again
+			AIRootAgent's "Quest_Flag_8" = True;
+		end
+
+
+	//Give the player the ability to build a Dwarven Settlement if they have already found one
+	//Only do this once.
+	If (AIRootAgent's "Quest_Flag_9" == False)
+		begin
+			Dsettles = $ListCompletedTitles (palace,"building","Dwarven_Settlement",-1);
+
+			If ($ListSize (Dsettles) > 0)
+				begin
+
+					$EnableUnitType ("Dwarven_Settlement");
+					AIRootAgent's "Quest_Flag_9" = True;
+
+				end
+		end
+
+
+	//If Quest_Flag_1 is true, then that means that heroes have
+	//knocked over the Hidden Sword site, and someone has PICKED UP THE SWORD
+	//The flag is set in QItem_Stat_Boost
+	If (AIRootAgent's "Quest_Flag_1")
+		begin
+			//See if there are completed Dwarven Settlements on the map
+			Dsettles = $ListCompletedTitles (palace,"building","Dwarven_Settlement",-1);
+
+			if ($listsize(dsettles) > 0)
+				begin
+					//Make message marker, and clone the damn sword
+					$MessageFlag ($ListMember(dsettles,1), #message_slay_dragon_sword_cloned);
+
+					$Play_Endgame_Music (AIRootAgent);
+
+					//This is so the function knows to give all heroes the magic sword
+					//And so VENDRAL knows that he should spawn with his normal ARMOR!
+					AIRootAgent's "Quest_Flag_2" = TRUE;
+
+					//Spawn a bunch of Dragons to help Vendral
+					//Make them type Bomber
+
+					$spawnunit(palace,"Dragon",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Dragon",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Dragon",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Dragon",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Harpy",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Harpy",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Harpy",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Harpy",$RandomedgeCoord($RandomNumber (4)),#Monster_player, $concatenate(#ATTRIB_Artifice,#force_bomber));
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+
+
+					//See if there are any Vendral already on the map. If there are, then make them mortal
+					$ListObjects(Palace, "Monster", -1, Vendrals, #NoHiddenMap );
+					Vendrals = $ListTitles (Vendrals, "Vendral");
+					If ($ListSize (Vendrals) > 0)
+						begin
+
+							Vendral = $ListMember (Vendrals, 1);
+							$SetAttribute (Vendral, #ATTRIB_Armor_Basic_Damage, 12);
+							$SetAttribute (Vendral, #ATTRIB_MagicResistance, 55);
+							$say(vendral,"Taunt");
+
+ //						$make_raider(vendral);
+//							vendral's "activeScript" = $raider;
+//							vendral's "basicScript" = $raider;
+//							vendral's "backscript" = $raider;
+//							vendral's "raider_respond" = TRUE;
+							$reset_tasks(vendral);
+
+							//Kill Vendral's sleeperscript
+							If ($IsRunning (Vendral's "SleeperScript"))
+								begin
+
+									$KillThread (Vendral's "SleeperScript");
+
+								end
+
+						end
+					Else
+						begin
+
+							//spawn a new Vendral and some Dragons immediately - this one will spawn mortal (birthscript flag flipped)
+							$spawnunit(palace,"Vendral",$RandomedgeCoord($RandomNumber (4)),#Monster_player);
+
+						end
+
+					// do we want vendral to have some help for the 'finale'?
+
+					// make sure the 'events' script is killed
+					$killthread(AIRootagent's "SpecialSpawnScript");
+
+					//there isn't a reason to engage this logic again
+					AIRootAgent's "Quest_Flag_1" = FALSE;
+				end
+		end
+
+	//This is only True if the player has already found the sword, and built the DSettle
+	If (AIRootAgent's "Quest_Flag_2")
+		begin
+			//Give all the heroes the sword
+			Heroes = $ListSubtypesInRadius (Palace, "Hero", "Hero", -1);
+
+			Foreach Hero in Heroes do
+				If ($AgentHasInventoryItem (#QItem_Magic_Sword, Hero) == False)
+					begin
+						$CreateNewInventoryItem (#QItem_Magic_Sword, Hero, #Allow_Cloned_Quest_Item);
+						$createeffector(hero,"got_item",0);
+					end
+
+			//True if the player has killed Vendral - this means that they have won the game.
+			If (AIRootAgent's "Quest_Flag_4")
+				begin
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,AIRootAgent's "end_coord");
+					$killthread(AIRootAgent's "VictoryCondition");
+					$killthread(AIRootAgent's "VictoryCondition2");
+
+					AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+					$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+					AIRootAgent's "VictoryCondition2" = $end_game_script_hard;
+					$newthread(AIRootAgent's "VictoryCondition2",$random_time(300000));
+		      end
+		end
+
+	//Rescue buildings and get heroes
+	$Rescue_Buildings (Palace);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function slay_dragon_delay()
+
+declare
+	agent AIRootAgent;
+
+begin
+	// this is called after a short delay, so the player
+	// has the opportunity to see vendral's spectacular death
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Flag_4" = True; // tell the victory script its over
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Tomb of the Dragon King Quest entry point
+function TOMB_DRAGON()
+
+declare
+	agent AIRootAgent,palace,vampire,bldg;
+	list palaces,monsters,lairs,chests,signs;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Tomb_Dragon;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// disable certain buildings
+	$disableunittype("Guardhouse1");
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	$gold_bonus(palace,"trading_post",9000);
+	$SetUp_Rescue_Buildings (Palace);
+
+	$listobjects(palace,"lair",-1,lairs,#NoHIddenMAp);
+
+	$Setup_Multispawning_Lairs (lairs, 5);
+	$messageflag(palace,#message_Tomb_intro);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,500,500);
+
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"stone_tablet");
+	bldg = $listmember(signs,1);
+	$post_message(bldg,#sign_dragon_gravestone);
+
+	AIRootAgent's "end_coord" = $locationof(bldg);
+
+	// make vampires rooted guardians
+	$listobjects(palace,"monster",-1,monsters,#NotMyPlayer);
+	monsters = $listtitles(monsters,"vampire");
+
+	foreach vampire in monsters do
+		begin
+			vampire's "startingScript" = $returning_guardian;
+			vampire's "basicScript" = $returning_guardian;
+			vampire's "activeScript" = $returning_guardian;
+			vampire's "birthscript" = $guardian_birth;
+			$SetDrawEffects( vampire, "gray", 0 );
+		end
+
+	AIRootAgent's "VictoryCondition" = $Tomb_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	AIRootAgent's "VictoryCondition2" = $Tomb_events;
+	$NewThread( AIRootAgent's "VictoryCondition2", $random_time(480000));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Tomb_victory()
+
+declare
+	agent AIRootAgent,palace,thing;
+	list palaces,lairs,things;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	If (AIRootAgent's "Quest_Flag_1" == False)
+		begin
+			$listobjects(palace,"lair",-1,lairs,#NoHIddenMAp);
+			if ($listsize(lairs) == 0)
+				begin
+					// make the final tomb appear
+					$listobjects(palace,"color",-1,things,#NoHIddenMAp);
+					things = $listtitles(things,"stone_tablet");
+					thing = $listmember(things,1);
+
+					$spawnunit(thing,"dragon_tomb","MAXHP",#Monster_PLayer);
+					$messageflag(thing,#Message_Tomb_final);
+
+					$MiniMapAnimation( Thing, "event_beacon" );
+
+					$spawnunit(thing,"Dragon",#monster_player);
+					$spawnunit(thing,"Dragon",#monster_player);
+					$spawnunit(thing,"Dragon",#monster_player);
+
+					$spawnunit(thing,"Dragon",#monster_player);
+					$spawnunit(thing,"Dragon",#monster_player);
+					$spawnunit(thing,"Dragon",#monster_player);
+
+					//Stop playing current music, and play the last music track
+					$Play_Endgame_Music (AIRootAgent);
+
+					AIRootAgent's "Quest_Flag_1" = TRUE;
+					AIRootAgent's "quest_flag_2" = TRUE;
+				end
+		end
+	else
+	if (AIRootAgent's "Quest_Flag_2" == FALSE)
+		begin
+			$listobjects(palace,"lair",-1,lairs,#NoHiddenMap);
+			if ($listsize(lairs) == 0)
+				begin
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					// they have won!
+					$declarevictory(palace,AIRootAgent's "end_coord");
+					$KillThread( AIRootAgent's "VictoryCondition" );
+
+					AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+					$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+				end
+		end
+
+	$Rescue_Buildings (Palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function tomb_events()
+
+declare
+	agent AIRootAgent,palace;
+	list palaces;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	if (AIRootAgent's "quest_flag_3" == FALSE)
+		begin
+			// wave 1 - easy
+			AIRootagent's "quest_flag_3" = TRUE;
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+		end
+	else
+	if (AIRootAgent's "quest_flag_4" == FALSE)
+		begin
+			// wave 2 - hard
+			AIRootagent's "quest_flag_4" = TRUE;
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+		end
+	else
+	if (AIRootAgent's "quest_flag_5" == FALSE)
+		begin
+			// wave 3 - hard. Player might not get here if they are very good
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+
+			AIRootagent's "quest_flag_5" = TRUE;
+		end
+	else
+		begin
+			// trickle in dragons - ad infinitum
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+			$spawnunit(palace,"Dragon",$Randomedgecoord($randomnumber(4)),#monster_player);
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Elven Treachery Quest entry point
+function ELVEN_TREACHERY()
+
+declare
+	agent	AIRootAgent,palace,bldg;
+	list signs,palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Elven_Treachery;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	// what is restricted in this quest?
+	$disableunittype("Elven_bungalow");
+	$ElvesVoice_setOperative(0);
+
+	// setup sepcial things - like signs
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"sign_wood");
+
+	bldg = $listmember(signs,1);
+	$post_message(bldg, #sign_elves1 );
+
+	bldg = $listmember(signs,2);
+	$post_message(bldg, #sign_elves2 );
+
+	bldg = $listmember(signs,3);
+	$post_message(bldg, #sign_elves3 );
+
+	bldg = $listmember(signs,4);
+	$post_message(bldg, #sign_elves4 );
+
+	// what scripts need to be run during the game?
+	AIRootAgent's "VictoryCondition" = $elven_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	AIRootAgent's "VictoryCondition2" = $Elven_victory2;
+	$newThread( AIRootAgent's "VictoryCondition2", 1800000);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Elven_victory()
+
+declare
+	list palaces,bldgs,enemies;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// does the player have 50000 gold?
+	if ($getplayerdata(palace,"Gold") >= 50000)
+		begin
+			$declarevictory(palace);
+			$KillThread( AIRootAgent's "VictoryCondition" );
+			$KillThread( AIRootAgent's "VictoryCondition2" );
+			$adjustplayerdata(palace,"gold",-50000);
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+		end
+	else
+	// has the player killed all elves?
+		begin
+			$listobjects(palace,"building",-1,bldgs,#NoHiddenMap,#NotMyPlayer);
+			bldgs = $remove_statues(bldgs);
+
+			if ($listsize(bldgs) == 0)
+				begin
+					$listobjects(palace,"hero",-1,enemies,#NoHiddenMap,#NotMyPlayer);
+					if ($listsize(enemies) == 0)
+						begin
+							//Set quest music back to bounce between early and mid game tracks
+							$Reset_Quest_Music (AIRootAgent);
+
+							$declarevictory(palace);
+							$KillThread( AIRootAgent's "VictoryCondition" );
+							$KillThread( AIRootAgent's "VictoryCondition2" );
+
+							AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+							$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function remove_statues(list stuff) is list
+
+declare
+	agent item;
+	list newlist;
+
+begin
+	foreach item in stuff do
+		begin
+			if (item's "title" != "statue")
+				newlist << item;
+		end
+
+	return newlist;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Elven_victory2()
+
+// you lose if you don't have 50,000 gold!
+
+declare
+	list palaces;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// does the player have 50000 gold?
+	if ($getplayerdata(palace,"Gold") >= 50000)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace);
+			$KillThread( AIRootAgent's "VictoryCondition" );
+			$KillThread( AIRootAgent's "VictoryCondition2" );
+			$adjustplayerdata(palace,"gold",-50000);
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+		end
+	else
+		begin
+			// player lost
+			$declareloss(palace);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// The Fertile Plain Quest entry point
+function FERTILE_PLAIN()
+
+declare
+	agent	AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Fertile_Plain;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	// what can't be used in this quest
+	$disableunittype("elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+
+	// what scripts need to be run during the game?
+	AIRootAgent's "VictoryCondition" = $fertile_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", 180000 ); // 300000
+
+	// reset global flags to be used by this quest
+	AIRootAgent's "Quest_Flag_1" = False;
+	AIRootAgent's "Quest_Flag_2" = False;
+	AIRootAgent's "Quest_Flag_3" = False;
+	AIRootAgent's "Quest_Flag_4" = False;
+	AIRootAgent's "Quest_Flag_5" = False;
+	AIRootAgent's "Quest_Flag_6" = False;
+	AIRootAgent's "Quest_Flag_7" = False;
+	AIRootAgent's "Quest_Flag_8" = False;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function fertile_victory()
+
+declare
+	agent	AIRootAgent;
+	coordinate tcoord;
+	list palaces;
+	agent palace;
+	integer i;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	if (AIRootAgent's "Quest_flag_1" == FALSE)
+		begin
+			// send out first wave of raiders
+			i = 7;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"goblin_fighter",$RandomedgeCoord(#North),#Monster_player);
+					$spawnunit(palace,"Goblin_archer",$RandomedgeCoord(#North),#Monster_player);
+					$spawnunit(palace,"Goblin_Champion",$RandomedgeCoord(#North),#Monster_player);
+					$spawnunit(palace,"Goblin_Priest",$RandomedgeCoord(#North),#Monster_player);
+					$spawnunit(palace,"Goblin_fighter",$RandomedgeCoord(#North),#Monster_player);
+					i -= 1;
+				end
+			AIRootAgent's "Quest_flag_1" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_2" == FALSE)
+		begin
+			// send out second wave of raiders
+			i = 14;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord(#South),#Monster_player);
+					i -= 1;
+				end
+			// reset thread interval to 2  1/2 mins
+			$setthreadinterval(AIRootagent's "VictoryCondition",150000);
+			AIRootAgent's "Quest_flag_2" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_3" == FALSE)
+		begin
+			// send out third wave
+			i = 15;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Elf",$RandomedgeCoord(#East),#Monster_player);
+					i -= 1;
+				end
+			$setthreadinterval(AIRootagent's "VictoryCondition",75000);
+			AIRootAgent's "Quest_flag_3" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_4" == FALSE)
+		begin
+			// send out fourth wave
+			i = 12;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Dwarf",$RandomedgeCoord(#West),#Monster_player);
+					i -= 1;
+				end
+			// set timer interval to 5 minutes
+			$setthreadinterval(AIRootagent's "VictoryCondition",300000);
+			AIRootAgent's "Quest_flag_4" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_5" == FALSE)
+		begin
+			// send out fifth wave
+			i = 7;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Vampire",$RandomedgeCoord(#South),#Monster_player);
+					i -= 1;
+				end
+			// set interval to 3 minute
+			$setthreadinterval(AIRootagent's "VictoryCondition",180000);
+			AIRootAgent's "Quest_flag_5" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_6" == FALSE)
+		begin
+			// send out 6th wave
+			i = 30;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Minotaur",$RandomedgeCoord($randomnumber(4)),#Monster_player);
+					i -= 1;
+				end
+			// set interval to 3 1/3 minutes
+			$setthreadinterval(AIRootagent's "VictoryCondition",200000);
+			AIRootAgent's "Quest_flag_6" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_7" == FALSE)
+		begin
+			//Stop playing current music, and play the last music track
+			$Play_Endgame_Music (AIRootAgent);
+
+			// send out last wave
+			i = 15;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Rock_Golem",$RandomedgeCoord($randomnumber(4)),#Monster_player);
+					i -= 1;
+				end
+			$spawnunit(palace,"Dirgo",$RandomedgeCoord(#North),#Monster_player);
+			// set timer interval to 10 minutes - new: set it to 5 seconds for victory checking
+			$setthreadinterval(AIRootagent's "VictoryCondition",2000);//600000);
+			AIRootAgent's "Quest_flag_7" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_8" == FALSE)
+		begin
+			// the player has survived 7 waves of raiders! They win!
+			if ($no_monsters_titled(palace,"Rock_Golem"))
+				if ($no_monsters_titled(palace,"dirgo"))
+					begin
+						//Set quest music back to bounce between early and mid game tracks
+						$Reset_Quest_Music (AIRootAgent);
+
+						$declarevictory(palace);
+						$KillThread( AIRootAgent's "VictoryCondition" );
+						AIRootAgent's "Quest_flag_8" = TRUE;
+
+						AIRootAgent's "VictoryCondition2" = $end_game_script_hard;
+						$newthread(AIRootAgent's "VictoryCondition2",$random_time(300000));
+					end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function no_monsters_titled(agent thisagent,string title) is boolean
+
+declare
+	list monsters,list2;
+	agent whatever;
+
+begin
+	$listobjects(thisagent,"monster",-1,monsters,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	monsters = $listtitles(monsters,title);
+
+	$listobjects(thisagent,"invisible",-1,list2,#NotMyTeam,#NoHiddenMap,#InsideOtherUnits);
+	foreach whatever in list2 do
+		if (whatever's "title" == title)
+			monsters << whatever;
+
+	if ($listsize(monsters) == 0)
+		return true;
+	else
+		return false;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// The Forsaken Land Quest entry point
+function FORSAKEN_LANDS()
+
+declare
+	agent AIRootAgent;
+	list palaces,buildings,rangers,markets,lairs;
+	agent palace,bldg,bldg2,lair;
+
+begin
+
+	// what can't be used in this quest?
+	$disableunittype("Wizards_guild1");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+	$disableunittype("Palace3");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+	// what scripts need to be run during the game?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "VictoryCondition" = $forsaken_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "VictoryCondition2" = $forsaken_events;
+	$newThread( AIRootAgent's "VictoryCondition2", 180000);//300000);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIRootAgent's "Quest_Number" = #QNumber_Forsaken_Lands;
+
+
+	// set up some initial messages, as this is an introductory quest
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$setup_random_treasure(20, #default_spawn_treasure_dist);
+
+	//Setup the intro message
+	$messageflag(palace,#message_forsaken_intro);
+
+	AIRootAgent's "Quest_flag_1" = False;
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap );
+	lairs = $listtitles(lairs,"Dark_castle");
+	lair = $listmember(lairs,1);
+	AIRootAgent's "End_coord" = $locationof(lair);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function forsaken_victory()
+
+declare
+	list palaces,lairs,lairs2, buildings;
+	agent palace,bldg;
+	agent AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	//TODO: ADD FINAL MUSIC CALL
+
+	$ListObjects(palace,"building",-1, buildings );
+
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap );
+	lairs = $listtitles(lairs,"Dark_castle");
+
+	//Setup sequential message flags
+	//Make sure we haven't placed this flag yet
+	If (AIRootAgent's "Message_Check_1" == False)
+		begin
+			//If current message is gone, set up the next one
+			If ($IsMessageFlagPresent (#message_forsaken_intro) == False)
+				begin
+					Buildings = $listtitles(buildings,"rangers_guild");
+
+					If ($ListSize (Buildings) > 0)
+						begin
+							bldg = $listmember(buildings,1);
+							$messageflag(bldg,#message_forsaken_rangers);
+						end
+
+					AIRootAgent's "Message_Check_1" = True;
+				end
+		end
+
+	Else
+		begin
+			If (AIRootAgent's "Message_Check_2" == False)
+				begin
+					If ($IsMessageFlagPresent (#message_bbc_blacksmith) == False)
+						begin
+							Buildings = $listtitles(buildings,"marketplace");
+
+							If ($ListSize (Buildings) > 0)
+								begin
+									bldg = $listmember(buildings,1);
+									$messageflag(bldg,#message_forsaken_marketplace);
+								end
+
+							AIRootAgent's "Message_Check_2" = True;
+						end
+				end
+		end
+
+	if ($listsize(lairs) == 0)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "end_coord");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+		end
+	else
+		begin
+			// check to see if new messages need to be placed on the map
+			// check to see if the hero has 'discovered' special lairs
+			$ListObjects(palace,"lair",-1,lairs );
+
+			If (AIRootAgent's "Quest_Flag_1" == False)
+				begin
+					lairs2 = $listtitles(lairs,"Dark_Castle");
+					if ($listsize(lairs2) > 0)
+						begin
+							bldg = $listmember(lairs2,1);
+							$messageflag(bldg,#message_forsaken_castle);
+							$MiniMapAnimation( bldg, "event_beacon" );
+							AIRootAgent's "Quest_flag_1" = True;
+						end
+				end
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function forsaken_events()
+
+declare
+
+	list palaces,markets;
+	agent AIRootAgent,palace;
+	coordinate coord;
+
+begin
+	// set out a caravan
+	// put a message on the palace
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	coord = $farthestmapcorner(palace);
+
+	$listobjects(palace,"building",-1,markets,#MyPlayer);
+	markets = $listtitles(markets,"marketplace");
+
+	If (AIRootAgent's "Quest_Flag_2" == False)
+		begin
+			if ($listsize(markets) > 0)
+				begin
+					$messageflag(palace,#message_forsaken_caravan1);
+					$spawnunit(palace,"Palace_guard",$randomCoord(coord,300),$concatenate(#ATTRIB_Sightrange,250));
+					$spawnunit(palace,"Palace_guard",$randomCoord(coord,300),$concatenate(#ATTRIB_Sightrange,250));
+					$spawnunit(palace,"caravan",$randomCoord(coord,200),"clear");
+
+					$MiniMapAnimation( $randomCoord(coord,100), "event_beacon" );
+
+ 					AIRootAgent's "Quest_Flag_2" = true;
+				end
+		end
+	else
+	If (AIRootAgent's "Quest_Flag_3" == False)
+		begin
+			$messageflag(palace,#message_forsaken_party);
+			$spawnunit(palace,"ranger",$randomCoord(coord,300));
+			$spawnunit(palace,"ranger",$randomCoord(coord,300));
+			$spawnunit(palace,"ranger",$randomCoord(coord,300));
+			$spawnunit(palace,"warrior",$randomCoord(coord,300));
+
+			$MiniMapAnimation( $randomCoord(coord,100), "event_beacon" );
+
+			AIRootAgent's "Quest_Flag_3" = TRUE;
+		end
+	else
+	If (AIRootAgent's "Quest_Flag_4" == False)
+		begin
+			if ($listsize(markets) > 0)
+				begin
+					$messageflag(palace,#message_forsaken_caravan2);
+					$spawnunit(palace,"caravan",$randomCoord(coord,300),"clear");
+
+					$MiniMapAnimation( $randomCoord(coord,100), "event_beacon" );
+
+					AIRootAgent's "Quest_Flag_4" = TRUE;
+				end
+		end
+	else
+	If (AIRootAgent's "Quest_Flag_5" == False)
+		begin
+			$messageflag(palace,#message_forsaken_other_inn);
+//			$spawnunit(palace,"inn",$randomCoord(coord,600),"MAXHP",#player_2);
+			$spawnunit(palace,"inn",$randomcoord(coord,600),"MAXHP");
+
+			$MiniMapAnimation( $randomCoord(coord,100), "event_beacon" );
+
+			AIRootAgent's "Quest_Flag_5" = TRUE;
+			$setthreadinterval(AIRootAgent's "VictoryCondition2", $random_time(300000));
+		end
+	else
+		begin
+			if ($listsize(markets) > 0)
+				begin
+//					$messageflag(palace,#message_forsaken_caravan2);
+					$spawnunit(palace,"caravan",$randomCoord(coord,300),"clear");
+					$MiniMapAnimation( $randomCoord(coord,100), "event_beacon" );
+					$setthreadinterval(AIRootAgent's "VictoryCondition2", $random_time(300000));
+					if ($randomnumber(100) < 50)
+						$spawn_monsters(4,#EasyMonster);
+				end
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Hold off the Goblin Hordes Quest entry point
+function GOBLIN_HORDES()
+
+declare
+	agent Palace, AIRootAgent, Guild, Tower;
+	list 	Palaces, Buildings, WGuilds, WTowers;
+
+begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	// what can't be used in this quest?
+	$disableunittype("Rangers_guild");
+
+	// what scripts need to be run during the game?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_Goblin_Hordes;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	$setup_random_treasure (40, #default_spawn_treasure_dist);
+
+
+	//Have the onmap Wiz Guild continually spawn Heroes
+	//Find all the player 2 guilds
+	$ListObjects (Palace, "Building", -1, Buildings, #NotMyPlayer, #NoHiddenMap);
+	WGuilds = $ListTitles (Buildings, "Wizards_Guild");
+
+
+	Guild = $ListMember (WGuilds, 1);
+	//Reveal an area around the Wiz Guild
+	$RevealArea (Palace, $LocationOf (Guild), 300);
+
+
+	//Have the Guild spawn heroes
+	Guild's "SpecialScript" = $Hero_Generator;
+	$NewThread( Guild's "SpecialScript", 30000, Guild );
+
+	//Set the guild to invulnerable and unflaggable. The events script will change this back.
+	Guild's "Type" = "Invulnerable";
+	//This unit is not flaggable and not targettable by spells
+	$SetAttribute (Guild, #ATTRIB_NotFlaggable, 1);
+	$SetAttribute (Guild, #ATTRIB_NotSpellTarget, 1);
+	//Make a message flag that explains why the Wizard's Guild is temporarily invulnerable
+	$MessageFlag (Guild, #message_ghordes_invulnerable_wguild);
+
+
+	//Reveal a small area around the Wiz Towers, so that the Player can see them right off the bat.
+	WTowers = $ListTitles (Buildings, "Wizards_Tower");
+	Foreach Tower in WTowers do
+		begin
+
+			$RevealArea (Palace, $LocationOf (Tower), 100);
+
+		end
+
+
+	//Kick off Victory Conditions and Events Script
+	AIRootAgent's "Lair_extra_delay" = 1000;
+	AIRootAgent's "VictoryCondition" = $goblin_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	//This makes the Wiz Guild mortal
+	//It also periodically has the Wiz Guild send the player money (if it is still alive)
+	AIRootAgent's "VictoryCondition2" = $Goblin_Events;
+	$newThread( AIRootAgent's "VictoryCondition2", 120000 + $RandomNumber (40000) );
+
+	//This will start spawning Trolls after a duration
+	AIRootAgent's "SpecialSpawnScript" = $GHorde_Troll_Spawner_Setup;
+	$NewThread (AIRootAgent's "SpecialSpawnScript", 750000);
+
+	//This makes it so that the Wiz_Tower around the Wiz Guild will sometimes become enchanted once in awhile
+	//NOTE: THE PALACE IS THE AGENT THAT EXECUTES THIS
+	AIRootAgent's "SpecialSpawnScript2" = $GHorde_Wiz_Tower_Enchanter;
+	$NewThread (AIRootAgent's "SpecialSpawnScript2", 120000, Palace);
+
+	//Also, have the Wiz Towers possibly become active right away
+	$Ghorde_Wiz_Tower_Enchanter (Palace);
+
+	//These are for the Wiz Guild giving the player gold
+	AIRootAgent's "Quest_Flag_1" = False;
+	AIRootAgent's "Quest_Flag_2" = False;
+
+	//This is for the Wizard's Guild becoming mortal again
+	AIRootAgent's "Quest_Flag_3" = False;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Goblin_victory()
+
+declare
+	list palaces,lairs;
+	agent palace;
+	agent AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//NOTE: GHorde_Troll_SPawner_Setup handles playing the last music track
+
+	$ListObjects(palace,"lair",-1,lairs, #NoHiddenMap );
+
+	if ($listsize(lairs) == 0)
+		begin
+			AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace);
+			AIRootAgent = $RetrieveAgent("GplAIRoot");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+			$KillThread( AIRootAgent's "SpecialSpawnScript");
+			$killThread( AIRootAgent's "VictoryCondition2");
+
+			AIRootAgent's "VictoryCondition2" = $end_game_script_easy;
+			$newthread(AIRootAgent's "VictoryCondition2",$random_time(600000));
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function creates a message and kicks off troll spawning in GHordes
+Function GHorde_Troll_Spawner_Setup ()
+Declare
+	list Palaces;
+	agent Palace;
+	agent AIRootAgent;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Stop playing current music, and play the last music track
+	$Play_Endgame_Music (AIRootAgent);
+
+	$MessageFlag (Palace, #Message_GHorde_Troll_Spawn);
+
+	AIRootAgent's "SpecialSpawnScript" = $GHorde_Troll_Spawner;
+
+	$SetThreadInterval (AIRootAgent's "SpecialSpawnScript", 90000);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Goblin_Events ()
+Declare
+	list Palaces, Guilds, WGuilds;
+	agent Palace, Guild;
+	agent AIRootAgent;
+
+Begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+
+	//Player gets some gold from the Wiz guild
+	If (AIRootAgent's "Quest_Flag_1" == False)
+		begin
+
+			$MessageFlag (Palace, #Message_GHorde_Wiz_Gold_1);
+
+			$setthreadinterval (AIRootagent's "victoryCondition2", 110000 + $RandomNumber (20000) );
+
+			AIRootAgent's "Quest_Flag_1" = True;
+
+			$Adjustplayerdata (palace, "gold", 3000);
+			$CreateEffector (Palace, "got_gold_bldg", 0, 3000);
+
+		end
+
+
+	//Player gets some gold from the Wiz guild again
+	Else If (AIRootAgent's "Quest_Flag_2" == False)
+		begin
+
+			$MessageFlag (Palace, #Message_Ghorde_Wiz_Gold_2);
+
+			$setthreadinterval (AIRootagent's "victoryCondition2", 30000 + $RandomNumber (20000) );
+
+			AIRootAgent's "Quest_Flag_2" = True;
+
+			$Adjustplayerdata (palace, "gold", 4000);
+			$CreateEffector (Palace, "got_gold_bldg", 0, 4000);
+
+		end
+
+
+	//If this is False, then the WGuild is still mortal
+	Else If (AIRootAgent's "Quest_Flag_3" == False)
+		begin
+
+			//The Wiz Guild is "type" invulnerable
+			$ListObjects (Palace, "Invulnerable", -1, Guilds, #NotMyPlayer, #NoHiddenMap);
+			WGuilds = $ListTitles (Guilds, "Wizards_Guild");
+
+			Guild = $ListMember (WGuilds, 1);
+
+			//Set the guild to back to vulnerable and flaggable, and change its type back to normal
+			Guild's "Type" = "Building";
+			$SetAttribute (Guild, #ATTRIB_NotFlaggable, 0);
+			$SetAttribute (Guild, #ATTRIB_NotSpellTarget, 0);
+			//Make a message that says that the WGuild is now vulnerable again.
+			$MessageFlag (Guild, #message_ghordes_mortal_wguild);
+
+			$MiniMapAnimation( guild, "event_beacon" );
+
+			//Don't enter this logic again
+			AIRootAgent's "Quest_Flag_1" = True;
+
+			//Kill the Events script - there are no more events  in GHordes (yet)
+			$killthread(AIRootagent's "victoryCondition2");
+
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This spawns Trolls in the Goblin Horde Quest
+Function GHorde_Troll_Spawner ()
+Declare
+	list		Palaces, Lairs, Monsters;
+	agent		Palace, Lair;
+	integer	Counter;
+
+Begin
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects( Palace, "Lair", -1, Lairs, #NoHiddenMap );
+	$ListObjects ( Palace, "Monster", -1, Monsters, #NoHiddenMap );
+
+	//Don't spawn over the Monster Cap
+	Counter = $ListSize (Monsters);
+
+	Foreach Lair in Lairs do
+		begin
+
+			If (Counter < #Monster_Spawn_Cap)
+				begin
+					$SpawnUnit (Lair, "Troll", "Override");
+					Counter++;
+				end
+
+		end
+
+	//Also, spawn a few that appear to be coming from offmap
+	$spawnunit(palace,"Troll",$RandomedgeCoord(#East),#Monster_player);
+	$spawnunit(palace,"Troll",$RandomedgeCoord(#West),#Monster_player);
+	$spawnunit(palace,"Troll",$RandomedgeCoord(#North),#Monster_player);
+	$spawnunit(palace,"Troll",$RandomedgeCoord(#South),#Monster_player);
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This will enchant Wiz_Towers that are not on the palace's team sometimes
+// Thisagent is the palace
+Function GHorde_Wiz_Tower_Enchanter (agent ThisAgent)
+Declare
+	list 	Towers;
+	agent Tower;
+
+Begin
+	$ListObjects (ThisAgent, "Building", -1, Towers, #NotMyPlayer, #NoHiddenMap);
+	Towers = $ListTitles (Towers, "Wizards_Tower");
+
+	Foreach Tower in Towers do
+		begin
+
+			If ($RandomNumber (100) >= 50)
+				$EnchantWizTower (Tower);
+
+		end
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Vengeance of the Liche Queen Quest entry point
+function LICHE_QUEEN()
+
+declare
+	agent AIRootAgent,bldg,palace,lair,sign;
+	list bldgs,palaces,lairs,lairs2,lairs3,chests,signs;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// what can't be used in this quest?
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Blacksmith1"); // can be enabled later
+	$disableunittype("Inn");
+	$disableunittype("Dwarven_Settlement");
+	$disableunittype("Rogues_guild1");
+
+	$dwarvesVoice_setOperative(0);
+
+	// what needs to be set up special?
+
+		// this is so monsters don't attack buildings before
+		// the player has a chance to 'rescue them'
+
+	$setup_rescue_buildings(palace);
+
+	$listobjects(palace,"lair",-1,lairs,#NoHIddenMAp);
+
+
+	foreach lair in lairs do
+		begin
+			if ($gettitle(lair) != "Liche_queen_lair")
+				if ($gettitle(lair) == "ruined_altar1")
+					lairs2 << lair;
+				else
+					lairs3 << lair;
+		end
+
+	$setup_multispawning_lairs (lairs2, 2);
+	$Setup_Multispawning_Lairs (lairs3, 6);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,300,300);
+
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	sign = $listmember(signs,1);
+	$post_message(sign,#sign_liche);
+
+	// what scripts need to be run during the game?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	AIRootAgent's "VictoryCondition" = $liche_queen_victory;
+	AIRootAgent's "victoryCondition2" = $liche_queen_events;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIrootAgent's "end_coord" = $locationof(palace);
+	AIRootAgent's "Quest_Number" = #QNumber_Liche_Queen;
+
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+	$NewThread( AIRootAgent's "VictoryCondition2", 180000 + ($randomnumber(120000)));
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Liche_queen_victory()
+
+declare
+	list palaces,lairs,monsters,bldgs;
+	agent palace,bldg;
+	agent AIRootAgent;
+	integer player;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	$ListObjects(palace,"lair",-1, lairs, #NoHiddenMap );
+	lairs = $listtitles(lairs,"Liche_queen_lair");
+
+	if ($listsize(lairs) == 0)
+		begin
+			$ListObjects(palace,"monster",-1, monsters, #NoHiddenMap );
+			monsters = $listtitles(monsters,"Liche_queen");
+
+//			if ($listsize(monsters) == 0)
+			if ($istitlealive(palace,"liche_queen") == FALSE)
+				begin
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,AIRootAgent's "end_Coord");
+					$KillThread( AIRootAgent's "VictoryCondition" );
+					$KillThread( AIRootAgent's "VictoryCondition2" );
+
+					AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+					$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+					AIRootAgent's "VictoryCondition2" = $end_game_script_medium;
+					$newthread(AIRootAgent's "VictoryCondition2",$random_time(450000));
+				end
+			else
+				begin
+					if (AIRootAgent's "Quest_flag_4" == FALSE)
+						begin
+							$play_endgame_music(AIRootAgent);
+							AIRootAgent's "Quest_flag_4" = TRUE;
+						end
+					if ($listsize(monsters) > 0)
+						AIRootAgent's "end_Coord" = $locationof($listmember(monsters,1));
+				end
+		end
+	else
+		AIRootAgent's "end_Coord" = $locationof($listmember(lairs,1));
+
+	$rescue_buildings(palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function liche_queen_events()
+
+declare
+	agent AIRootAgent,palace;
+	integer edge,i;
+	list palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	If (AIRootAgent's "Quest_Flag_1" == False)
+		begin
+			// first skeleton wave - easy
+			edge = $randomnumber(4);
+			i = 7;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Skeleton",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					i -= 1;
+				end
+
+			$playsound(palace,"Liche_queen","VFX_APPEARS");
+			$setthreadinterval(AIRootagent's "victoryCondition2", 165000 + ($randomnumber(105000)));
+ 			AIRootAgent's "Quest_Flag_1" = true;
+		end
+	else
+	If (AIRootAgent's "Quest_Flag_2" == False)
+		begin
+			// second undead wave - easy
+			edge = $randomnumber(4);
+			i = 12;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Skeleton",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					i -= 1;
+				end
+
+			$playsound(palace,"Liche_queen","Taunt");
+			$setthreadinterval(AIRootagent's "victoryCondition2", 180000 + ($randomnumber(120000)));
+			AIRootAgent's "Quest_Flag_2" = TRUE;
+		end
+	else
+	If (AIRootAgent's "Quest_Flag_3" == False)
+		begin
+			// third wave - a little harder
+			edge = $randomnumber(4);
+			i = 17;
+			while (i > 0) do
+				begin
+					$spawnunit(palace,"Skeleton",$RandomedgeCoord(edge),#Monster_player,$concatenate(#ATTRIB_Artifice,#force_raider));
+					i -= 1;
+				end
+
+			$playsound(palace,"Liche_queen","VFX_GO_COMBAT");
+			$setthreadinterval(AIRootagent's "victoryCondition2", 180000 + ($randomnumber(120000)));
+			AIRootAgent's "Quest_Flag_3" = TRUE;
+			$killthread(AIRootagent's "victoryCondition2");
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// CALL THIS FUNCTION BEFORE SETUP_RESCUE_BUILDINGS!
+// This Function loads a Guild's "SpecialList" list with the class and Bonus additional starting XP
+// of a hero that it should spawn when it gets rescued.
+Function Setup_Rescue_Heroes (agent Palace, string GuildName, string Class, integer StartLevel)
+Declare
+	agent Guild;
+	list	Guilds;
+
+Begin
+	$ListObjects (Palace, "Building", -1, Guilds, #NoHiddenMap, #NotMyTeam);
+	Guilds = $ListTitles (Guilds, GuildName);
+
+	If ($ListSize (Guilds) > 0)
+		begin
+			Guild = $ListMember (Guilds, 1);
+
+			Guild's "SpecialList" << Class;
+			Guild's "SpecialList" << StartLevel;
+
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function setup_rescue_buildings(agent palace)
+
+declare
+	list bldgs;
+	agent bldg;
+
+begin
+	$ListObjects(palace,"building",-1,bldgs,#NotMyTeam, #NoHiddenMap);
+
+	if ($listsize(bldgs) > 0)
+		begin
+			foreach bldg in bldgs do
+				begin
+					bldg's "type" = "unknown";
+					if ($gettitle(bldg) == "Dwarven_settlement" || $gettitle(bldg) == "ballista_tower")
+						begin
+							bldg's "enemytype" = "nothing";
+						end
+					if ($gettitle(bldg) == "guardhouse")
+						bldg's "enemytype" = "nothing";
+
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function setup_rescue_pets(agent palace,string whatpet)
+
+declare
+	list monsters;
+	agent monster;
+
+begin
+	$ListObjects(palace,"monster",-1,monsters,#NotMyTeam, #NoHiddenMap);
+	monsters = $listtitles(monsters,whatpet);
+
+	if ($listsize(monsters) > 0)
+		begin
+			foreach monster in monsters do
+				begin
+					monster's "type" = "pet";
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rescue_pets(agent palace)
+
+declare
+	list pets;
+	agent pet;
+	integer player;
+
+begin
+	$listobjects(palace,"pet",-1,pets,#NotMyPlayer);
+	player = $getunitplayernumber(palace);
+
+	foreach pet in pets do
+		begin
+			$setunitplayernumber(pet,player);
+			pet's "type" = "hidden";
+//			pet's "enemytype" = "monster";
+			$createeffector(pet,"charm_icon",1,"infinite");
+
+//			$Reset_Tasks (Pet);
+			pet's "activescript" = $pet_ready;
+			$setthreadinterval(pet's "Activescript", #charm_delay_time);
+			$stopmoving(pet);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function pet_ready(agent thisagent)
+
+declare
+	integer player;
+	agent AIRootAgent,palace;
+	list palaces;
+
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+	player = $getunitplayernumber(palace);
+
+//	$setunitplayernumber(thisagent,player);
+	thisagent's "type" = "hero";
+	thisagent's "enemytype" = "monster";
+
+	$setthreadinterval(thisagent's "Activescript", #Normal_cycle);
+
+	$Reset_Tasks (Thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rescue_buildings(agent palace)
+
+declare
+	integer 	player;
+	list 		bldgs,guys;
+	agent 	bldg,guy;
+	list		Levels;
+
+begin
+	$ListObjects(palace,"unknown", -1, bldgs, #NotMyPlayer );
+
+	player = $getunitplayernumber(palace);
+	if ($listsize(bldgs) > 0)
+		begin
+			// convert the other buildings to my side
+			foreach bldg in bldgs do
+				begin
+					$setunitplayernumber(bldg,player);
+					if ($gettitle(bldg) == "statue")
+						begin
+							$messageflag(bldg,#message_rescued_statue);
+							$listobjects(bldg,"hero",-1,guys,#MyPlayer,#insideOtherUnits);
+
+							foreach guy in guys do
+								if (guy's "subtype" == "hero")
+									guy's "loyalty" += #statue_loyalty_boost;
+
+						end
+					else
+						begin
+							$messageflag(bldg,#message_rescued_building);
+							$PlaySound (palace, "Advisor_New_Outpost", "VFX_ADVISOR");
+						end
+
+					bldg's "type" = "building";
+
+					if ($gettitle(bldg) == "Dwarven_settlement" || $gettitle(bldg) == "ballista_tower")
+						begin
+							bldg's "enemytype" = "monster";
+						end
+					else
+					if ($gettitle(bldg) == "Guardhouse")
+						begin
+							bldg's "enemytype" = "monster";
+							$RunThread (bldg's "Guard_Spawn_Function", 1, bldg);
+						end
+
+					//See if thisbuilding is a guild w/ a speciallist
+					If ($HasAttribute ("SpecialList", Bldg))
+						begin
+							//If this is > 0, that means it was loaded in Setup_Rescue_Heroes, so spawn heroes
+							While ($ListSize (Bldg's "SpecialList") > 0) do
+								begin
+									//$DebugOut (911, "Listsize:",$Listsize (Bldg's "SpecialList"));
+
+									//ListMember 1 on the occupants list is a herotitle string
+									$SpawnUnit (Bldg, $ListMember (Bldg's "SpecialList", 1));
+
+									//remember the additional experience that we wanted to give the the hero
+									Levels << $ListMember (Bldg's "SpecialList", 2);
+
+									$RemoveListMember (Bldg's "SpecialList", 1);
+									$RemoveListMember (Bldg's "SpecialList", 1);
+
+								end
+
+							//If we want higher than level 0 heroes, than Levels > 0, and has the AdditionalXp the
+							//Heroes should get
+							If ($ListSize (Levels) > 0)
+								begin
+									Bldg's "SpecialList" = Levels;
+
+									Bldg's "SpecialScript" = $Setup_High_Level_Members;
+									$NewThread (Bldg's "SpecialScript", 500, Bldg);
+								end
+					 	end
+				end
+		end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This will give a high level hero their starting level once they belong to the guild
+Function Setup_High_Level_Members (agent ThisAgent)
+Declare
+	integer	Start_Level;
+	agent		Member;
+
+Begin
+	If ($ListSize (ThisAgent's "SpecialList") == 0)
+		begin
+			//ThisAgent is done giving out XP
+			$KillThread (ThisAgent's "SpecialScript");
+
+		end
+
+	Else If ($ListSize (ThisAgent's "Members") > 0)
+		begin
+			Foreach Member in ThisAgent's "Members" do
+				begin
+					If ($ListSize (ThisAgent's "SpecialList") > 0)
+						begin
+							Start_Level = $ListMember (ThisAgent's "SpecialList", 1);
+
+							//This will give the level that is stored in the SpecialList (see Rescue_Buildings) to the listmember
+							$advance_to_level (Member, Start_Level);
+
+							$setattribute(thisagent,#ATTRIB_StartedwithThisUnit,1);
+							$RemoveListMember (ThisAgent's "SpecialList", 1);
+						end
+				end
+		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This replaces all Lair's "IGdeathscripts" with scripts that respawn them after a duration
+Function Setup_Respawning_Lairs (agent Palace)
+Declare
+	list 	Lairs;
+	agent Lair;
+
+Begin
+	$ListObjects (Palace, "Lair", -1, Lairs, #NoHiddenMap);
+
+	Foreach Lair in Lairs do
+		Lair's "IGDeathScript" = $Respawning_Lair_Death;
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Rescue the Prince Quest entry point
+function SAVE_PRINCE()
+
+declare
+	agent AIRootAgent;
+	agent palace,bldg;
+	list palaces,buildings,bldgs,chests,signs,lairs;
+
+begin
+	// what is not available on this map?
+	$disableunittype("Rangers_guild");
+	$disableunittype("Temple_krypta1");
+	$disableunittype("Temple_agrela1");
+	$disableunittype("Temple_fervus1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Temple_dauros1");
+	$disableunittype("Temple_helia1");
+	$disableunittype("Temple_lunord1");
+	$disableunittype("Elven_bungalow");
+	$disableunittype("Dwarven_settlement");
+	$disableunittype("Gnome_hovel");
+
+	$ElvesVoice_setOperative(0);
+	$dwarvesVoice_setOperative(0);
+
+	// what scripts need to be run?
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	AIRootAgent's "Quest_Number" = #QNumber_Save_Prince;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIRootAgent's "VictoryCondition" = $prince_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	// setup starting messages
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects(palace,"building",-1, buildings, #NoHiddenMap );
+
+	bldgs = $listtitles(buildings,"wizards_guild");
+	bldg = $listmember(bldgs,1);
+	$messageflag(bldg,#message_save_prince_wizards);
+
+	bldgs = $listtitles(buildings,"marketplace");
+	bldg = $listmember(bldgs,1);
+	$messageflag(bldg,#message_save_prince_markets);
+
+	$messageflag(palace,#message_save_prince_intro);
+
+	bldgs = $listtitles(buildings,"library");
+	bldg = $listmember(bldgs,1);
+	$messageflag(bldg,#message_save_prince_library);
+
+	$listobjects(palace,"special_item",-1,chests,#NoHiddenMap);
+	chests = $listtitles(chests,"treasure_chest");
+	$setup_starting_treasure(chests,125,150);
+
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"obelisk");
+	bldg = $listmember(signs,1);
+	$post_message(bldg,#sign_prince_prison);
+
+	AIRootAgent's "Quest_flag_1" = False;
+
+	$ListObjects(palace,"lair",-1, lairs, #NoHiddenMap );
+
+	lairs = $listtitles(lairs,"tower_prison");
+
+	AIRootagent's "end_coord" = $locationof($listmember(lairs,1));
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function prince_victory()
+
+declare
+	list palaces,lairs,lairs2;
+	agent palace,bldg;
+	agent AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects(palace,"lair",-1, lairs, #NoHiddenMap );
+	lairs = $listtitles(lairs,"Tower_prison");
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	if ($listsize(lairs) == 0)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "end_coord");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+		end
+	else
+		begin
+			// check to see if new messages need to be placed on the map
+			// check to see if the hero has 'discovered' special lairs
+			$ListObjects(palace,"lair",-1, lairs );
+
+			If (AIRootAgent's "Quest_Flag_1" == False)
+				begin
+					lairs2 = $listtitles(lairs,"Tower_Prison");
+					if ($listsize(lairs2) > 0)
+						begin
+							bldg = $listmember(lairs2,1);
+
+							//Stop playing current music, and play the last music track
+							$Play_Endgame_Music (AIRootAgent);
+
+							$messageflag(bldg,#message_save_prince_tower);
+							AIRootAgent's "Quest_flag_1" = True;
+						end
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Quest for the Magic Ring entry point
+function MAGIC_RING()
+declare
+	agent AIRootAgent, Temp_Palace, Palace, Palace2, Guild, Ring_Site, Inn;
+	list	Palaces, Guilds, Lairs, Inns;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Magic_Ring;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	Palaces = $ListPalaces ();
+
+	//Get the Player 1 palace
+	Foreach Temp_Palace in Palaces do
+		begin
+			If ($GetUnitPlayerNumber (Temp_Palace) == #Player_1)
+		   	Palace = Temp_Palace;
+		end
+
+
+	//Get the Player 2 palace, and have it set up all its guilds to spawn their members once in awhile
+	Foreach Temp_Palace in Palaces do
+		begin
+			If ($GetUnitPlayerNumber (Temp_Palace) == #Player_2)
+		   	Palace2 = Temp_Palace;
+		end
+
+	//Give the Ring to the Ring Site
+	$ListObjects (Palace, "Lair", -1, Lairs, #NoHiddenMap);
+	Lairs = $ListTitles (Lairs, "Hidden_Ring_Site");
+	Ring_Site = $ListMember (Lairs, 1);
+	$CreateNewInventoryItem (#QItem_Magic_Ring, Ring_Site);
+
+	//Find all the player 2 guilds
+	$ListObjects (Palace2, "Building", -1, Guilds, #MyTeam, #MyPlayer, #NoHiddenMap);
+	Guilds = $ListSubtypes (Guilds, "Guild");
+
+	Foreach Guild in Guilds do
+		begin
+			Guild's "SpecialScript" = $Hero_Generator;
+			$NewThread( Guild's "SpecialScript", 30000 + $randomnumber(30000), Guild );
+		end
+
+	// what scripts need to be run during the game?
+	AIRootAgent's "VictoryCondition" = $Magic_Ring_Victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	//The events script
+	AIRootAgent's "VictoryCondition2" = $Magic_Ring_Events;
+	$NewThread( AIRootAgent's "VictoryCondition2", 240000);
+
+
+
+	//Put a message flag on and reveal one of the other kingdom's inns
+	$ListObjects (Palace, "Building", -1, Inns, #NoHiddenMap, #NotMyPlayer);
+	Inns = $ListTitles (Inns, "Inn");
+	Inn = $ListMember (Inns, 1);
+	$revealArea(Palace,$LocationOf (Inn),400);
+	$MessageFlag (Inn, #message_discovered_other_inn);
+
+	//Spawn a couple heroes by Player 1's Palace. These are to show that there are other player's heroes running around
+	$SpawnUnit (Palace2, "Warrior", $RandomCoord (Palace, 500));
+	$SpawnUnit (Palace2, "Wizard", $RandomCoord (Palace, 500));
+	$SpawnUnit (Palace2, "Ranger", $RandomCoord (Palace, 500));
+
+	//Used by the victory script
+	AIRootAgent's "Quest_Flag_1" = False;
+	AIRootAgent's "Quest_Flag_2" = False;
+
+	//Used by the events script
+	AIRootAgent's "Quest_Flag_4" = False;
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+//IMPORTANT: Hidden_Ring Birth + Death play integral roles in this quest
+Function Magic_Ring_Victory ()
+Declare
+	agent	AIRootAgent;
+	agent	Palace, Dude;
+	list	Palaces;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	//If Quest_Flag_1 is true, that means the first Hidden_Ring_site has been knocked over
+	//If Quest_Flag_2 is false, that means we haven't entered this loop yet
+	If (AIRootAgent's "Quest_Flag_1" == True && AIRootAgent's "Quest_Flag_2" == False)
+		begin
+
+			Palaces = $ListPalaces ();
+
+			//Get the Player 1 palace
+			Foreach Dude in Palaces do
+				begin
+					If ($GetUnitPlayerNumber (Dude) == #Player_1)
+		   			Palace = Dude;
+				end
+
+			//Make the kingdoms go to war
+			$setplayerteamnumber (Palace,$newteamnumber());
+
+			//Stop playing current music, and play the last music track
+			$Play_Endgame_Music (AIRootAgent);
+
+			//Spawn the second hidden ring site
+			$SpawnUnit (Palace, "Hidden_Ring_Site", "MaxHP", $RandomCoord (Palace, -1), #Monster_Player, $Concatenate (#ATTRIB_forcebuildingState,#Building_force_active));
+
+			//Set this to true so we don't enter this loop again
+			AIRootAgent's "Quest_Flag_2" = True;
+
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Magic_Ring_Events ()
+Declare
+	agent Dude, Palace, Palace2, AIRootAgent;
+	list 	Palaces;
+
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	If (AIRootAgent's "Quest_Flag_4" == False)
+		//Give 5000 gold to the palace
+		begin
+			Palaces = $ListPalaces ();
+
+			//Get the Player 1 palace
+			Foreach Dude in Palaces do
+				begin
+					If ($GetUnitPlayerNumber (Dude) == #Player_1)
+		   			Palace = Dude;
+
+					Else
+						Palace2 = Dude;
+				end
+
+			//Only if the kingdoms aren't at war
+			if (($isdead(palace) == FALSE) && ($isdead(palace2) == FALSE))
+				If ($GetPlayerTeamNumber (Palace) == $GetPlayerTeamNumber (Palace2))
+					begin
+
+						$AdjustPlayerData(Palace, "gold", 5000);
+						$CreateEffector (Palace, "got_gold_bldg", 0, 5000);
+
+						$MessageFlag (Palace, #message_ring_faith_gold);
+
+					end
+
+			AIRootAgent's "Quest_Flag_4" = True;
+
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Free the Slaves Quest entry point
+Function SLAVE_PITS()
+declare
+	agent	AIRootAgent,palace;
+	list palaces;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	// start up the victory condition
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Slave_Pits;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	AIRootAgent's "VictoryCondition" = $slaves_victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "VictoryCondition2" = $slaves_events;
+	$NewThread( AIRootAgent's "VictoryCondition2", $random_to_percent(200000,3) );
+
+	//
+	$setup_rescue_buildings(palace);
+	$setup_random_treasure(20, #default_spawn_treasure_dist);
+
+	AIRootAgent's "end_coord" = $locationof(palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function slaves_victory()
+
+declare
+	list pits,palaces,monsters;
+	agent palace,AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	if (AIRootAgent's "Quest_flag_1" == FALSE)
+		begin
+			// see if there are any slave pits left
+			// if not, release the BOSS
+			$listobjects(palace,"lair",-1,pits,#NoHiddenMap);
+			pits = $listtitles(pits,"Slave_pits");
+
+			if ($listsize(pits) == 0)
+				begin
+					//Stop playing current music, and play the last music track
+					$Play_Endgame_Music (AIRootAgent);
+
+					$spawnunit(palace,"url_shekk",$randomedgecoord($randomnumber(4)),#Monster_player,"clear");
+					AIROOTAgent's "Quest_flag_1" = TRUE;
+				end
+		end
+	else
+		begin
+			if (AIRootAgent's "Quest_flag_4" == TRUE) // the boss must have been spawned!
+				begin
+					// see if the BOSS is still around
+					// otherwise, the player wins!
+					$listobjects(palace,"monster",-1,monsters,#NoHiddenMap);
+					monsters = $listtitles(monsters,"Url_Shekk");
+//					if ($listsize(monsters) == 0)
+					if ($istitlealive(palace,"url_shekk") == FALSE)
+						begin
+							//Set quest music back to bounce between early and mid game tracks
+							$Reset_Quest_Music (AIRootAgent);
+
+							$declarevictory(palace,AIRootAgent's "end_coord");
+							$KillThread( AIRootAgent's "VictoryCondition" );
+
+							AIRootAgent's "VictoryCondition" = $rescue_keep_playing;
+							$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+						end
+					else
+						if ($listsize(monsters) > 0)
+							AIRootAgent's "end_coord" = $locationof($listmember(monsters,1));
+				end
+		end
+
+	$rescue_buildings(palace);
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function slaves_events()
+
+declare
+	list palaces,pits;
+	agent palace,AIRootAgent;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	if (AIRootagent's "Quest_flag_2" == FALSE)
+		begin
+			// send a message to the player - another kingdom gives them money
+			$messageFlag(palace,#message_Slaves_money_1);
+
+			$Adjustplayerdata (palace, "gold", 2500);
+			$CreateEffector (Palace, "got_gold_bldg", 0, 2500);
+
+			AIRootAgent's "Quest_flag_2" = TRUE;
+		end
+	else
+	if (AIRootagent's "Quest_flag_3" == FALSE)
+		begin
+			// another kingdom sends its final aid
+			$messageFlag(palace,#message_Slaves_money_2);
+
+			$Adjustplayerdata (palace, "gold", 1500);
+			$CreateEffector (Palace, "got_gold_bldg", 0, 1500);
+
+			AIRootAgent's "Quest_flag_3" = TRUE;
+			$killthread(AIRootAgent's "victorycondition2");
+		end
+//	else
+//	if (AIRootAgent's "Quest_flag_5" == FALSE)
+//		begin
+
+//			AIRootAgent's "Quest_flag_5" = TRUE;
+//		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Brashnard's Ultimate Sphere of Power Quest entry point
+// 
+// $SPHERE_DEATH does a bunch of stuff for this quest - like spawning large monster waves 
+// when the last sphere sites are destroyed
+function BRASHNARD()
+declare
+	agent	AIRootAgent;
+	agent	Palace, Lair;
+	list Palaces;
+	list	Spheres;
+	agent	Sphere;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	AIRootAgent's "VictoryCondition" = $Brashnard_Victory;
+
+	AIRootAgent's "Quest_Number" = #QNumber_Brashnard;
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+	//This is the script that will spawn Dirgo after x amount of time
+	AIRootAgent's "SpecialSpawnScript" = $Dirgo_Spawner;
+	$RunThread (AIRootAgent's "SpecialSpawnScript", $RandomNumber (1500000) + 600000);
+	//$RunThread (AIRootAgent's "SpecialSpawnScript", 2000, AIRootAgent);
+
+	//Find all of the Brashnards Sphere Sites on the Map and give each of them a Sphere Item
+	$ListObjects(Palace, "Lair", -1, Spheres, #NoHiddenMap);
+
+	//This is a coverup for RGSEditor booboo. Set any lair that has maxHP 5 to HP/MaxHP 200
+	Foreach Lair in Spheres do
+		begin
+
+			If ($GetAttribute (Lair, #ATTRIB_MaxHP) == 5)
+				begin
+
+					$SetAttribute (Lair, #ATTRIB_MaxHP, 200);
+					$SetAttribute (Lair, #ATTRIB_HP, 200);
+
+				end
+
+		end
+
+
+
+	Spheres = $ListTitles (Spheres, "Brashnards_Sphere");
+
+	//$DebugOut (911, "Listsize of Spheres after ListTitles:",$ListSize (Spheres));
+
+	//If Listsize of Sphere does not equal 7, then that is VERY BAD, so $DebugOut
+	If ($ListSize (Spheres) != 7)
+		begin
+			$DebugOut (911, "$LISTSIZE OF SPHERES != 7!!!!");
+		end
+
+	//Give all the different spheres each a unique shard
+	//($ListMember (Spheres, 1))'s "Epic_Quest_Item" = #QItem_Shard_Combustion;
+	$CreateNewInventoryItem (#QItem_Shard_Combustion, $ListMember (Spheres, 1));
+
+	//($ListMember (Spheres, 2))'s "Epic_Quest_Item" = #QItem_Shard_Shielding;
+	$CreateNewInventoryItem (#QItem_Shard_Detonation, $ListMember (Spheres, 2));
+
+	//($ListMember (Spheres, 3))'s "Epic_Quest_Item" = #QItem_Shard_Displacement;
+	$CreateNewInventoryItem (#QItem_Shard_Displacement, $ListMember (Spheres, 3));
+
+	//($ListMember (Spheres, 4))'s "Epic_Quest_Item" = #QItem_Shard_Wisdom;
+	$CreateNewInventoryItem (#QItem_Shard_Transfixion, $ListMember (Spheres, 4));
+
+	//($ListMember (Spheres, 5))'s "Epic_Quest_Item" = #QItem_Shard_Health;
+	$CreateNewInventoryItem (#QItem_Shard_Health, $ListMember (Spheres, 5));
+
+	//($ListMember (Spheres, 6))'s "Epic_Quest_Item" = #QItem_Shard_Burning;
+	$CreateNewInventoryItem (#QItem_Shard_Burning, $ListMember (Spheres, 6));
+
+	//($ListMember (Spheres, 7))'s "Epic_Quest_Item" = #QItem_Shard_Haste;
+	$CreateNewInventoryItem (#QItem_Shard_Haste, $ListMember (Spheres, 7));
+
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+	AIRootAgent's "end_coord" = $locationof(palace);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Brashnard_Victory ()
+Declare
+	list palaces,Spheres;
+	agent palace;
+	agent AIRootAgent;
+
+Begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+
+	//NOTE: FINAL MUSIC CALL IS IN SPHERE_DEATH
+
+	$ListObjects (Palace, "Lair", -1, Spheres, #NoHiddenMap );
+	Spheres = $ListTitles (Spheres, "Brashnards_Sphere");
+
+	If ($ListSize (Spheres) == 0)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "end_coord");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+		end
+	else
+		AIRootAgent's "end_coord" = $locationof($listmember(spheres,1));
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This Spawns Dirgo in a random place on the map
+Function Dirgo_Spawner ()
+Declare
+	list	Palaces;
+	agent	Palace;
+
+Begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//$DebugOut (911, "Before Global Coord.");
+
+	$SpawnUnit (Palace, "Dirgo", $RandomCoord (Palace, -1), "Override", #Monster_Player);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This Spawns Vendral from a random map edge - called in Slay Dragon
+Function Vendral_Spawner ()
+Declare
+	list	Monsters, Palaces;
+	agent	Palace;
+	agent AIRootAgent;
+	coordinate coord;
+	integer direction;
+
+Begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+	//Spawn Vendral if there already isn't one out
+	$ListObjects (Palace, "Monster", -1, Monsters, #NoHiddenMap);
+	Monsters = $ListTitles (Monsters, "Vendral");
+
+	if (AIRootAgent's "Quest_flag_5" == FALSE)
+		begin
+			// this is vendral's second appearance - he should scare the player
+			// and annoy them this time!
+			direction = $randomnumber(4);
+			coord = $randomedgecoord(direction);
+
+			If ($ListSize (Monsters) == 0)
+				$spawnunit(palace,"Vendral",coord,#Monster_player);
+
+			//Also spawn a bunch of Harpies.
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+			$spawnunit(palace,"Harpy",$randomCoord(coord,300),#Monster_player, $Concatenate (#ATTRIB_Artifice, #Force_Bomber));
+
+			//Make another vendral in a random amount of time
+			$SetThreadInterval (AIRootAgent's "SpecialSpawnScript", $RandomNumber (240000) + 120000);
+			AIRootAgent's "quest_flag_5" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_6" == FALSE)
+		begin
+			direction = $randomnumber(4);
+			coord = $randomedgecoord(direction);
+
+			If ($ListSize (Monsters) == 0)
+				$spawnunit(palace,"Vendral",coord,#Monster_player);
+
+			$SetThreadInterval (AIRootAgent's "SpecialSpawnScript", $RandomNumber (220000) + 100000);
+
+			AIRootAgent's "quest_flag_6" = TRUE;
+		end
+	else
+	if (AIRootAgent's "Quest_flag_7" == FALSE)
+		begin
+			// vendral has brought some friends along to play!
+			direction = $randomnumber(4);
+			coord = $randomedgecoord(direction);
+
+			If ($ListSize (Monsters) == 0)
+				$spawnunit(palace,"Vendral",coord,#Monster_player);
+
+			$spawnunit(palace,"Dragon",$randomEdgeCoord($randomnumber(4)),#Monster_player);
+			$spawnunit(palace,"Dragon",$randomEdgeCoord($randomnumber(4)),#Monster_player);
+			$spawnunit(palace,"Dragon",$randomEdgeCoord($randomnumber(4)),#Monster_player);
+			$spawnunit(palace,"Dragon",$randomEdgeCoord($randomnumber(4)),#Monster_player);
+
+			$SetThreadInterval (AIRootAgent's "SpecialSpawnScript", $RandomNumber (100000) + 30000);
+
+			AIRootAgent's "quest_flag_7" = TRUE;
+		end
+	else
+		begin
+			// just try to spawn vendral over and over - the player has had
+			// enough time - they have to work hard now.
+			direction = $randomnumber(4);
+			coord = $randomedgecoord(direction);
+
+			If (($ListSize (Monsters) == 0) && (AIROOTAgent's "Quest_flag_4" == FALSE))
+				$spawnunit(palace,"Vendral",coord,#Monster_player);
+
+			$SetThreadInterval (AIRootAgent's "SpecialSpawnScript", $RandomNumber (20000) + 15000);
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+expression #wiz_curse_mod 5
+
+
+///////////////////////////////////////////////////////////////////////////////
+// The Wizard's Curse Quest entry point
+function WIZARDS_CURSE()
+declare
+	agent 	AIRootAgent, Palace, E_Wizard, E_Hooligan, sign, Guild, Hut,lair, Varg;
+	list		Palaces, E_Heroes, E_Wizards, E_Hooligans, signs, Guilds, Huts,lairs, Vargs;
+	integer	Rate;
+	boolean	Hut_Spawn_Bool;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	AIRootAgent's "Quest_Number" = #QNumber_Wizards_Curse;
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//Start playing music
+	$Setup_Quest_Music (AiRootAgent);
+
+
+	// disable some building types
+	$disableunittype("Temple_Fervus1");
+	$disableunittype("Temple_Dauros1");
+	$disableunittype("Temple_Krypta1");
+	$disableunittype("Temple_Agrela1");
+	$disableunittype("Temple_Krolm");
+	$disableunittype("Wizards_guild1");
+
+	// what scripts need to be run during the game?
+	AIRootAgent's "VictoryCondition" = $Wizards_Curse_Victory;
+	$NewThread( AIRootAgent's "VictoryCondition", #VictoryCondition_callback_frequency );
+
+
+	//Setup the Hooligans by spawning them from all runttime General Housing
+	$ListObjects (Palace, "building", -1, Huts, #NoHiddenMap, #NotMyPlayer);
+	Huts = $ListTitles (Huts, "General_Housing");
+
+
+	//Every odd Number, roll a random to see if we spawn a Hooligan or not
+	Hut_Spawn_Bool = True;
+
+	Foreach Hut in Huts do
+		begin
+			//If true, then spawn
+			If (Hut_Spawn_Bool)
+				$SpawnUnit (Hut, "Hooligan");
+
+			//If false, then roll random to see if spawn
+			Else
+				begin
+					If ($RandomNumber (100) + 1 > 25)
+						$SpawnUnit (Hut, "Hooligan");
+				end
+
+			//Flip Hut_Spawn_Bool
+			If (Hut_Spawn_Bool)
+				Hut_Spawn_Bool = False;
+
+			Else
+				Hut_Spawn_Bool = True;
+		end
+
+	//Message flag the intro message on the palace
+	$messageflag(palace, #message_wizards_curse_intro);
+
+
+	//Post a message on the sign that is used for a loc to spawn the monster and captive at
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"sign_wood");
+	sign = $listmember(signs,1);
+	$post_message(sign, #sign_tic_tac_toe);
+
+	//Post a message on the sign outside the wizard's guild
+	$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+	signs = $listtitles(signs,"sign_fancy_iron");
+	sign = $listmember(signs,1);
+	$post_message(sign,#sign_angry_wizard);
+
+	$setup_random_treasure(20, #default_spawn_treasure_dist);
+
+	//Setup the Enemy Wiz Guild - it needs to Leech levels from heroes from time to time
+	//IT ALSO looks for monsters nearby and zaps them, and repairs the Wiz Guild if it
+	//needs it
+	$ListObjects (Palace, "Building", -1, Guilds, #NoHiddenMap, #NotMyPlayer);
+	Guilds = $ListTitles (Guilds, "Wizards_Guild");
+	Guild = $ListMember (Guilds, 1);
+	Guild's "SpecialScript" = $Curse_Active;
+	$NewThread (Guild's "SpecialScript", 5000, Guild);
+
+	//Have a Varg with spells be a guardian around this sign
+	//Setup the "Beware of Dog" Varg (Find the Varg by searching around the WizGuild for the closest one...
+	//GUILD is the enemy WizGuild
+	$ListObjects (Guild, "Monster", -1, Vargs, #NoHiddenMap);
+	Vargs = $ListTitles (Vargs, "White_Wolf");
+	Varg = $ListMember (Vargs, 1);
+	Varg's "Type" = "Hero";
+	Varg's "Subtype" = "Controlled";
+	Varg's "EnemyType" = "Monster";
+	Varg's "Guardian_Mod" = 2;
+	Varg's "ActiveScript" = $Guardian;
+	Varg's "BasicScript" = $Guardian;
+	Varg's "BackScript" = $Guardian;
+	Varg's "BirthScript" = $Guardian_Birth;
+	$LearnSpell (Varg, "Energy_Blast");
+	$LearnSpell (Varg, "Fire_Shield");
+	//Set the Varg's level to 10 so that he actually learns the aforementioned spells
+	$SetAttribute (Varg, #ATTRIB_ExperienceLevel, 10);
+
+
+	//Setup The Enemy Wizard
+	$ListObjects (Palace, "Hero", -1, E_Heroes, #NoHiddenMap, #NotMyPlayer);
+	E_Wizards = $ListTitles (E_Heroes, "Wizard");
+	E_Wizard = $ListMember (E_Wizards, 1);
+
+	//Set their scripts so they just do basic stuiff and wander around their home
+	E_Wizard's "StartingScript" = $Guardian_Hero_Tree;
+	E_Wizard's "BasicScript" = $Guardian_Hero_Tree;
+	E_Wizard's "ActiveScript" = $Guardian_Hero_Tree;
+	E_Wizard's "BackScript" = $Guardian_Hero_Tree;
+	E_Wizard's "EvaluationScript" = $guardian_hero_eval_nearby;
+
+	//Give them a bunch of XP and spells by using the high-level birth special-case function
+	E_Wizard's "BirthScript" = $High_Level_Hero_Birth;
+
+	//$adjustattribute(E_Wizard,#ATTRIB_MAXHP,25);
+	//$adjustattribute(E_Wizard,#attrib_Armor_basic_damage,4);
+	//Set up one of the Hooligans with the spell book
+	$ListObjects (Palace, "Hooligan", -1, E_Hooligans, #NoHiddenMap, #NotMyPlayer);
+
+	// set the lairs to super slow rates, so the hooligan arresting takes
+	// precedence at first.
+	$listobjects(palace,"lair",-1,lairs,#NoHiddenMap,#NotMyPlayer);
+
+
+	foreach lair in lairs do
+		begin
+			//Change their special_spawn_type
+			lair's "special_spawn_type" = "giant_rat";
+
+
+			Rate = $GetAttribute (lair, #ATTRIB_Lair_BaseSpawnRate);
+			rate = rate * #wiz_curse_mod;
+			$setattribute(lair,#ATTRIB_lair_baseSpawnRate,rate);
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// NOTE: Hooligan.gpl is integral to this quest. It deals with stuff like transferring 
+// the book and having hooligans wander around, etc.
+Function Wizards_Curse_Victory ()
+Declare
+	agent	AIRootAgent, Palace, Wiz_Guild, Hero,lair, Item_Holder, Spawn_Build, Sign, Peasant;
+	list	Palaces, Heroes, New_Heroes, Hooligans, Monsters, Wiz_Guilds, lairs, Signs, Peasants;
+	integer rate;
+	coordinate Spawn_loc;
+
+Begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	//If this is true, then the last Hooligan has been found (see Hooligan_Goto_Palace)
+	If (AIRootAgent's "Quest_Flag_2")
+		begin
+			//Querried in Hooligan_Birth, and sets up next VC check
+			AIRootAgent's "Quest_Flag_3" = True;
+
+			//Find the Wiz_guild, as we want to spawn the Hooligan a give distance from it
+			$ListObjects (Palace, "building", -1, Wiz_Guilds, #NoHiddenMap, #NotMyPlayer);
+
+			Wiz_Guilds = $ListTitles (Wiz_Guilds, "Wizards_Guild");
+
+			If ($ListSize (Wiz_Guilds) > 0)
+				begin
+					Spawn_Build = $ListMember (Wiz_Guilds, 1);
+				end
+
+			Else
+				Spawn_Build = Palace;
+
+			//Create the nasty Hooligan who has spells
+			//Make sure they aren't near the Wiz Guild else the Palace
+			$SpawnUnit (Palace, "Hooligan", $RandomCoord (Spawn_Build, 2000, -1), #Player_3);
+
+			// set the lairs back to normal spawn rates
+			$listobjects(palace,"lair",-1,lairs,#NoHiddenMap,#NotMyPlayer);
+
+			foreach lair in lairs do
+				begin
+					Rate = $GetAttribute (lair, #ATTRIB_Lair_BaseSpawnRate);
+					rate = rate / #wiz_curse_mod;
+					$setattribute(lair,#ATTRIB_lair_baseSpawnRate,rate);
+				end
+
+			//Don't enter this loop again
+			AIRootAgent's "Quest_Flag_2" = False;
+		end
+
+
+	//Check to see when one of the Player's heroes picks up the book
+	If (AIRootAgent's "Quest_Flag_3")
+		begin
+			Item_Holder = $FindInventoryItem (#QItem_Spellbook);
+
+			If ($IsDead (Item_Holder) == False)
+				begin
+					if ($GetUnitPlayerNumber(Item_Holder) == #Player_1)
+						begin
+
+							//Stop checking this condition
+							AIRootAgent's "Quest_Flag_3" = False;
+
+							//Start checking the next condition
+							AIRootAgent's "Quest_Flag_4" = True;
+
+							//Place the message flag on the Wizard's Guild, etc.
+							$ListObjects (Palace, "building", -1, Wiz_Guilds, #NoHiddenMap, #NotMyPlayer);
+
+							Wiz_Guilds = $ListTitles (Wiz_Guilds, "Wizards_Guild");
+
+							If ($ListSize (Wiz_Guilds) > 0)
+								begin
+
+									Wiz_Guild = $ListMember (Wiz_Guilds, 1);
+
+									//Kill the thread that keeps decrementing levels
+									$KillThread (Wiz_Guild's "SpecialScript");
+
+									$revealArea(Palace,$LocationOf (Wiz_Guild),400);
+
+									$MessageFlag (Wiz_Guild, #message_wizard_demands_deeds);
+//									$MiniMapAnimation( Wiz_Guild, "event_beacon" );
+
+								end
+
+							Else
+								begin
+
+									//Place the message Flag on the Palace
+									$MessageFlag (Palace, #message_wizard_demands_deeds);
+
+								end
+
+									//Get a coord to spawn the monsters and captive at...
+									$listobjects(palace,"color",-1,signs,#NoHiddenMap);
+									signs = $listtitles(signs,"sign_wood");
+									sign = $listmember(signs,1);
+
+									Spawn_loc = $LocationOf (Sign);
+
+									//Spawn the Werewolves and a captive peasant
+									$SpawnUnit (Palace, "Peasant_female", Spawn_Loc, #Monster_player);
+
+									$SpawnUnit (Palace, "Werewolf", Spawn_Loc, #Monster_player);
+
+									$SpawnUnit (Palace, "Werewolf", Spawn_Loc, #Monster_player);
+
+									$SpawnUnit (Palace, "Werewolf", Spawn_Loc, #Monster_player);
+
+									$MiniMapAnimation( Spawn_Loc, "event_beacon" );
+
+									//Stop playing current music, and play the last music track
+									$Play_Endgame_Music (AIRootAgent);
+
+						end
+					else
+						begin
+							if ($getplayerteamnumber(item_holder) == $getplayerteamnumber(palace))
+								$setplayerteamnumber(palace,$newteamNumber());
+						end
+				end
+		end
+
+
+	If (AIRootAgent's "Quest_Flag_4")
+		begin
+			//Check to see if the new baddies are dead
+			$ListObjects (Palace, "Monster", -1, Monsters, #NoHiddenMap);
+			Monsters = $ListTitles (Monsters, "Werewolf");
+
+			if ($istitlealive(palace,"werewolf") == FALSE)
+			//If ($ListSize (Monsters) == 0)
+				begin
+					//Send the Peasant home to the palace, and change their team to the player team
+					//The peasant is type hidden
+					$ListObjects (Palace, "Hidden", -1, Peasants, #NoHiddenMap, #NotMyPlayer);
+					Peasants = $ListTitles (Peasants, "Peasant");
+					If ($ListSize (Peasants) > 0)
+						begin
+							Peasant = $ListMember (Peasants, 1);
+
+							$setunitplayernumber(Peasant, #Player_1);
+
+							//Have the Peasant goto the palace, and delete them when they get there
+							Peasant's "ActiveScript" = $Captured_Peasant_Goto_Palace;
+							Peasant's "BasicScript" = $Captured_Peasant_Goto_Palace;
+							Peasant's "BackScript" = $Captured_Peasant_Goto_Palace;
+
+							AIRootAgent's "end_coord" = $locationof(peasant);
+
+						end
+					else
+						AIRootAgent's "end_coord" = $locationof(palace);
+
+					//Set quest music back to bounce between early and mid game tracks
+					$Reset_Quest_Music (AIRootAgent);
+
+					$declarevictory(palace,AIRootAgent's "end_coord");
+  //					AIRootAgent = $RetrieveAgent("GplAIRoot");
+					$KillThread( AIRootAgent's "VictoryCondition" );
+
+
+				end
+
+		end
+
+	//If the evil Wizard is ever killed, then trigger victory
+	//Remember that the wiz is on the Monster Side
+	$ListObjects (Palace, "Hero", -1, Heroes, #NoHiddenMap, #InsideOtherUnits, #NotMyPlayer);
+	//$ListObjects (Palace, "Hidden", -1, HeroesII, #NoHiddenMap, #InsideOtherUnits, #NotMyPlayer);
+
+	Heroes = $ListTitles (Heroes, "Wizard");
+
+	If ($ListSize (Heroes) == 0)
+		begin
+			//Set quest music back to bounce between early and mid game tracks
+			$Reset_Quest_Music (AIRootAgent);
+
+			$declarevictory(palace,AIRootAgent's "end_coord");
+//			AIRootAgent = $RetrieveAgent("GplAIRoot");
+			$KillThread( AIRootAgent's "VictoryCondition" );
+		end
+	else
+		AIRootAgent's "end_coord" = $locationof($listmember(heroes,1));
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+//This sets each entry in ThisList to Lair_Multispawn_Death, and sets the number they spawn to Num_Spawns
+Function Setup_Multispawning_Lairs (list Lairs, integer Num_Spawns)
+Declare
+	agent Lair;
+
+Begin
+	Foreach Lair in Lairs do
+		begin
+			Lair's "IGDeathScript" = $Lair_Multispawn_Death;
+			Lair's "Multi_Spawn_Num" = Num_Spawns;
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This will be called at the start of any Freestyle game
+function Freestyle()
+declare
+	agent AIRootAgent;
+
+begin
+	//Kickoff the music, using the Freestyle music player
+	AiRootAgent = $RetrieveAgent ("GplAiRoot");
+
+	//Start playing music immediately
+	$SetUp_Freestyle_Music (AiRootAgent);
+
+	$setvictorycondition();
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function setup_starting_treasure(list chests,integer startgold,integer randomgold)
+
+declare
+	agent chest;
+
+begin
+	foreach chest in chests do
+		begin
+			$adjustattribute(chest,#ATTRIB_gold,startgold + $randomnumber(randomgold));
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function setup_random_Treasure (integer how_many, integer Dist_from_palace)
+
+Declare
+	list	Palaces;
+	agent Palace;
+	integer i, random;
+
+Begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	i = 0;
+
+	while (i < how_many) do
+		begin
+
+			Random = $RandomNumber (4) + 1;
+
+			If (Random == 1)
+				$SpawnUnit (Palace, "Treasure_Chest1", $RandomCoord (Palace, Dist_from_palace, -1), #Monster_Player,"maxhp");
+
+			Else if (Random == 2)
+				$SpawnUnit (Palace, "Treasure_Chest2", $RandomCoord (Palace, Dist_from_palace, -1), #Monster_Player,"maxhp");
+
+			Else if (Random == 3)
+				$SpawnUnit (Palace, "Treasure_Chest3", $RandomCoord (Palace, Dist_from_palace, -1), #Monster_Player,"maxhp");
+
+			Else if (Random == 4)
+				$SpawnUnit (Palace, "Treasure_Chest4", $RandomCoord (Palace, Dist_from_palace, -1), #Monster_Player,"maxhp");
+
+			i = i + 1;
+
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Magical_Repair (agent ThisAgent)
+Declare
+	integer	HP, MaxHP;
+
+
+Begin
+	HP = $getattribute(thisagent,#ATTRIB_HP);
+	MaxHP = $getattribute(thisagent,#ATTRIB_MAXHP);
+
+	if (HP < MAXHP)
+		begin
+			HP += #magical_repair_amount;
+
+			if (HP > MAXHP)
+				HP = MAXHP;
+
+			$setattribute(thisagent,#ATTRIB_HP,HP);
+
+//			if (HP < MaxHP)
+//				begin
+//					If ($CheckEffector (ThisAgent, "Magical_Repair_Effector") == False)
+//						$CreateEffector (ThisAgent, "Magical_Repair_Effector", 1);
+//				end
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// end game scripts should be run in the victoryCondition2 Variable
+
+expression #easyMonster 1
+expression #mediumMonster 2
+expression #hardMonster 3
+expression #expertMonster 4
+
+///////////////////////////////////////////////////////////////////////////////
+function end_game_script_easy()
+// 1 - 2 monsters every 10ish days
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	$spawn_monsters(3,#easyMonster);
+
+	$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(600000));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function spawn_monsters(integer num,integer difficulty)
+
+declare
+	integer i;
+	string monster;
+	agent palace;
+	list palaces;
+
+begin
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	while (i < num) do
+		begin
+			if (difficulty == #easymonster)
+				monster = $pick_easy_monster();
+			else
+			if (difficulty == #mediummonster)
+				monster = $pick_medium_monster();
+			else
+			if (difficulty == #hardMonster)
+				monster = $pick_hard_monster();
+			else
+			if (difficulty == #expertMonster)
+				monster = $pick_expert_monster();
+
+			$spawnunit(palace,monster,$RandomedgeCoord($randomnumber(4)),#Monster_player);
+			i += 1;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function pick_easy_monster() is string
+
+declare
+	integer i;
+
+begin
+	i = $randomnumber(4);
+	if (i == 0)
+		return "Giant_spider";
+
+	if (i == 1)
+		return "Zombie";
+
+	if (i == 2)
+		return "Red_Bear";
+
+	return "White_wolf";
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function pick_medium_monster() is string
+
+declare
+	integer i;
+
+begin
+	i = $randomnumber(5);
+	if (i == 0)
+		return "Werewolf";
+
+	if (i == 1)
+		return "Rust_spitter";
+
+	if (i == 2)
+		return "Goblin_fighter";
+
+	if (i == 3)
+		return "goblin_champion";
+
+	return "Harpy";
+end
+	
+///////////////////////////////////////////////////////////////////////////////
+function pick_hard_monster() is string
+
+declare
+	integer i;
+
+begin
+	i = $randomnumber(4);
+	if (i == 0)
+		return "Minotaur";
+
+	if (i == 1)
+		return "Troll";
+
+	if (i == 2)
+		return "Medusa";
+
+	return "Skeleton";
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function pick_expert_monster() is string
+
+declare
+	integer i;
+
+begin
+	i = $randomnumber(3);
+	if (i == 0)
+		return "Evil_Oculus";
+
+	if (i == 1)
+		return "Dragon";
+
+	return "Vampire";
+end
+		
+
+///////////////////////////////////////////////////////////////////////////////
+function end_game_script_medium()
+
+declare
+	agent AIRootAgent;
+
+begin
+// 1 - 2 monsters every 5 days
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	if ($randomnumber(2) == 0)
+		$spawn_monsters(6,#easyMonster);
+	else
+		$spawn_monsters(3,#mediumMonster);
+
+	$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(450000));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function end_game_script_hard()
+
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	if ($randomnumber(2) == 0)
+		$spawn_monsters(6,#MediumMonster);
+	else
+		$spawn_monsters(3,#HardMonster);
+
+	$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(300000));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function end_game_script_expert()
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	if ($randomnumber(2) == 0)
+		$spawn_monsters(6,#HardMonster);
+	else
+		$spawn_monsters(3,#ExpertMonster);
+
+	$setthreadinterval(AIRootAgent's "VictoryCondition2",$random_time(300000));
+end

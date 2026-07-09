@@ -1,0 +1,93 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Journey_Offmap	(agent ThisAgent)
+Declare
+
+
+Begin
+//	If ($isnearmapedge(thisagent))
+//		begin
+
+//			//Hide ThisAgent
+//			ThisAgent's "Type" = "Hidden";
+
+//			$StopMoving (ThisAgent);
+//			$DebugOut ("Ranger has journeyed offmap!");
+
+
+//			ThisAgent's "ActiveScript" = $Return_To_Map;
+//			$SetThreadInterval (ThisAgent's "ActiveScript", #Journey_OffMap_Duration);
+//		end
+//	Else
+		begin
+			$DebugOut ("Journeying to the farthest map edge!");
+			ThisAgent's "Target" = ThisAgent;
+			ThisAgent's "BackScript" = $hide_off_map;//$Journey_Offmap;
+			ThisAgent's "ActiveScript" = $Travel_To;
+			$Move (ThisAgent, ThisAgent's "Destination");
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function hide_off_map(agent thisagent)
+
+declare
+	integer arrivedist;
+	coordinate agent_loc,destination_loc;
+
+begin
+	arrivedist = 32;
+
+	agent_loc = $locationof(thisagent);
+	Destination_loc = thisagent's "destination";
+
+	if (($distanceBetweenCoords(agent_loc,destination_loc) < arrivedist))
+		begin
+			//Hide ThisAgent
+			ThisAgent's "Type" = "Hidden";
+
+			$StopMoving (ThisAgent);
+			$DebugOut ("Ranger has journeyed offmap!");
+
+			ThisAgent's "ActiveScript" = $Return_To_Map;
+			$SetThreadInterval (ThisAgent's "ActiveScript", #Journey_OffMap_Duration);
+		end
+	else
+		begin
+			ThisAgent's "Target" = ThisAgent;
+			ThisAgent's "BackScript" = $hide_off_map;//$Journey_Offmap;
+			ThisAgent's "ActiveScript" = $Travel_To;
+			$Move (ThisAgent, ThisAgent's "Destination");
+		end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Return_To_Map (agent ThisAgent)
+Declare
+
+
+Begin
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+
+	ThisAgent's "Type" = "Hero";
+
+	//Give XP
+	$give_exp(thisagent,#offmap_exp);
+
+	//Give Gold
+	$Give_Gold (ThisAgent, $RandomNumber (#Offmap_Gold) + 1);
+
+//	$DebugOut ("Ranger has returned to the map!");
+
+	if ($go_home(thisagent,105) == FALSE)
+		begin
+			thisagent's "activescript" = $flee_map;
+			thisagent's "BasicScript" = $flee_map;
+		end
+//	$reset_tasks(thisagent);
+End

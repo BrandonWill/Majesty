@@ -1,0 +1,915 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Respawning_Lairs ( string AgentName )
+Declare
+	list	Palaces;
+	agent	Palace, ThisAgent;
+
+Begin
+	$DebugOut ( 911, "KICKING OFF RESPAWNING LAIRS SPECIAL EVENT!" );
+
+	ThisAgent = $RetrieveAgent ( AgentName );
+
+	Palaces = $ListPalaces ();
+
+	//Doesn't matter which palace does the setup in this case.
+	Palace = $ListMember ( Palaces, 1 );
+	$Setup_Respawning_Lairs ( Palace );
+
+	//Don't need to run this anymore
+	$KillThread ( ThisAgent's "EventScript" );
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Friendly_Heroes ( string AgentName )
+Declare
+	list  	Palaces;
+	agent		Palace, ThisAgent;
+	string	Hero_Type;
+
+Begin
+	$DebugOut ( 911, "EXECUTING FRIENDLY HEROES SPECIAL EVENT!" );
+
+	ThisAgent = $RetrieveAgent ( AgentName );
+
+	//Don't do anything the first time through.
+	If ( ThisAgent's "Event_Flag_1" )
+		begin
+
+			//Doesn't matter which palace does the spawning;
+			Palaces = $ListPalaces ();
+
+			Foreach Palace in Palaces do
+				begin
+
+					Hero_Type = $Random_Hero_Type ( Palace );
+
+					$SpawnUnit ( Palace, Hero_Type, $RandomEdgeCoord ( $randomnumber ( 4 )), $GetUnitPlayerNumber ( Palace ));
+
+				end
+		end
+
+
+	$SetThreadInterval ( ThisAgent's "EventScript", $Random_Time ( 180000 ));
+
+	ThisAgent's "Event_Flag_1" = True;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Random_Disasters ( string AgentName )
+declare
+	list 	Palaces;
+	agent   ThisAgent, palace;
+	integer target_num, Event_Num, delay;
+
+begin
+	ThisAgent = $RetrieveAgent ( AgentName );
+	Palaces = $ListPalaces ();
+
+	if ( Thisagent's "event_flag_9" == TRUE ) // Dont run on the first iteration.
+		begin
+			target_num = $Listsize ( palaces );
+			target_num = ( $Randomnumber ( target_num ) + 1 );
+			palace = $Listmember ( palaces, target_num );
+
+			Event_Num = ( $RandomNumber ( 4 ) + 1 );
+
+//			if ( event_num == 1 )
+//				begin
+//					// $messageflag ( palace, #Message_Treasury_Looted );
+//					$Treasury_Looted ( palace );
+//				end
+			if ( event_num == 1 )
+				begin
+					// $messageflag ( palace, #Message_Plague_Event );
+  					$Plague_Event ( palace );
+				end
+			else if ( event_num == 2 )
+				begin
+			 		// $messageflag ( palace, #Message_Earthquake_Event );
+					$Earthquake_Event ( palace );
+				end
+			else if ( event_num == 3 )
+				begin
+					// $messageflag ( palace, #Message_Krypta_Curse );
+					$Krypta_Curse ( palace );
+				end
+			else if ( event_num == 4 )
+				begin
+					$Magical_Accident ( palace );
+			 			// $messageflag ( palace, #Message_Magical_Accident );
+				end
+			delay = ( 360000 /  $listsize ( palaces ));
+			$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( delay ) + ( delay / 6 )));
+		end
+	delay = ( 360000 /  $listsize ( palaces ));
+	$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( delay ) + ( delay / 6 )));
+	ThisAgent's "event_flag_9" = TRUE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Crunch_All_You_Want ( string AgentName )
+declare
+	list 	Palaces;
+	agent   ThisAgent, palace;
+	integer wave_num, wave;
+
+begin
+	ThisAgent = $RetrieveAgent ( AgentName );
+
+	if ( Thisagent's "event_flag_9" == TRUE ) // Dont run on the first iteration.
+		begin
+			wave_num = ( $RandomNumber ( 4 ) + 1 );
+			palaces = $Listpalaces ();
+			palace = $listmember ( palaces, 1 );
+			wave = $listsize ( palaces );
+
+			// Gob Wave
+			if ( wave_num == 1 )
+				begin
+					$debugout ( 911, "'Crunch All You Want' Generating ", wave, " Goblin waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "goblin_fighter", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_fighter", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_fighter", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_archer", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_archer", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_archer", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_priest", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_priest", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_champion", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "goblin_champion", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "GoblinOverlord", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 120000 ));
+				end
+			else
+			// Rat Wave
+			if ( wave_num == 2 )
+				begin
+					$debugout ( 911, "'Crunch All You Want' Generating ", wave, " Ratman waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "Giant_Rat", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Giant_Rat", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Giant_Rat", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Ratman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Ratman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Ratman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "Ratman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "RatmanShaman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "RatmanShaman", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "RatmanChampion", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "RatmanCatapult", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player);
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 120000 ));
+				end
+			else
+			// Animal Wave
+			if ( wave_num == 3 )
+				begin
+					$debugout ( 911, "'Crunch All You Want' Generating ", wave, " Animal waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "white_wolf", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "white_wolf", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "white_wolf", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "white_wolf", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "red_bear", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "red_bear", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "red_bear", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "giant_eagle", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "giant_eagle", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "giant_eagle", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "giant_spider", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "giant_spider", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 120000 ));
+				end
+			else
+			// Undead Wave
+			if ( wave_num == 4 )
+				begin
+					$debugout ( 911, "'Crunch All You Want' Generating ", wave, " Undead waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "skeleton", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "zombie", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_bomber ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player);
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 120000 ));
+				end
+			return;
+		end
+
+	ThisAgent's "event_flag_9" = TRUE;
+	// Set initial delay.
+	$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 150000 ));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function The_Hunters ( string AgentName )
+declare
+	list 	Palaces;
+	agent   ThisAgent, palace;
+	integer wave_num, wave;
+
+begin
+	ThisAgent = $RetrieveAgent ( AgentName );
+
+	if ( Thisagent's "event_flag_9" == TRUE ) // Dont run on the first iteration.
+		begin
+			wave_num = ( $RandomNumber ( 4 ) + 1 );
+			palaces = $Listpalaces ();
+			palace = $listmember ( palaces, 1 );
+			wave = $listsize ( palaces );
+
+			// Gob Wave
+			if ( wave_num == 1 )
+				begin
+					$debugout ( 911, "'The Hunters' Generating ", wave, " Dragon waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "IceDragon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "IceDragon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "IceDragon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 180000 ));
+				end
+			else
+			// Rat Wave
+			if ( wave_num == 2 )
+				begin
+					$debugout ( 911, "'The Hunters' Generating ", wave, " Oculus waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "Evil_Oculus", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "Evil_Oculus", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "Evil_Oculus", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "Evil_Oculus", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 180000 ));
+				end
+			else
+			// Animal Wave
+			if ( wave_num == 3 )
+				begin
+					$debugout ( 911, "'The Hunters' Generating ", wave, " Vampire waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "vampire", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 180000 ));
+				end
+			else
+			// Undead Wave
+			if ( wave_num == 4 )
+				begin
+					$debugout ( 911, "'The Hunters' Generating ", wave, " Gorgon waves!" );
+					while ( wave > 0 ) do
+						begin
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+							$spawnunit ( palace, "GreaterGorgon", $RandomedgeCoord ( $RandomNumber ( 4 )), #Monster_player, $concatenate ( #ATTRIB_Artifice, #force_PC_Hunter ));
+
+							wave -= 1;
+						end
+					$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 180000 ));
+				end
+			return;
+		end
+
+	ThisAgent's "event_flag_9" = TRUE;
+	// Set initial delay.
+	$SetThreadInterval ( ThisAgent's "EventScript", ( $RandomNumber ( 90000 ) + 360000 ));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Dead_Heroes (string AgentName)
+Declare
+	list		Palaces, Mausoleums;
+	agent		Palace, ThisAgent;
+	agent		Mausoleum;
+	agent 	Hero;
+	string   Hero_Type;
+
+Begin
+
+	$DebugOut (911, "KICKING OFF DEAD HEROES SPECIAL EVENT!");
+
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+
+	//Each player gets a Mausoleum
+	Foreach Palace in Palaces do
+		begin
+
+			//If the player doesn't have a Maus yet, then spawn one, otherwise use one that is already on the map to
+			//spawn the dead heroes
+			If ( $ListObjects ( Palace, "Building", -1, Mausoleums, #CheckTitles, "Mausoleum", #MyPlayer ) > 0 )
+				begin
+
+					Mausoleum = $ListMember (Mausoleums, 1);
+
+				end
+
+			Else
+				Mausoleum = $SpawnUnit (Palace, "Mausoleum", "MaxHP", $RandomCoord (Palace, 200) );
+
+			Hero = $SpawnUnit (Mausoleum, $Mausoleum_Random_Hero_Type (Mausoleum));
+			Hero's "Type" = "Dead";
+			$advance_to_level(Hero, $RandomNumber (5) + 10);
+			$SetAttribute (Hero, #ATTRIB_HP, 0);
+			$Check_Mausoleum ( Hero );
+			//$Unit_Dismiss_Gravestone (Hero);
+
+			Hero = $SpawnUnit (Mausoleum, $Mausoleum_Random_Hero_Type (Mausoleum));
+			Hero's "Type" = "Dead";
+			$advance_to_level(Hero, $RandomNumber (5) + 10);
+			$SetAttribute (Hero, #ATTRIB_HP, 0);
+			$Check_Mausoleum ( Hero );
+			//$Unit_Dismiss_Gravestone (Hero);
+
+			Hero = $SpawnUnit (Mausoleum, $Mausoleum_Random_Hero_Type (Mausoleum));
+			Hero's "Type" = "Dead";
+			$advance_to_level(Hero, $RandomNumber (5) + 10);
+			$SetAttribute (Hero, #ATTRIB_HP, 0);
+			$Check_Mausoleum ( Hero );
+			//$Unit_Dismiss_Gravestone (Hero);
+
+			Hero = $SpawnUnit (Mausoleum, $Mausoleum_Random_Hero_Type (Mausoleum));
+			Hero's "Type" = "Dead";
+			$advance_to_level(Hero, $RandomNumber (5) + 10);
+			$SetAttribute (Hero, #ATTRIB_HP, 0);
+			$Check_Mausoleum ( Hero );
+			//$Unit_Dismiss_Gravestone (Hero);
+
+			Hero = $SpawnUnit (Mausoleum, $Mausoleum_Random_Hero_Type (Mausoleum));
+			Hero's "Type" = "Dead";
+			$advance_to_level(Hero, $RandomNumber (5) + 10);
+			$SetAttribute (Hero, #ATTRIB_HP, 0);
+			$Check_Mausoleum ( Hero );
+			//$Unit_Dismiss_Gravestone (Hero);
+
+		end
+
+	//Don't need to run this anymore
+	$KillThread (ThisAgent's "EventScript");
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This just returns a random hero type, but only those that can go to the Maus
+Function Mausoleum_Random_Hero_Type (agent ThisAgent) is string
+Declare
+	integer	Random;
+
+Begin
+	Random = $RandomNumber (13) + 1;
+
+	If (Random == 1)
+		return "Adept";
+	Else if (Random == 2)
+		return "Barbarian";
+	Else if (Random == 3)
+		return "Cultist";
+	Else if (Random == 4)
+		return "Priestess";
+	Else if (Random == 5)
+		return "Ranger";
+	Else if (Random == 6)
+		return "Rogue";
+	Else if (Random == 7)
+		return "Solarus";
+	Else if (Random == 8)
+		return "Warrior";
+	Else if (Random == 9)
+		return "Wizard";
+	Else if (Random == 10)
+		return "Warrior_of_Discord";
+	Else if (Random == 11)
+		return "Dwarf";
+	Else if (Random == 12)
+		return "Elf";
+	Else
+		return "Gnome";
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function on_perimeter() is coordinate
+
+declare
+
+begin
+	return $randomedgeCoord ( $randomnumber ( 4 ));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Dark_magics ( string AgentName )
+
+Declare
+	list		Palaces;
+	agent		Palace, ThisAgent;
+
+Begin
+	ThisAgent = $RetrieveAgent ( AgentName );
+
+	Palaces = $ListPalaces ();
+	palace = $listmember ( palaces, 1 );
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+
+			// start the witch_king randomly on the map
+			$spawnunit(palace,"witch_king",$RandomCoord (Palace, -1),#monster_player);
+
+			// set event interval to 7 to 10 days later...
+			$setthreadInterval(thisagent's "eventScript",$random_time(600000));
+			thisagent's "event_flag_1" = True;
+		end
+	else
+	if (thisagent's "event_flag_2" == false)
+		begin
+
+			$spawnunit(palace,"Liche_queen",$on_perimeter(),#monster_player);
+
+			$killthread(thisagent's "EventScript");
+			thisagent's "event_flag_2" = true;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function goblin_attack (string AgentName)
+
+Declare
+	list		Palaces;
+	agent		Palace, ThisAgent;
+
+Begin
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+	palace = $listmember(palaces,1);
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+
+			// 2 to 3 days til the first wave!
+			$setthreadinterval(thisagent's "eventScript",$random_time(180000));
+			thisagent's "event_flag_1" = True;
+		end
+	else
+	if (thisagent's "event_flag_2" == false)
+		begin
+			// the first wave - smallish!
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+
+			// 4 to 6 days til the next wave
+			$setthreadinterval(thisagent's "eventScript",$random_time(360000));
+			thisagent's "event_flag_2" = True;
+		end
+	else
+	if (thisagent's "event_flag_3" == FALSE)
+		begin
+			// wave 2 - medium
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+
+			// 4 to 6 days til the next wave
+			$setthreadinterval(thisagent's "eventScript",$random_time(360000));
+			thisagent's "event_flag_3" = True;
+
+ //			ThisAgent's "event_flag_4" = FALSE;
+		end
+	else
+	if (thisagent's "event_flag_4" == FALSE)
+		begin
+			// wave 3 - large
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+			$goblin_clump(palace);
+
+			// 7 to 10 days til next wave (the waves reset)
+			$setthreadinterval(thisagent's "eventScript",$random_time(500000));
+			thisagent's "event_flag_2" = FALSE;
+			thisagent's "event_flag_3" = FALSE;
+//			thisagent's "event_flag_4" = true;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function goblin_clump(agent thisagent)
+
+declare
+
+begin
+	$SpawnUnit (thisagent, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblin_champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+	$SpawnUnit (thisagent, "Goblinoverlord", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function super_lairs (string AgentName)
+
+Declare
+	list		Palaces,lairs;
+	agent		Palace, ThisAgent,lair;
+	integer	Random, Counter;
+
+Begin
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+	palace = $listmember(palaces,1);
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+			// 6 to 8 days til first spawn
+			$setthreadInterval(thisagent's "eventScript",$random_time(420000));
+			thisagent's "event_flag_1" = True;
+		end
+	else
+		begin
+			// make each lair spawn an extra guy right now
+			$listobjects(palace,"lair",-1,lairs,#NoHiddenMap);
+
+			foreach lair in lairs do
+				begin
+					if ( $isdead ( lair ) == FALSE )
+						begin
+							//Reset counter
+							Counter = 0;
+
+							//Spawn up to three units
+							Random = $RandomNumber (3) + 1;
+
+							While	(Counter < Random) do
+								begin
+
+									$spawn( Lair );
+
+									(Counter) ++;
+
+								end
+						end
+				end
+			// 6 to 8 days til next burst!
+			$setthreadInterval(thisagent's "eventScript",$random_time(480000));
+	  	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function treasure (string AgentName)
+
+Declare
+	list		Palaces;
+	agent		Palace, ThisAgent;
+
+Begin
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+	palace = $listmember(palaces,1);
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+
+			$setup_random_treasure(20 * $listsize(palaces),30);
+			$killthread(thisagent's "eventScript");
+			thisagent's "event_flag_1" = True;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Abomination_appear_event (string AgentName)
+
+Declare
+	list		Palaces;
+	agent		Palace, ThisAgent;
+
+Begin
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+	palace = $listmember(palaces,1);
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+
+			//  10 - 15 days til first spawn
+			$setthreadInterval(thisagent's "eventScript",$random_time(900000));
+			thisagent's "event_flag_1" = True;
+		end
+	else
+		begin
+			$spawnunit(palace,"abomination",$on_perimeter(),#monster_player);
+			$killthread(thisagent's "EventScript");
+	  	end
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Ritual_of_pain (string AgentName)
+
+Declare
+	list		Palaces,things,things2;
+	agent		Palace, ThisAgent,thing,target;
+	integer i,i2;
+
+Begin
+	ThisAgent = $RetrieveAgent (AgentName);
+
+	Palaces = $ListPalaces ();
+	palace = $listmember(palaces,1);
+
+	if (thisagent's "event_flag_1" == false)
+		begin
+			// this is the first time through!
+			// set up anything that needs setting up,
+			// and set the thread interval for the next part
+
+			// 6 to 8 days til first event
+			$setthreadInterval(thisagent's "eventScript",$random_time(480000));
+			thisagent's "event_flag_1" = True;
+		end
+	else
+		begin
+			i = $randomnumber(3);
+			if (i == 0)
+				begin
+					// lightning bolts
+					// find some heroes
+					$listobjects(palace,"monster",-1,things,#NoHiddenMap);
+					$listobjects(palace,"hero",-1,things2,#NoHiddenMap);
+
+					things = $addlists(things,things2);
+
+					i2 = $listsize(things);
+					if (i2 > 0)
+						begin
+							target = $listmember(things,$randomnumber(i2) + 1);
+							$lightning_bolt_hit(target);
+
+							target = $listmember(things,$randomnumber(i2) + 1);
+							$lightning_bolt_hit(target);
+
+							target = $listmember(things,$randomnumber(i2) + 1);
+							$lightning_bolt_hit(target);
+						end
+				end
+			else
+			if (i == 1)
+				begin
+					// earthquake
+					$listobjects(palace,"building",-1,things,#NoHiddenMap);
+					$listobjects(palace,"lair",-1,things2,#NoHiddenMap);
+
+					things = $addlists(things,things2);
+
+					i2 = $listsize(things);
+
+					if (i2 > 0)
+						begin
+							target = $listmember(things,$randomnumber(i2) + 1);
+							$createspellunit(palace,"earthquake",target);
+						end
+
+				end
+			else
+			if (i == 2)
+				begin
+					// they were lucky! nothing happens this round!
+				end
+
+			// 3ish - 5 days til next event!!!
+			$setthreadInterval(thisagent's "eventScript",$random_time(300000));
+	  	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+//This makes Rrongol and Url_Shekk pop out of random lairs when the lairs get destroyed
+Function Wake_the_Hunters (string AgentName)
+
+Declare
+	agent	ThisAgent, Palace, Lair;
+	list	Palaces, Lairs;
+
+Begin
+
+	ThisAgent = $RetrieveAgent (AgentName);
+	Palaces = $ListPalaces ();
+	//Doesn't matter which Palace we get
+	Palace = $ListMember (Palaces, 1);
+
+	//Get all the lairs on the map
+	If ( $ListObjects (Palace, "lair", -1, Lairs, #NoHiddenMap) > 0 )
+		begin
+
+			//A random lair gets Rrongol as its special spawn type
+			Lair = $ListMember (Lairs, $RandomNumber ($ListSize (Lairs) ) + 1 );
+
+			Lair's "Special_Spawn_Type" = "Rrongol";
+			Lair's "Has_Special_Spawn" = True;
+
+			Lairs -= Lair;
+
+		end
+
+	If ($ListSize (Lairs) > 0)
+		begin
+
+			//A random lair gets Url as its special spawn type
+			Lair = $ListMember (Lairs, $RandomNumber ($ListSize (Lairs) ) + 1 );
+
+			Lair's "Special_Spawn_Type" = "Url_Shekk";
+			Lair's "Has_Special_Spawn" = True;
+
+		end
+
+	//Don't need to run this anymore
+	$KillThread ( ThisAgent's "EventScript" );
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This spawns assorted monsters in random spots all over the map
+Function Evil_Everywhere (string AgentName)
+Declare
+	agent		ThisAgent, Palace;
+	list		Palaces, Monsters;
+	integer	Random;
+
+Begin
+
+	ThisAgent = $RetrieveAgent (AgentName);
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	if ( Thisagent's "event_flag_9" == TRUE ) // Dont run on the first iteration.
+		begin
+
+			If ($ListObjects (Palace, "Monster", -1, Monsters, #NoHiddenMap) < #Monster_Spawn_Cap)
+				begin
+
+					Random = $RandomNumber (5) + 1;
+
+
+					If (Random == 1)
+						begin
+
+							//Each palace spawns monsters
+							Foreach Palace in Palaces do
+								begin
+
+									$spawnUnit(Palace,"Minotaur",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Skeleton",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Minotaur",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Skeleton",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+
+								end
+						end
+
+					Else if (Random == 2)
+						begin
+
+							Foreach Palace in Palaces do
+								begin
+
+									$spawnUnit(Palace,"Troll",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Zombie",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Troll",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Zombie",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+
+								end
+
+						end
+
+					Else if (Random == 3)
+						begin
+
+							Foreach Palace in Palaces do
+								begin
+
+									$spawnUnit(Palace,"Minotaur",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Troll",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Minotaur",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+									$spawnUnit(Palace,"Troll",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+
+								end
+
+						end
+
+					Else if (Random == 4)
+						begin
+
+							$spawnUnit(Palace,"Zombie",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Werewolf",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Zombie",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Werewolf",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+
+						end
+
+					Else if (Random == 5)
+						begin
+
+							$spawnUnit(Palace,"Vampire",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Skeleton",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Vampire",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+							$spawnUnit(Palace,"Skeleton",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay), $RandomCoord (Palace, -1 ));
+
+						end
+
+				end
+
+		end
+
+	Thisagent's "event_flag_9" = TRUE;
+
+	$SetThreadInterval ( ThisAgent's "EventScript", $Random_Time (180000) );
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function just sets a flag on the AIRootAgent that
+// makes it so all heroes subsequently recruited are very high level
+Function Veteran_Heroes (string AgentName)
+
+Declare
+	agent	ThisAgent, AIRootAgent;
+
+Begin
+
+	ThisAgent = $RetrieveAgent (AgentName);
+
+
+	AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+	AIRootAgent's "Spawn_High_Level_Heroes" = TRUE;
+
+	//Don't need to run this anymore
+	$KillThread ( ThisAgent's "EventScript" );
+
+End

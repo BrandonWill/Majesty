@@ -1,0 +1,1693 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Return the Palace ThisAgent belongs to, this can return an Outpost if
+// an Outpost is ThisAgent's "Parent"
+function GetPalace (Agent ThisAgent) is agent
+Declare
+	list	Palaces;
+	agent	Closest_Palace;
+	agent Parent;
+
+Begin
+
+	 Parent = $Parent (ThisAgent);
+
+	If ($IsDead (Parent) == False)
+		begin
+			If (Parent's "SubType" == "Outpost")
+				return Parent;
+		end
+
+	$ListObjects (ThisAgent, "Building", -1, Palaces, #CheckTitles, "Palace", #MyPlayer, #NoHiddenMap);
+
+	If (ThisAgent's "Title" == "Palace")
+		Palaces << ThisAgent;
+
+	If ($ListSize (Palaces) > 0)
+		return $ListMember (Palaces, 1);
+
+	return $NullAgent ();
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Returns the Palace of the player ThisAgent belongs to, even if ThisAgent
+// is owned by an Outpost of the player.
+Function GetTruePalace (agent ThisAgent) is agent
+Declare
+	list	Palaces;
+	agent Palace;
+
+Begin
+
+	$ListObjects (ThisAgent, "Building", -1, Palaces, #CheckTitles, "Palace", #MyPlayer, #NoHiddenMap);
+
+	If (ThisAgent's "Title" == "Palace")
+		Palaces << ThisAgent;
+
+	If ($ListSize (Palaces) > 0)
+		return $ListMember (Palaces, 1);
+
+	return $NullAgent ();
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This function finds all FAMILY in the passed list, and then returns a list that is only those units
+Function ListFamily (list ThisList, string Family) is list
+Declare
+	agent	Dude;
+	list	NewList;
+
+Begin
+	Foreach Dude in ThisList do
+		begin
+			If (Dude's "family" == family)
+				NewList << Dude;
+		end
+
+	return NewList;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This function determines the string entry that describes why a given player lost.
+// Unused?
+function GameOverReason( integer playerNum ) is integer
+declare
+	integer index ;
+	agent AIRootAgent;
+
+begin
+	$DebugOut( 911, "GameOverReason() called for player number ", playerNum );
+
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+	index = AIRootAgent's "Quest_Number";
+
+	//If this is the DEMO, then return a hard-coded index number
+	If (AIRootAgent's "Quest_Number" == #QNumber_Demo)
+		index = 20;
+
+
+	//If this is MX, then all QNumbers start out 9 higher than their actual
+	//string table entry, so we have to subtract 9 to make them match.
+	If (index > 20 && index < 500)
+		begin
+
+			index -= 9;
+
+		end
+
+	//If index > 500, that means it is a freestyle quest, in which case set it to
+	//the index 0, which is the generic loss. All freestyle victory conditions are 500 or greater
+	If (index > 500)
+		index = 0;
+
+
+	return index;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function calculates a gamble from the gamling hall
+function Gamble(agent thisAgent, integer color, integer bet) is integer
+declare
+	integer Winnings,roll,newcolor;
+
+begin
+	$DebugOut( 911, "Gamble" );
+
+	roll = $randomnumber(20) + 1;
+// VERY IMPORTANT need to set the attrib GambleWinner to 0-3 (red,black,gold,skulls)
+
+	if (roll <= 10)
+		begin
+			newcolor = 1; // black wins
+			winnings = bet * 2;
+		end
+	else
+	if (roll <= 15)
+		begin
+			newcolor = 3; // skulls
+			winnings = 0;
+		end
+	else
+	if (roll <= 19)
+		begin
+			newcolor = 0; // red wins
+			winnings = bet * 5;
+		end
+	else
+		begin
+			newcolor = 2; // gold wins
+			winnings = bet * 20;
+		end
+
+	if (newcolor != color)
+		begin
+			winnings = 0; // ha ha they chose a loser color this time.
+		end
+
+	$setattribute(thisagent,#ATTRIB_gamblewinner,newcolor);
+	return Winnings;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function calculates the number to put in the difficulty field in Freestyle games
+function CalculateDifficulty (integer StartingGold, integer playerdiff, integer monsterDiff,integer wanderingDIff,integer event1Diff,integer event2Diff) is integer
+declare
+	integer Diff, DiffMod1, DiffMod2;
+
+begin
+	//$DebugOut (911,"---------------------------------------------------------------------------------------");
+
+	//$DebugOut (911, "Event1Diff:", Event1Diff);
+	//$DebugOut (911, "Event2Diff:", Event2Diff);
+
+	//Take the average of the 3 difficulty ratings
+	Diff = (PlayerDiff + (MonsterDiff * 3) + (WanderingDiff * 2) ) / 6;
+
+	StartingGold = ( StartingGold / #Starting_Gold_Diff_Divider ) - #Starting_Gold_Diff_Threshold;
+
+	//$DebugOut (911, "DIFF:", Diff);
+
+	//$DebugOut (911, "STARTING GOLD:", StartingGold);
+
+	//Modify difficulty by the EventDiffs levels
+
+	//Only if the EventDiff is higher than the currently computed diff do we modifiy it
+	If (Event1Diff > Diff)
+		DiffMod1 = ( Diff + Event1Diff ) / 2;
+
+
+	If (Event2Diff > Diff)
+		DiffMod2 = ( Diff + Event2Diff ) / 2;
+
+	If (DiffMod1 == 0)
+		DiffMod1 = Diff;
+
+	If (DiffMod2 == 0)
+		DiffMod2 = Diff;
+
+
+	//$DebugOut (911, "Difficulty Modifier ONE:", DiffMod1);
+	//$DebugOut (911, "Difficulty Modifier TWO:", DiffMod1);
+
+
+	//Take the average of the two DiffMods.
+	Diff = ( DiffMod1 + DiffMod2 ) / 2;
+
+	//$DebugOut (911, "EVENT-Modified difficulty:", DIff);
+
+	//Modify average difficulty by Starting Gold
+	Diff = Diff - StartingGold;
+
+	//$DebugOut (911, "RETURN VALUE:", Diff);
+
+	return Diff;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function recieves the diffrating that was passed back to the engine (see CalculateDifficulty) and passes back
+// a string index that corresponds to an entry in ingametxt. This is the adjective that is printed in the window along
+// with the diff rating.
+function CalculateDifficultyString(integer diffRating) is integer
+declare
+begin
+	if (diffRating < 20)
+		return 0 ;
+	else if (diffRating < 40)
+		return 1 ;
+	else if (diffRating < 60)
+		return 2 ;
+	else if(diffrating < 80)
+		return 3 ;
+	else
+		return 4 ;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Called before Camp actually moves - it kicks everyone out of the old building after the new camp is placed
+// then the old camp is destroyed and the new one becomes active.
+function KickoutRangers(agent thisAgent)
+declare
+begin
+//	$DebugOut( 911, "Kicking out rangers" );
+	$release_occupants(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Have members activescript's reset to their basicscripts - maybe only of they are going home?
+// this is so they move to the right location - old loc is invalid
+function MoveCamp(agent ThisAgent)
+
+declare
+	agent member;
+begin
+//	$DebugOut( 911, "Moving camp" );
+	foreach member in thisagent's "members" do
+		begin
+			if ($isdead(member) == FALSE)
+				if ($ishidden(member) == False)
+				if ((member's "activescript" != $journey_offmap) &&
+				 	(member's "activescript" != $return_to_map) &&
+				  	(member's "backscript" != $hide_off_map))
+					begin
+						$stopmoving(member);
+						$reset_tasks(member);
+					end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function RewardFlag_Birth(agent thisAgent)
+declare
+begin
+	//$DebugOut( 911, "A Reward Flag has been placed" );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Initialize a newly spawned unit
+function UnitDelete(integer agentID)
+declare
+	agent theAgent;
+begin
+	theAgent = $AgentNumber( agentID );
+ 	// Run the death script here::
+	if ( $ValidFunction( theAgent's "DeathScript" ) )
+		( theAgent's "deathScript" )( theAgent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Initialize a newly spawned unit
+function NewUnitInit(agent newAgent)
+declare
+	agent AIRootAgent;
+begin
+	// The birth script is set to run:
+	if ( $ValidFunction( NewAgent's "BirthScript" ) )
+		begin
+			//$RunThread( newAgent's "birthScript", 1, newAgent );
+
+			//THIS IS DONE NOW BECAUSE ALL UNITS ARE GUARANTEED TO BE PLACED ON THE MAP
+			//BEFORE THEY CALL NEWUNITINIT, SO WE DON'T HAVE TO RUN BIRTHSCRIPTS A FRAME LATER
+			(NewAgent's "BirthScript")(NewAgent);
+
+	//		$DebugOut( 911, newAgent's "title", " set ", newAgent's "birthScript", " to run." );
+		end
+	else
+		begin
+//			$DebugOut( 911, newAgent's "title", " didn't have a birthscript." );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function will be called once, before any objects have
+// been loaded into the map.  It should set up any agents
+// and functions that need to be in place before the game
+// pieces are loaded onto the map;
+function InitializeGpl()
+declare
+	agent AIRootAgent;
+begin
+	AIRootAgent = $RetrieveAgent("GplAIRoot");
+	if ( AIRootAgent == $NullAgent() )
+	begin
+		// Set the script-calling function executing every 1/2 second;
+		// Create the container agent for the agents to be loaded onto the map;
+		$CreateAgent( "GplAIRoot", "GplAIRoot" );
+		// Retrieve the agent we just created
+		AIRootAgent = $RetrieveAgent("GplAIRoot");
+		// The following function will be run once, after map objects are loaded:
+		$RunThread( AIRootAgent's "KickoffFunction", 1 );
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function will be called ONCE, after all objects have been loaded onto
+// the game map, just before all the scripts begin executing;
+function GplKickoff()
+declare
+	agent AIRootAgent;
+	agent agentIdx;
+begin
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function listtitlesinRadius(agent thisagent,string type, string title, integer dist) is list
+
+declare
+	list new_list;
+	agent diddly;
+
+begin
+	$ListObjects(thisagent,type,dist,new_list, #CheckTitles, Title );
+	return new_list;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function ListSubtypesinRadius(agent thisagent,string type, string subtype, integer dist) is list
+
+declare
+	list new_list;
+	agent diddly;
+
+begin
+	$ListObjects( thisagent,type,dist,new_list );
+	New_list = $ListSubtypes (New_List, Subtype);
+
+	return new_list;
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function builds and culls a list by ThisAgent's "Friend"
+Function Cull_Subtypes (list ThisList, string Friend)
+Declare
+	agent Potential;
+
+Begin
+
+	Foreach Potential in ThisList do
+		begin
+			If (Potential's "Subtype" == Friend)
+				ThisList -= Potential;
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Cull_Titles (list ThisList, string Friend)
+Declare
+	agent Potential;
+
+Begin
+
+	Foreach Potential in ThisList do
+		begin
+			If (Potential's "Title" == Friend)
+				ThisList -= Potential;
+		end
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This function builds a list if all first_stage built entries on the list it was passed, and returns it
+Function ListCompleted (list ThisList) is list
+Declare
+	agent Dude;
+	list 	Newlist;
+
+Begin
+	Foreach Dude in ThisList do
+		begin
+			If ($GetAttribute (Dude,#ATTRIB_FirstStageBuilt) == 1)
+				NewList << Dude;
+		end
+
+	return NewList;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function ListCompletedTitlesJ (list ThisList,string title) is list
+Declare
+	agent Dude;
+	list 	Newlist;
+
+Begin
+	Foreach Dude in ThisList do
+		begin
+			If (($GetAttribute (Dude,#ATTRIB_FirstStageBuilt) == 1) && (dude's "title" == title))
+				NewList << Dude;
+		end
+
+	return NewList;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function ListBuildLevelsinRadius (agent ThisAgent, string type, string title, integer Level, integer Dist) is list
+Declare
+	list	new_list;
+	list	working_list;
+	list	final_list;
+	agent Diddly;
+
+Begin
+	$ListObjects (ThisAgent, Type, Dist, New_List );
+	foreach Diddly in New_List do
+		begin
+			If (Diddly's "title" == Title)
+				Working_list << Diddly;
+		end
+
+	foreach Diddly in Working_List do
+		begin
+			If (Diddly's "Level" == Level)
+				Final_List << Diddly;
+		end
+
+	return Final_List;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function PickHighestLevelBuilding (agent ThisAgent, list ThisList) is agent
+Declare
+	agent 	Dude;
+	integer	Temp_Best_Level;
+	agent		Temp_Best_Agent;
+	integer	Temp_Best_Distance;
+	integer	Distance;
+
+Begin
+	Temp_Best_Level = -1;
+
+	Foreach Dude in ThisList do
+		begin
+			If (Dude's "Level" > Temp_Best_Level)
+				begin
+					Temp_Best_Level = Dude's "Level";
+					Temp_Best_Agent = Dude;
+					Temp_Best_Distance = $DistanceBetweenAgents (ThisAgent, Dude);
+				end
+
+			Else
+				begin
+					If (Dude's "Level" == Temp_Best_Level)
+						begin
+							Distance = $DistanceBetweenAgents (ThisAgent, Dude);
+							If (Distance < Temp_Best_Distance)
+								begin
+									Temp_Best_Distance = Distance;
+									Temp_Best_Agent = Dude;
+								end
+						end
+				end
+		end
+
+	return Temp_Best_Agent;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Loyalty_Mod_Pick_Closest (agent ThisAgent, list ThisList) is agent
+declare
+	agent Dude;
+	agent closest_dude;
+	integer closest_dist;
+	integer temp_dist;
+	integer	Loyalty;
+	integer thisagent_team_number;
+
+begin
+	//$Debugout (911, "In Loyalty check!");
+	Loyalty = ThisAgent's "Loyalty";
+	closest_dist = 999999;
+	thisagent_team_number = $getplayerTeamNumber(ThisAgent);
+
+  	foreach Dude in Thislist do
+	 	begin
+			//$DebugOut (911, "In Foreach!");
+			temp_dist = $distancebetweenAgents(thisagent,Dude);
+
+			//See if the Dude is on a different team, if so then make it less attractive
+//			If ($GetPlayerTeamNumber (ThisAgent) != $GetPlayerTeamNumber (Dude))
+			If (thisagent_team_number != $GetPlayerTeamNumber (Dude))
+				begin
+			   	//If hero is loyal, then don't even consider this Dude
+					If (Loyalty > (#Loyalty_Other_Team_Roll) + 1)
+						begin
+							ThisList -= Dude;
+					   end
+					Else
+						//Crank up the temp_dist, so this building appears less attractive
+						Temp_Dist = Temp_Dist * #Loyalty_Dist_Diff_Team_Mod;
+				end
+
+			Else
+				begin
+					//See if the Dude is owned by a different player, if so them make it less attractive
+					If ( $UnitsAreSamePlayer (ThisAgent, Dude) == False )
+			  			begin
+							//Roll against my loyalty
+				 			If (Loyalty > $RandomNumber (#Loyalty_Other_Player_Roll) + 1)
+								//If I am loyal, make this building appear further away than it is
+								temp_dist = temp_dist * #Loyalty_Dist_Diff_Player_Mod;
+						end
+				end
+
+			if (temp_dist < closest_dist)
+			 	begin
+					closest_dist = temp_dist;
+				  	closest_dude = dude;
+			  	end
+	  	end
+
+	//$DebugOut (911, closest_Dude);
+	return closest_dude;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This builds a list consisting of all types that a Looter finds attractive
+//    --Note: It only requires an agent and a distance, as the types/titles are hardcoded in the function--
+// Unfortunately, I couldn't use GetTitle for this, because it can't check several different titles at once.
+Function ListLootablesInRadius (agent ThisAgent, integer Distance) is list
+Declare
+	list  Working_List_Of_Heroes;
+	list  Working_List_Of_Buildings;
+	list  Final_List;
+	agent Diddly;
+
+Begin
+	$ListObjects (ThisAgent, "hero", Distance,Working_List_Of_Heroes );
+	$ListObjects (ThisAgent, "building", Distance, Working_List_Of_Buildings, #ATTRIB_FirstStageBuilt, 1 );
+	//WOrking_list_of_Buildings = $listcompleted(WOrking_list_of_Buildings);
+
+	Foreach Diddly in Working_List_Of_Buildings do
+		begin
+			if (Diddly's "Title" == "Marketplace")
+					Final_List << Diddly;
+			Else
+				begin
+					if (Diddly's "Title" == "Trading_Post")
+						Final_List << Diddly;
+				end
+		end
+
+	Foreach Diddly in Working_List_Of_Heroes do
+	  	begin
+		 	if (Diddly's "Title" == "Caravan")
+			  	Final_List << Diddly;
+		 	Else
+				if (Diddly's "Title" == "Tax_Collector")
+				 	Final_List << Diddly;
+		end
+
+
+	Return Final_List;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This Function builds a list of Buildings of Title that have their FirstStageCompleted
+Function ListCompletedTitles (agent thisagent,string type, string title, integer dist) is list
+Declare
+	list new_list;
+	list final_list;
+	agent diddly;
+
+begin
+	new_list = $ListTitlesInRadius(thisagent,type,title,dist);
+
+	Foreach Diddly in New_List do
+		begin
+			If ($GetAttribute (Diddly, #ATTRIB_FirstStageBuilt) == 1)
+				Final_List << Diddly;
+		end
+
+	return Final_List;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function getsubtype (agent ThisAgent) is string
+declare
+
+Begin
+	Return ThisAgent's "SubType";
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Called by the engine code to see if this unit should be tracked in the
+// mini-view (for now, just heros)
+//
+// return value: non-zero if is a valid unit
+function IsValidMiniViewTarget( agent thisagent ) is integer
+
+declare
+
+integer retval;
+
+begin
+	if (thisagent's "subtype" == "hero")
+		retval = 1;
+	else
+		retval = 0;
+
+	return retval;
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Called by the engine code to determine the type of a GPL vehicle
+//
+// return value: the type of unit
+expression #UNIT_TYPE_OTHER 0
+expression #UNIT_TYPE_HERO 1
+expression #UNIT_TYPE_HENCHMAN 2
+expression #UNIT_TYPE_BUILDING 3
+
+///////////////////////////////////////////////////////////////////////////////
+function GetUnitType( agent thisagent ) is integer
+
+declare
+
+integer retval;
+
+begin
+	if (thisagent's "subtype" == "hero")
+		retval = #UNIT_TYPE_HERO;
+	else if (thisagent's "subtype" == "henchman")
+		retval = #UNIT_TYPE_HENCHMAN;
+	else if (thisagent's "type" == "building")
+		retval = #UNIT_TYPE_BUILDING;
+	else
+		retval = #UNIT_TYPE_OTHER;
+
+	return retval;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function gettitle(agent thisagent) is string
+
+declare
+
+begin
+
+	return thisagent's "title";
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function isdead(agent thisagent) is Boolean
+
+declare
+
+begin
+
+	if ($IsValidGamePiece (ThisAgent) == FALSE)
+		begin
+			$debugout("isdead: isvalidgamepiece is FALSE.");
+			return TRUE;
+		end
+
+// Commenting out the null check.  The assumption is that $IsValidGamePiece encompasses this check
+//	if (thisagent == $nullagent())
+//		begin
+//			$debugout("isdead: thisagent == $nullagent()");
+//			return TRUE;
+//		end
+
+	if (ThisAgent's "Type" == "Dead")
+		begin
+			$debugout("isdead: thisagent's type == dead");
+			return TRUE;
+		end
+
+	if ($getattribute(thisagent,#ATTRIB_HP) > 0)
+		begin
+			return False;
+		end
+
+	$debugout("isdead: true for unknown reason.");
+	return True;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function notValid(agent thisagent) is boolean
+
+declare
+
+begin
+	if ($isdead(thisagent)) return TRUE;
+
+	if ($insidebuilding(thisagent)) return TRUE;
+
+	if (thisagent's "type" == "Hidden") return TRUE;
+
+  	if ($GetAttribute( thisagent, #ATTRIB_HasEffectInvisibility) != 0) return TRUE;
+
+  	if ($GetAttribute( thisagent, #ATTRIB_HasEffectCamouflage) != 0) return TRUE;
+
+//	if (thisagent's "type" == "invisible") return TRUE;
+
+//	if (thisagent's "type" == "camouflaged") return TRUE;
+
+	return FALSE;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function notValid_attacker(agent thisagent) is boolean
+
+declare
+
+begin
+	if ($isdead(thisagent)) return TRUE;
+
+	if ($insidebuilding(thisagent)) return TRUE;
+
+	if (thisagent's "type" == "Hidden") return TRUE;
+
+	return FALSE;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function IsFrozen (agent ThisAgent) is boolean
+Declare
+
+Begin
+
+	If ($CheckEffector (thisagent,"petrify_icon"))
+		return True;
+
+	If ($CheckEffector (thisagent,"vines_effector"))
+		return True;
+
+	If ($CheckEffector (thisagent,"Level_Leach_Effector"))
+		return True;
+
+	If ($CheckEffector (ThisAgent, "paralytic_gaze_icon"))
+		return True;
+
+	return False;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function isnearMapEdge(agent thisagent) is Boolean
+
+declare
+	coordinate board_size;
+	coordinate agent_loc;
+	integer x_size;
+	integer y_size;
+	integer x2;
+	integer y2;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size);
+	y_size = $getY(board_size);
+	agent_loc = $locationof(thisagent);
+
+	x2 = $getX(agent_loc);
+	y2 = $getY(agent_loc);
+
+
+	if (x2 >= (x_size - #edge_buffer)) return TRUE;
+
+	if (x2 <= #edge_buffer) return TRUE;
+
+	if (y2 >= (y_size - #edge_buffer)) return TRUE;
+
+	if (y2 <= #edge_buffer) return TRUE;
+
+	return FALSE;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function farthestmapedge(agent thisagent) is Coordinate
+
+declare
+	coordinate board_size;
+	coordinate agent_loc;
+	coordinate go_here,tcoord;
+	integer x_size;
+	integer y_size;
+	integer x2;
+	integer y2;
+	integer toleft,toright,totop,tobottom;
+	list values;
+	list coords;
+	integer bignum,num;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size) - 1;
+	y_size = $getY(board_size) - 1;
+
+	agent_loc = $locationof(thisagent);
+	x2 = $getX(agent_loc);
+	y2 = $getY(agent_loc);
+
+	toright = x_size - x2;
+	toleft = x2;
+
+	totop = y2;
+	tobottom = y_size - y2;
+
+	values << toright;
+	values << toleft;
+	values << totop;
+	values << tobottom;
+
+	coords << $makecoord(x_size + 250,y2);
+	coords << $makecoord(-250,y2);
+	coords << $makecoord(x2,-250);
+	coords << $makecoord(x2,y_size + 250);
+
+	bignum = -1;
+
+	foreach num in values do
+		begin
+			tcoord = $listmember(coords,1);
+			$removelistmember(coords,1);
+			if (num > bignum)
+				begin
+					bignum = num;
+					go_here = tcoord;
+				end
+		end
+
+	return go_here;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function farthestmapedge_onmap(agent thisagent) is Coordinate
+
+declare
+	coordinate board_size;
+	coordinate agent_loc;
+	coordinate go_here,tcoord;
+	integer x_size;
+	integer y_size;
+	integer x2;
+	integer y2;
+	integer toleft,toright,totop,tobottom;
+	list values;
+	list coords;
+	integer bignum,num;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size) - 1;
+	y_size = $getY(board_size) - 1;
+
+	agent_loc = $locationof(thisagent);
+	x2 = $getX(agent_loc);
+	y2 = $getY(agent_loc);
+
+	toright = x_size - x2;
+	toleft = x2;
+
+	totop = y2;
+	tobottom = y_size - y2;
+
+	values << toright;
+	values << toleft;
+	values << totop;
+	values << tobottom;
+
+	coords << $makecoord(x_size,y2);
+	coords << $makecoord(1,y2);
+	coords << $makecoord(x2,1);
+	coords << $makecoord(x2,y_size);
+
+	bignum = -1;
+
+	foreach num in values do
+		begin
+			tcoord = $listmember(coords,1);
+			$removelistmember(coords,1);
+			if (num > bignum)
+				begin
+					bignum = num;
+					go_here = tcoord;
+				end
+		end
+
+	return go_here;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Returns the farthest map corner from this agent in a coordinate
+function farthestmapcorner(agent thisagent) is coordinate
+declare
+	coordinate coord,agent_loc,go_here,board_size;
+	list coords;
+	integer x_size,y_size,bigdist,dist;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size) - 1;
+	y_size = $getY(board_size) - 1;
+
+	coords << $makecoord(0,0);
+	coords << $makecoord(0,y_size);
+	coords << $makecoord(x_size,0);
+	coords << $makecoord(x_size,y_size);
+
+	bigdist = -1;
+
+	agent_loc = $locationof(thisagent);
+
+	foreach coord in coords do
+		begin
+			dist = $distancebetweencoords(agent_loc,coord);
+			if (dist > bigdist)
+				begin
+					bigdist = dist;
+					go_here = coord;
+				end
+		end
+
+	return go_here;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function closestmapedge(agent thisagent) is coordinate
+
+declare
+	coordinate board_size;
+	coordinate agent_loc;
+	coordinate go_here,tcoord;
+	integer x_size;
+	integer y_size;
+	integer x2;
+	integer y2;
+	integer toleft,toright,totop,tobottom;
+	list values;
+	list coords;
+	integer bignum,num;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size) - 1;
+	y_size = $getY(board_size) - 1;
+
+	agent_loc = $locationof(thisagent);
+
+	x2 = $getX(agent_loc);
+	y2 = $getY(agent_loc);
+	toright = x_size - x2;
+	toleft = x2;
+
+	totop = y2;
+	tobottom = y_size - y2;
+
+	values << toright;
+	values << toleft;
+	values << totop;
+	values << tobottom;
+
+	coords << $makecoord(x_size,y2);
+	coords << $makecoord(5,y2);
+	coords << $makecoord(x2,5);
+	coords << $makecoord(x2,y_size);
+
+	bignum = 100000;
+
+	$debugout("bignum",bignum);
+
+	foreach num in values do
+		begin
+			tcoord = $listmember(coords,1);
+			$removelistmember(coords,1);
+			if (num < bignum)
+				begin
+					bignum = num;
+					go_here = tcoord;
+					$debugout("set bignum to",num," set go_here to",go_here,"(",tcoord,")");
+
+				end
+			$debugout(num,tcoord);
+		end
+
+	$debugout(x_size,y_size,"-",go_here);
+
+	return go_here;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+expression #North 0
+expression #south 1
+expression #East 2
+expression #West 3
+
+///////////////////////////////////////////////////////////////////////////////
+function randomedgeCoord(integer whichside) is coordinate
+
+declare
+	coordinate board_size,coord;
+	integer x_size;
+	integer y_size;
+	integer x2;
+	integer y2;
+
+begin
+	board_size = $getboardextents();
+	x_size = $getX(board_size);
+	y_size = $getY(board_size);
+
+	if (whichside == #North)
+		begin
+			x2 = $randomnumber(x_size - 60) + 30;
+			y2 = 30;
+		end
+	else
+	if (whichside == #South)
+		begin
+			x2 = $randomnumber(x_size - 60) + 30;
+			y2 = y_size - 30;
+		end
+	else
+	if (whichside == #East)
+		begin
+			x2 = x_size - 30;
+			y2 = $randomnumber(y_size - 60) + 30;
+		end
+	else
+	if (whichside == #West)
+		begin
+			x2 = 30;
+			y2 = $randomnumber(y_size - 60) + 30;
+		end
+
+	coord = $makecoord(x2,y2);
+	return coord;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function agentinlist(agent thisagent,list thislist) is Boolean
+
+declare
+	agent joe_smith;
+	boolean is_it_here;
+
+begin
+	is_it_here = FALSE;
+
+	foreach joe_smith in thislist do
+		if (joe_smith == thisagent) is_it_here = TRUE;
+
+	return is_it_here;
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function ListEnchanted(list thislist) is list
+
+declare
+	list newlist;
+	agent entry;
+
+begin
+	foreach entry in thislist do
+		begin
+			if ($getattribute(entry,#ATTRIB_enchantmentlevel) > 0)
+				newlist << entry;
+		end
+
+	return NewList;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This function find all SUBTYPES the passed list, and then returns a list that is only those titles
+Function ListSubtypes (list ThisList, string Subtype) is list
+Declare
+	agent	Dude;
+	list	NewList;
+
+Begin
+	Foreach Dude in ThisList do
+		begin
+			If (Dude's "Subtype" == Subtype)
+				NewList << Dude;
+		end
+
+	return NewList;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function reset_tasks(agent thisagent)
+
+declare
+
+begin
+	// TODO: Why doesn't reset_tasks stop the unit's movement or clear its order stack in some
+	// fashion?  It could complete an existing hide order and end up doing very wierd stuff
+	// inside a building or other strangeness as it currently stands.
+	$StopMoving (ThisAgent);
+	
+	thisagent's "target" = $Nullagent();
+	thisagent's "activescript" = thisagent's "basicscript";
+	thisagent's "backscript" = thisagent's "basicscript";
+	$clearlist(thisagent's "hostiles");
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function haslowHP(agent thisagent) is boolean
+
+declare
+	integer HP,maxHP;
+
+begin
+	HP = $getattribute(thisagent,#ATTRIB_HP);
+	maxHP = $getattribute(thisagent,#ATTRIB_MAXHP);
+
+ 	if (((HP * 100) / maxHP) <= thisagent's "PercentageHPretreat") return TRUE;
+	else
+		return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function addlists(list list1,list list2) is list
+
+declare
+	list new_list;
+
+begin
+	while ($listsize(list1) > 0) do
+		begin
+	 		new_list << $listmember(list1,1);
+			$removelistmember(list1,1);
+		end
+
+	while ($listsize(list2) > 0) do
+		begin
+	 		new_list << $listmember(list2,1);
+			$removelistmember(list2,1);
+		end
+
+	return new_list;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// This is for Units transfering to Buildings -- it DOESN'T TAX BY ITSELF
+Function Transfer_Gold (agent ThisAgent, agent Target, integer Gold)
+Declare
+
+Begin
+
+	$AdjustAttribute (ThisAgent, #ATTRIB_Gold, -Gold);
+
+	$AdjustAttribute (Target, #ATTRIB_Gold, Gold);
+
+	$CreateEffector (Target, "got_gold_bldg", 0, Gold);
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Spend_Gold (agent ThisAgent, agent ThisBuilding, integer Gold)
+Declare
+	integer	Stored_Gold;
+	integer	Gold_Owed;
+	integer	Spent_Gold;
+	integer	Vaporized_Gold;
+
+Begin
+	Stored_Gold = $GetAttribute (ThisAgent, #ATTRIB_StoredGold);
+
+	//Amount of gold that goes to the Building
+	Spent_Gold = (Gold * $GetAttribute (ThisBuilding, #ATTRIB_TaxRate)) / 100;
+
+	//Amount of gold that is vaporized
+	Vaporized_Gold = Gold - Spent_Gold;
+
+	//Where the gold comes from - Stored before Regular
+	If (Stored_Gold >= Gold)
+		begin
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Gold);
+		end
+
+	Else
+		begin
+			Gold_Owed = Gold - Stored_Gold;
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Stored_Gold);
+			$AdjustAttribute (ThisAgent, #ATTRIB_Gold, -Gold_Owed);
+		end
+
+	//Give Spent_Gold to building
+	$AdjustAttribute (ThisBuilding, #ATTRIB_Gold, Spent_Gold);
+
+	//Perform Action or Create Effector
+	//$PerformAction (ThisBuilding, "Got_Gold_Bldg", ThisBuilding);
+	$CreateEffector (ThisBuilding, "Got_Gold_Bldg", 0, Spent_Gold);
+
+	//Vaporize the Ramainder of the gold
+	$Vaporize_Gold (ThisAgent, Vaporized_Gold);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This is for Hero Distractors like the Gambling Hall and Brothel.  They have taxrate 0, but still
+// need to have the overlays above their heads show that they got gold. This function DOES
+// subtract gold from ThisAgent.
+Function Hero_Pay_Distractor (agent ThisAgent, agent ThisBuilding, integer Gold)
+Declare
+	integer	Stored_Gold;
+	integer	Gold_Owed;
+
+Begin
+	Stored_Gold = $GetAttribute (ThisAgent, #ATTRIB_StoredGold);
+
+	//Where the gold comes from - Stored before Regular
+	If (Stored_Gold >= Gold)
+		begin
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Gold);
+		end
+
+	Else
+		begin
+			Gold_Owed = Gold - Stored_Gold;
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Stored_Gold);
+			$AdjustAttribute (ThisAgent, #ATTRIB_Gold, -Gold_Owed);
+		end
+
+	//Perform Action or Create Effector using GOLD (even though the building actually didn't
+	//get anything
+	$CreateEffector (ThisBuilding, "Got_Gold_Bldg", 0, Gold);
+
+	//Vaporize ALL of the gold
+	$Vaporize_Gold (ThisAgent, Gold);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This returns a Hero's Total_Gold (Stored + Regular)
+Function Total_Gold (agent ThisAgent) is integer
+Declare
+	integer	Total_Gold;
+
+Begin
+	Total_Gold = $GetAttribute (ThisAgent, #ATTRIB_Gold) + $GetAttribute (ThisAgent, #ATTRIB_StoredGold);
+	return Total_Gold;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// ThisAgent is only passed so that GetPalace works
+Function Vaporize_Gold (agent ThisAgent, integer Gold)
+Declare
+	agent	Palace,spawn_target;
+	list buildings;
+	integer i;
+
+Begin
+	Palace = $GetTruePalace (ThisAgent);
+
+	if ($isvalidgamepiece(palace) == FALSE)
+		return;
+
+	if ($isvalidgamepiece(palace) == FALSE)
+		return;
+
+	Palace's "Vaporized_Gold" += Gold;
+
+	Palace's "troll_gold" += gold;
+
+	if (Palace's "troll_gold" > #troll_gold_limit)
+		begin
+			Palace's "troll_gold" -= #troll_gold_limit;
+//			// spawn a troll from the farthest
+//			$ListObjects(palace,"building",-1, buildings );
+//			if ($listsize(buildings) > 0)
+//				spawn_target = $ListMember (Buildings, $ListSize (Buildings));
+//				//spawn_target =	$pick_farthest(thisagent,buildings);
+//			else
+//				spawn_target = Palace;
+
+			// spawn a troll from a random complete building
+			$listobjects(palace,"building",-1,buildings,#MyPlayer, #ATTRIB_FirstStageBuilt, 1);
+			//buildings = $listcompleted(buildings);
+
+			buildings << palace;
+
+			i = $listsize(buildings);
+
+			spawn_target = $listmember(buildings,$randomnumber(i) + 1);
+
+			$spawnUnit(spawn_target,"Troll",#Monster_Player,$concatenate(#ATTRIB_artifice,#force_overlay));
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// This will give the inn the full Price of staying there, if the Hero has it, otherwise it will give what they can afford
+Function Pay_Inn (agent ThisAgent, agent ThisBuilding, integer Gold)
+Declare
+	integer	Total_Gold;
+	integer	Stored_Gold;
+	integer	Gold_Owed;
+	integer	Spent_Gold;
+	integer	Vaporized_Gold;
+
+Begin
+	Total_Gold = $Total_Gold (ThisAgent);
+
+	//This makes sure the Agent deosn't spend more than they have
+	If (Gold > Total_Gold)
+		Gold = Total_Gold;
+
+	Stored_Gold = $GetAttribute (ThisAgent, #ATTRIB_StoredGold);
+
+	//Amount of gold that goes to the Building
+	Spent_Gold = (Gold * $GetAttribute (ThisBuilding, #ATTRIB_TaxRate)) / 100;
+
+	//Amount of gold that is vaporized
+	Vaporized_Gold = Gold - Spent_Gold;
+
+	//Where the gold comes from - Stored before Regular
+	If (Stored_Gold >= Gold)
+		begin
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Gold);
+		end
+
+	Else
+		begin
+			Gold_Owed = Gold - Stored_Gold;
+			$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, -Stored_Gold);
+			$AdjustAttribute (ThisAgent, #ATTRIB_Gold, -Gold_Owed);
+		end
+
+	//Give Spent_Gold to building
+	$AdjustAttribute (ThisBuilding, #ATTRIB_Gold, Spent_Gold);
+
+	//Perform Action
+	if (spent_gold > 0)
+		$CreateEffector (ThisBuilding, "Got_Gold_Bldg", 0, Spent_Gold);
+		//$PerformAction (ThisBuilding, "Got_Gold_Bldg", ThisBuilding);
+
+	//Vaporize the Ramainder of the gold
+	$Vaporize_Gold (ThisAgent, Vaporized_Gold);
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Is_Free_Task (agent ThisAgent, function Intention, agent Target) is boolean
+
+Declare
+	list	others;
+	agent	other;
+	list	potentials;
+	integer i;
+	boolean free;
+
+Begin
+
+	free = true;
+
+	If ($ListObjects (ThisAgent, "hero", #Is_Free_Task_Range, others, #MyPlayer) > 0)
+		Foreach Other in Others do
+			begin
+				If ((Other's "ActiveScript" == Intention) || (Other's "BackScript" == Intention))
+					begin
+						If (Other's "Target" == Target)
+							begin
+								//If I am further from the target than the other, then return False
+								If ($DistanceBetweenAgents (ThisAgent, Target) > $DistanceBetweenAgents (Other, Target))
+									free = False;
+							  	else
+									i += 1;
+							end
+					end
+			end
+
+	//no other people with this intention around - so return true
+	if (free)
+		begin
+			if (i <= #is_free_task_max_heroes)
+  				return True;
+			else
+				return false;
+		end
+	else
+		return false;
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function looks at the passed list and cull out all units that have Attribute set as true.
+// Then it returns that list
+Function List_Attribs (list ThisList, integer Attribute) is list
+Declare
+	agent Entry;
+	list 	NewList;
+
+Begin
+	Foreach Entry in ThisList do
+		begin
+			If ($GetAttribute (Entry, Attribute) != 0)
+				begin
+
+					NewList << Entry;
+
+				end
+
+		end
+
+	return NewList;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+// Returns the absolute value of an integer passed to it.
+function AbsoluteValue ( integer number ) is integer
+declare
+begin
+	if ( number < 0 )
+		number = ( number * ( - 1 ));
+
+	return number;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cheat_wave_undead()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects (palace, "Monster", -1, Monsters,#noHiddenMap );
+
+	//Make sure that there aren't already the maximum number of monsters on the map
+	If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+		begin
+//			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), "Override", #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Skeleton", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Zombie", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Vampire", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Vampire", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Vampire", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Vampire", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Vampire", $RandomCoord (Palace, -1), #Monster_Player);
+
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cheat_wave_raiders()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects (palace, "Monster", -1, Monsters,#noHiddenMap );
+
+	//Make sure that there aren't already the maximum number of monsters on the map
+	If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+		begin
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Dragon", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Rock_golem", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cheat_wave_raiders_easy()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects (palace, "Monster", -1, Monsters,#noHiddenMap );
+
+	//Make sure that there aren't already the maximum number of monsters on the map
+	If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+		begin
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Minotaur", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cheat_wave_goblins()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects (palace, "Monster", -1, Monsters,#noHiddenMap );
+
+	//Make sure that there aren't already the maximum number of monsters on the map
+	If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+		begin
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_fighter", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_archer", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Champion", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+			$SpawnUnit (Palace, "Goblin_Priest", $RandomEdgeCoord($randomnumber(4)), #Monster_Player);
+
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function cheat_wave_general()
+
+declare
+	agent	AIRootAgent,palace;
+	list palaces,monsters;
+
+begin
+	AIRootAgent = $RetrieveAgent ("GplAIRoot");
+
+	palaces = $ListPalaces();
+	palace = $listmember(palaces,1);
+
+	$ListObjects (palace, "Monster", -1, Monsters,#noHiddenMap );
+
+	//Make sure that there aren't already the maximum number of monsters on the map
+	If ($ListSize (Monsters) <= #Monster_Spawn_Cap)
+		begin
+			$SpawnUnit (Palace, "Giant_Spider", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Giant_Spider", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Giant_Spider", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Giant_Spider", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Werewolf", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Werewolf", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Werewolf", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Werewolf", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Medusa", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Medusa", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Medusa", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Medusa", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Evil_Oculus", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Evil_Oculus", $RandomCoord (Palace, -1), #Monster_Player);
+
+			$SpawnUnit (Palace, "Rust_spitter", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Rust_spitter", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Rust_spitter", $RandomCoord (Palace, -1), #Monster_Player);
+			$SpawnUnit (Palace, "Rust_spitter", $RandomCoord (Palace, -1), #Monster_Player);
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+/// Search functions :
+
+expression		#NoHiddenMap 				0
+expression		#MyPlayer	  	  			1
+expression		#NotMyPlayer				2
+expression		#MyTeam	 		  			3
+expression		#NotMyTeam		 			4
+expression		#InsideOtherUnits			5
+expression		#RewardFlags				6
+expression		#CheckTitles				7
+expression		#CheckSubtypes				8
+expression 		#FindFirstMatchOnly			9

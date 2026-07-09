@@ -1,0 +1,66 @@
+<Majesty>
+	<Description type="Unit" subType="Character" ID="MagicBall" Name="MagicBall" Description="IDTXT_SPECIAL_ITEM_MAGIC_BALL_HELP">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="HumanPlayer"/>
+			<Menu value="8"/>
+			<ImageIDBase value="AVk4"/>
+			<DefaultSound value="0"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="APb1"/>
+			<MaxHP value="10"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="NotFlaggable"/>
+			<Flags value="NotSpellTarget"/>
+			<!-- Flag that this is an inventory item -->
+			<Flags value="IsInventoryItem"/>
+			<!-- Reference our text key for the item help text -->
+			<HelpID value="IDTXT_SPECIAL_ITEM_MAGIC_BALL_HELP"/>
+			<Attributes>
+				<!-- Signal that the item can be dropped, else it will be deleted if the owner dies. -->
+				<!-- A value of 0 means no, and the item will be deleted if the owner dies. -->
+				<!-- A value of 1 means the item can be dropped.  Buildings will drop it immediately, heroes will drop it
+					when their gravestone timer runs out.  If the value is 2, heroes will drop it immediately, -->
+				<Attribute ID="CanDropItem" Value="2"/>
+				<!-- When this unit is instanced, keep a copy of its ID as an attribute for the inventory system to use. -->				
+				<Attribute ID="MagicBall" Value="0"/>
+			</Attributes>
+		</Game>
+	</Description>
+	
+	<Description type="Unit" subType="Character" ID="DorgoTheDestroyer" Name="DorgoTheDestroyer" Description="IDTXT_DORGO_THE_DESTROYER_DESCRIPTION">
+		<Engine version="1">
+			<Info value="BlockGround"/>
+			<Info value="BlockFlying"/>
+			<CanUse value="Monster"/>
+			<Menu value="4"/>
+			<ImageIDBase value="BVd1"/>
+			<Attachment kind="Movement" type="Walk" ID="cross_terrain"/>
+			<DefaultSound value="Dirgo"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="AP97"/>
+			<Experience value="4000"/>
+			<MaxHP value="350"/>
+			<SightRange value="125"/>
+			<Speed value="1"/>
+			<AttackRange min="1" max="1"/>
+			<Intelligence value="5"/>
+			<Strength value="65"/>
+			<MagicResistance value="5"/>
+			<Attack value="95"/>
+			<Parry value="30"/>
+			<Dodge value="30"/>
+			<ArmorBasicDamage value="3"/>
+			<Gold value="750"/>
+			<RecruitDelay value="10000"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="CanHighlight"/>
+			<HelpID value="IDTXT_DORGO_THE_DESTROYER_HELP"/>
+		</Game>
+	</Description>
+	
+</Majesty>

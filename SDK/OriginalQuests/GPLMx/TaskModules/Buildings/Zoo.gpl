@@ -1,0 +1,180 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+function zoo_flag_check ( agent thisagent ) is boolean
+//////////////////////////////////////////////////////////////////////////////
+// This function is usually called when a creature is 'killed'.  It checks
+// to see if there is a zooflag on the creature.  If so it tries to charm that
+// creature to the nearest valid hero, then deletes the flag.
+//////////////////////////////////////////////////////////////////////////////
+declare
+	agent zoo_agent, hero;
+	boolean valid_hero, subdueflag;
+	integer new_hp, charm_percentage;
+	list heroes, valid_heroes;
+
+begin
+	subdueflag = FALSE;
+
+	//////////////////////////////////////////
+	// check to see if I have a zooflag on me.
+	//////////////////////////////////////////
+	zoo_agent = thisagent's "zoo_agent";
+	if ( zoo_agent != $nullagent() )
+		begin
+			////////////////////////////////////////////
+			// check to see if the charm check succeeds.
+			////////////////////////////////////////////
+			charm_percentage = zoo_agent's "charm_percentage";
+			if ( ( $RandomNumber ( 100 ) + 1 ) < charm_percentage )
+				begin
+					////////////////////////////////////////////////////////////////////
+					// check to see if there are any valid heroes in radius to charm me.
+					////////////////////////////////////////////////////////////////////
+					heroes = $ListSubtypesInRadius ( thisagent, "hero", "hero", #zoo_flag_radius );
+					foreach hero in heroes do
+						begin
+							if ( $isdead ( hero ) == FALSE )
+								begin
+									valid_heroes << hero;
+									valid_hero = TRUE;
+								end
+						end
+					//////////////////////////////////////////////////////////////////
+					// if there's a valid hero, give me some hit points and charm me
+					// to the closest of the heroes. Also give me a regeneration rate.
+					//////////////////////////////////////////////////////////////////
+					if ( valid_hero == TRUE )
+						begin
+							hero = $listmember ( valid_heroes, 1 );
+							new_hp = ( $GetAttribute ( ThisAgent, #ATTRIB_MaxHP ) / 3 );
+							$SetAttribute ( ThisAgent, #ATTRIB_HP, new_hp );
+							$Control_monster ( hero, thisagent );
+							// TODO: This healing code modifier probably doesn't work.
+							// Get some new attribs/functions from Adam to fix.
+							$setattribute ( thisagent, #ATTRIB_HealingRateModifier, 1 );
+							subdueflag = TRUE;
+						end
+				end
+			//////////////////////////////////////////////////////////////////////////////////
+			// regardless of the control result, the zoo flag should be deleted at this point.
+			//////////////////////////////////////////////////////////////////////////////////
+			$deletegamepiece ( zoo_agent );
+		end
+	////////////////////////////////////////////////////////////////////////////////////
+	// if any of the above processes fail, the function falls through to here and return
+	// a failure. If they all succeed, the subdueflag will return true.
+	////////////////////////////////////////////////////////////////////////////////////
+	return subdueflag;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Set_Subdue_Chance ( agent thisagent )
+/////////////////////////////////////////////////////////////
+// This is called both from the flag birthscript and whenever
+// the player increments the flag value upwards to revise the
+// chance of the creature being charmed when it is defeated.
+/////////////////////////////////////////////////////////////
+declare
+	integer subdue_chance, cash, target_strength;
+	agent target;
+begin
+	cash = $getattribute ( thisagent, #ATTRIB_RewardCost );
+	Target = $parent ( thisagent );
+	target_strength = $getattribute ( target, #ATTRIB_MaxHP );
+
+	/////////////////////////////////////////////////////////////////
+	// This formula creates a nice cost curve that is non-optimizable
+	/////////////////////////////////////////////////////////////////
+	subdue_chance = 50 * ( $sqrt ( ( cash / 20.0 ) / target_strength ));
+
+	//////////////////////////////////////////////////////////////////////////
+	// Your maximum chance cannot exceed 95%, no matter how much cash you dump
+	//////////////////////////////////////////////////////////////////////////
+	if ( subdue_chance > 95 )
+		subdue_chance = 95;
+
+	thisagent's "subdue_percentage" = subdue_chance;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function zoo_flag_birth ( agent thisagent )
+/////////////////////////////////////////////////////////////////
+// Kicks off the zoo flag activescript and sets the initial charm
+// success chance.
+/////////////////////////////////////////////////////////////////
+declare
+
+begin
+	$Set_Subdue_Chance ( thisagent );
+	$NewThread ( thisagent's "activeScript", #flag_Cycle, thisagent );
+	ThisAgent's "IGDeathScript" = $Zoo_Flag_Death;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function zoo_flag_poll(agent thisagent)
+declare
+	list new_heroes;
+	agent hero,target;
+
+begin
+	if ( $isvalidgamepiece ( thisagent ) == FALSE )
+		return;
+
+	// check to see if all the heroes on my list are alive,
+	// then, are they still coming to attack my target?
+	if ( $listsize ( thisagent's "heroes" ) > 0 )
+		begin
+			foreach hero in thisagent's "heroes" do
+				begin
+					if ( $isdead ( hero ) == FALSE )
+						if ( hero's "target" == $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID )))
+							new_heroes << hero;
+						else
+							$clearflag ( hero );
+				end
+		end
+	thisagent's "heroes" = new_heroes;
+	$setattribute ( thisagent, #ATTRIB_flagseekers, $listsize ( new_heroes ));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function zoo_flag_death_callback ( agent thisagent )
+///////////////////////////////////////////////////////////////////
+// Because the zoo flag functionality is called manually from the
+// monster deathscript, this function is unlikely to be called as a
+// result of an automatic death callback from its parent unit.
+// It CAN be called after the zoo flag runs its function, or
+// when a player deletes the flag, in which case it cleans itself
+// off its parent without doing anything else.
+///////////////////////////////////////////////////////////////////
+declare
+
+begin
+	$deletegamepiece ( thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function zoo_flag_death ( Agent thisagent )
+declare
+	agent hero;
+
+begin
+	// someone has removed the flag!
+	// reset all the tasks of the heroes attempting
+	$debugout ( 911, "got to reset flag heroes." );
+	if ( $listsize ( thisagent's "heroes" ) > 0 )
+		begin
+			$debugout ( 911, thisagent's "heroes" );
+			foreach hero in thisagent's "heroes" do
+				begin
+					if ( $isdead ( hero ) == FALSE )
+						if ( hero's "target" == $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID )))
+							$reset_tasks ( hero );
+				end
+		end
+end

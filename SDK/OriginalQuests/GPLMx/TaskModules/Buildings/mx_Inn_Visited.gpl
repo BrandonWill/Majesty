@@ -1,0 +1,226 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Inn_visited(agent thisagent)
+
+declare
+	agent		Target;
+	integer  Current_Intent, New_Intent;
+
+begin
+	Target = ThisAgent's "Target";
+
+	Current_Intent = $GetAttribute (ThisAgent, #ATTRIB_AIIntentionString);
+
+	$enter_building(thisagent, target);
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Inn_Visit_Duration);
+
+	//Give the Inn some gold - but not gazebos
+	if (target's "subtype" == "Inn")
+		If (thisagent's "title" != "Elf")
+			$Pay_Inn (ThisAgent, target, #Price_per_Inn_Visit);
+
+	if (thisagent's "home" == $nullagent() &&
+			(thisagent's "taskname" == "sulking"))
+			begin
+				thisagent's "Activescript" = $sulk;
+
+				//reset counter to 0 as it is what is used to
+				//decide when to stop sulking (or when to make a loyalty check)
+				thisagent's "counter" = 0;
+
+				//Now we keep running sulk at normal execution time
+				$SetThreadInterval (ThisAgent's "ActiveScript", #Sulk_Cycle);
+			end
+
+	else
+		//Rest at the inn and specify an intent that says resting at gazebo/inn or barding depending on target and title
+		begin
+			//Are they performing a minstrel show?
+			If (Current_Intent == #intent_going_to_bard)
+				begin
+
+					New_Intent = #intent_performing_minstrel;
+
+				end
+
+			Else
+				begin
+					//See if the hero was fleeing or just going to visit, and check to see if
+					//the taret is an Inn or Gazebo
+					If (Current_Intent == #intent_flee_scared)
+						begin
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_seeking_refuge_inn;
+
+							Else
+								New_Intent = #intent_seeking_refuge_gazebo;
+
+						end
+
+					//They must have been visiting
+					Else If (Current_Intent == #intent_flee_lowHP)
+						begin
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_recuperating_inn;
+
+							Else
+								New_Intent = #intent_recuperating_gazebo;
+						End
+
+				  Else
+						begin
+
+							If (Target's "Subtype" == "Inn")
+								New_Intent = #Intent_resting_inn;
+
+							Else
+								New_Intent = #intent_resting_gazebo;
+
+						end
+				end
+
+			thisagent's "Activescript" = $rest_at_inn;
+
+			$SpecifyIntent (ThisAgent, New_Intent);
+
+		end
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function rest_at_inn(agent thisagent)
+
+declare
+
+begin
+	$setattribute(thisagent,#ATTRIB_HP,$getattribute(thisagent,#ATTRIB_MaxHP));
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+	ThisAgent's "ActiveScript" = $Done_resting_inn;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function done_resting_inn(agent thisagent)
+
+declare
+
+begin
+	$exit_building(thisagent,thisagent's "target");
+
+	//If the hero's intention was to play a minstrel show, than they make some money
+	If ($GetAttribute (ThisAgent, #ATTRIB_AIIntentionString) == #intent_performing_minstrel)
+		begin
+			$Give_Gold (ThisAgent, #Elf_Visits_Inn_Gold);
+			$Give_Exp (ThisAgent, #Elf_Visits_Inn_Exp);
+		end
+
+	ThisAgent's "ActiveScript" = ThisAgent's "BasicScript";
+	thisAgent's "taskname" = "";
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function sulk(agent thisagent)
+
+declare
+	integer 	loyalty;
+	list		Check_Guilds, My_Guilds, My_Outposts, My_Embassies, Foreign_Guilds, Foreign_Outposts, Foreign_Embassies;
+	string	Guild_name;
+	boolean 	Flag;
+
+begin
+	// make a loyalty check -- if failed, leave map
+	// otherwise, sulk more
+
+	if ( thisagent's "home" != $nullagent() )
+		begin
+			$Reset_Tasks ( thisagent );
+			$Exit_Building (ThisAgent, ThisAgent's "Target");
+		end
+
+	//Increment ThisAgent's counter, as it is when it reaches a certain number,
+	//The hero decided whether to just leave or not...
+	(ThisAgent's "Counter")++;
+
+
+	guild_name = $Guild_Title ( thisagent );
+
+
+	$ListObjects ( thisagent, "building", -1, check_guilds, #MyPlayer, #ATTRIB_FirstStageBuilt, 1 );
+	my_guilds = $removetitles ( check_guilds, guild_name );
+	my_embassies = $removetitles ( check_guilds, "Embassy");
+	my_outposts = $listsubtypes ( check_guilds, "outpost" );
+
+	$listObjects ( thisagent, "Building", -1, check_guilds, #NotMyPlayer, #ATTRIB_FirstStageBuilt, 1 );
+	foreign_guilds = $removetitles ( check_guilds,	guild_name );
+	foreign_embassies = $removetitles (check_guilds, "Embassy");
+	foreign_outposts = $listsubtypes ( check_guilds, "outpost" );
+
+//	my_guilds = $ListCompleted ( my_guilds );
+//	my_outposts = $ListCompleted ( my_outposts );
+//	my_embassies = $listcompleted ( my_embassies );
+//	foreign_guilds = $ListCompleted ( foreign_guilds );
+//	foreign_outposts = $ListCompleted ( foreign_outposts );
+//	foreign_embassies = $listcompleted ( foreign_embassies );
+
+
+	// Check for a home with local guilds
+	flag = $Guild_Placement_Check ( thisagent, my_guilds );
+
+	// Check for a home with local outposts
+	if ( flag == FALSE )
+		flag = $Guild_Placement_Check ( thisagent, my_outposts );
+
+	//Check for a home with local Embassies
+	if ( flag == FALSE )
+		flag = $Guild_Placement_Check ( thisagent, my_embassies );
+
+	// Check for a home with foreign guilds
+ 	if ( flag == FALSE )
+		flag = $Guild_Placement_Check ( thisagent, foreign_guilds );
+
+	// Check for a home with foreign outposts
+ 	if ( flag == FALSE )
+		flag = $Guild_Placement_Check ( thisagent, foreign_outposts );
+
+	//Check for a home with foreign Embassies
+	if ( flag == FALSE )
+		flag = $Guild_Placement_Check ( thisagent, foreign_embassies );
+
+
+	if (Flag)
+		begin
+
+			//ThisAgent's "ActiveScript" = $Done_Resting_Inn;
+			//$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+
+			ThisAgent's "ActiveScript" = ThisAgent's "BasicScript";
+			$Exit_Building (ThisAgent, ThisAgent's "Target");
+
+		end
+
+	Else
+		begin
+
+			loyalty = thisagent's "loyalty";
+
+			If (ThisAgent's "Counter" >= 40)
+				begin
+
+					if ($randomnumber(100) > loyalty)
+						begin
+							ThisAgent's "ActiveScript" = $done_resting_inn;
+							thisagent's "basicScript" = $flee_map;
+							$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+						end
+
+					Else
+						ThisAgent's "Counter" = 0;
+
+				end
+		end
+end

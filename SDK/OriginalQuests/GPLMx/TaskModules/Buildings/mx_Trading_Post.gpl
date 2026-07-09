@@ -1,0 +1,51 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Trading_Post (Agent ThisAgent)
+Declare
+	integer	Send_Interval;
+
+Begin
+	Send_Interval = #Caravan_Base_Send_Interval + $RandomNumber (#Caravan_Random_Send_Mod);
+
+	ThisAgent's "ActiveScript" = $Send_Caravan;
+
+	$RunThread (ThisAgent's "ActiveScript", Send_Interval, ThisAgent);
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Send_Caravan (agent ThisAgent)
+Declare
+	agent	Market;
+	list	Markets;
+//	list	Potentials;
+
+Begin
+	$ListObjects(thisagent,"building",-1,Markets, #CheckTitles, "Marketplace", #myplayer);
+	//Markets = $listtitles(Markets,"Marketplace");
+
+	//COmmented out because we don't let you build a TPost close to a Market anymore
+
+	//If ($ListSize (Markets) > 0)
+	//	begin
+	//		Foreach Market in Markets do
+	 //			begin
+	 //				If ($DistanceBetweenAgents (ThisAgent, Market) > #Min_Dist_to_Market_For_Caravan_Spawn)
+	 //					Potentials << Market;
+	 //			end
+	 //	end
+
+
+	If ($ListSize (Markets) > 0)
+		begin
+			$SpawnUnit (ThisAgent, "Caravan");
+		end
+
+	ThisAgent's "ActiveScript" = $Trading_Post;
+
+	$Runthread (ThisAgent's "ActiveScript", #Henchmen_Cycle, ThisAgent);
+End

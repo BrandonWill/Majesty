@@ -1,0 +1,56 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Sleeper_Go_Steal (agent ThisAgent)
+Declare
+	integer targetrange;
+	agent target;
+
+begin
+	target = thisagent's "target";
+	if ($ListSize (ThisAgent's "Hostiles") > 0)
+		begin
+			ThisAgent's "Target" = $Pick_Closest (ThisAgent, ThisAgent's "Hostiles");
+			ThisAgent's "ActiveScript" = $Sleeper_Attack_Hero;
+			ThisAgent's "BackScript" = ThisAgent's "BasicScript";
+		end
+	else
+		begin
+			// is target alive?
+			if ($isdead(target))
+				begin
+					$reset_tasks(thisagent);
+				end
+			else
+				begin
+					if ($getattribute (Target, #ATTRIB_gold) < 1)
+						begin
+							$reset_tasks(thisagent);
+						end
+					else
+						begin
+							targetrange = $distanceBetweenAgents(thisagent,target);
+
+							// is ThisAgent adjacent target
+							if ($IsAdjacent (ThisAgent, Target) == FALSE)
+								begin
+									// move towards target
+									thisagent's "destination" = $locationOf (Target);
+									thisagent's "activeScript" = $Sleeper_Robber_Travel_To;
+									thisagent's "backScript" = $Sleeper_Go_Steal;
+									$move(thisagent,target);
+								end
+							else
+								begin
+									// steal a percentage from the object
+									$Monster_Steal (ThisAgent, Target);
+									ThisAgent's "ActiveScript" = ThisAgent's "BasicScript";
+									$ClearList (ThisAgent's "Hostiles");
+								end
+						end
+				end
+		end
+end

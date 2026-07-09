@@ -1,0 +1,82 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function liche_queen_raider(agent thisagent)
+
+declare
+
+	list buildings;
+	agent target;
+	boolean casting;
+	integer attackrange;
+	string spell_name;
+
+begin
+	target = thisagent's "target";
+
+	if ($isSpellavailable(thisagent,"summon_skeleton"))
+		begin
+			$castspell(thisagent,"summon_skeleton",thisagent, "");
+			return;
+		end
+
+	if ($isdead(thisagent's "target"))
+		begin
+			$debugout(thisagent's "title"," picking a target.");
+			$ListObjects(thisagent,"building",50000, buildings );
+			if ($listsize(buildings) > 0)
+				begin
+					ThisAgent's "Target" = $ListMember (Buildings, 1);
+					//thisagent's "target" = $pick_closest(thisagent,buildings);
+				end
+			else
+				begin
+					// raider wanders because it has no targets
+					thisagent's "activescript" = $wandering;
+				end
+		end
+	else
+		begin
+			// pick weapon or spell
+			spell_name = $getbestspell(thisagent,#list_attack);
+			$debugout("liche_queen spell:",spell_name);
+
+			if (spell_name == "nothing")
+				begin
+					attackrange = $getattribute(thisagent,#ATTRIB_maxattackrange);
+					casting = FALSE;
+				end
+			else
+				begin
+					attackrange = thisagent's "castingrange";
+					casting = TRUE;
+				end
+
+			if (($listsize(thisagent's "hostiles") > 0) && (thisagent's "raider_respond" == TRUE))
+//			if ((thisagent's "raider_respond" == TRUE))
+				begin
+					$monster_eval_enemies(thisagent);
+				end
+//			else
+				if ($distancebetweenagents(thisagent,thisagent's "target") < attackrange)
+					begin
+						if (casting)
+							$castspell(thisagent,spell_name,target, "");
+						else
+							$PerformAction (ThisAgent, ThisAgent's "Attack_Action", ThisAgent's "Target");
+
+					end
+				else
+					begin
+						thisagent's "destination" = $locationof(thisagent's "target");
+ 						thisagent's "activescript" = $monster_travel_to;
+						thisagent's "backscript" = $raider;
+						//$move(thisagent,$locationof(thisagent's "target"));
+						$move(thisagent,thisagent's "target");
+					end
+		end
+
+end

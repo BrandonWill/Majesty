@@ -1,0 +1,132 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Follow_Heal_Check (agent ThisAgent, string WhatToHeal, integer Chance) is Boolean
+
+Declare
+	list potentials;
+	agent best_one;
+	agent diddly;
+	list new_potentials,guards;
+	integer range;
+
+Begin
+
+	if ($RandomNumber (100) + 1 > Chance)
+		begin
+			return False;
+		end
+
+	range = $getattribute(thisagent,#ATTRIB_sightrange) * #Follow_Heal_Check_Mod;
+
+	//Potentials = $ListTitlesInRadius (ThisAgent, "Hero", WhatToHeal, range);
+	//$ListObjects (ThisAgent, "Hero", Range, Potentials, #CheckTitles, WhatToHeal)
+
+
+	If ($ListObjects (ThisAgent, "Hero", Range, Potentials, #CheckTitles, WhatToHeal) > 0)
+		begin
+			Foreach Diddly in Potentials do
+				begin
+					//guards = $listtitlesinradius(diddly,"hero",thisagent's "title",range);
+
+					if ($ListObjects (Diddly, "Hero", Range, Guards, #CheckTitles, ThisAgent's "Title") < 2)
+						if ($getplayerteamnumber(diddly) == $getplayerteamnumber(thisagent))
+							New_Potentials << Diddly;
+						else
+							if ($randomnumber(100) > thisagent's "loyalty")
+								new_potentials << Diddly;
+				end
+		end
+	Else
+		begin
+  //			$DebugOut ("No", WhatToHeal,"(s) in range!");
+			Return FALSE;
+		end
+
+	Potentials = New_Potentials;
+
+	If ($ListSize (Potentials) == 0)
+		begin
+//			$DebugOut ("Every",WhatToHeal,"is already being Followed and Healed, or there are already enough Healers nearby.");
+			Return FALSE;
+		end
+
+	Best_One = $ListMember (Potentials, 1);
+	ThisAgent's "ActiveScript" = $Follow_Heal;
+	ThisAgent's "Target" = Best_One;
+	$SpecifyIntent (ThisAgent, #intent_following_and_healing);
+
+	thisagent's "counter" = 0;
+
+	return TRUE;
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function follow_support_check(agent ThisAgent, string WhatToSupport, integer Chance) is Boolean
+
+declare
+	list potentials;
+	agent best_one;
+	agent diddly;
+	list new_potentials,guards;
+	integer range;
+
+begin
+	if ($RandomNumber (100) + 1 > Chance)
+		begin
+			return False;
+		end
+
+	range = $getattribute(thisagent,#ATTRIB_sightrange) * #Follow_support_Check_Mod;
+
+	//Potentials = $ListTitlesInRadius (ThisAgent, "Hero", WhatToSupport, range);
+
+	//$ListObjects (ThisAgent, "Hero", Range, Potentials, #MyTeam);
+	//Potentials = $ListTitles (Potentials, WhatToSupport);
+
+	If ($ListObjects (ThisAgent, "Hero", Range, Potentials, #CheckTitles, WhatToSupport, #MyTeam) > 0)
+		begin
+			Foreach Diddly in Potentials do
+				begin
+					if (((diddly's "backscript" == $use_building) && (diddly's "target" == diddly's "home")))
+						begin
+							range - range;
+						end
+					else
+						begin
+							//guards = $listtitlesinradius(diddly,"hero",thisagent's "title",range);
+
+
+							if ($ListObjects (Diddly, "Hero", Range, Guards, #CheckTitles, ThisAgent's "Title") < #support_max)
+								New_Potentials << Diddly;
+				  		end
+				end
+		end
+	Else
+		begin
+			Return FALSE;
+		end
+
+	Potentials = New_Potentials;
+
+	If ($ListSize (Potentials) == 0)
+		begin
+			Return FALSE;
+		end
+
+	Best_One = $ListMember (Potentials, 1);
+
+	thisagent's "basicscript" = $follow_support;
+	thisagent's "backscript" = $follow_support;
+	ThisAgent's "ActiveScript" = $Follow_support;
+
+	ThisAgent's "BackTarget" = Best_One;
+	$SpecifyIntent (ThisAgent, #intent_following_and_supporting);
+
+	thisagent's "counter" = 0;
+
+	return TRUE;
+end

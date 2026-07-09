@@ -1,0 +1,28 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Rooted_Guardian (agent ThisAgent)
+Declare
+	list Enemies;
+
+
+Begin
+	Enemies = $list_enemies_seen(thisagent,$getattribute (ThisAgent, #ATTRIB_SightRange));
+
+	If ($ListSize (Enemies) > 0)
+		begin
+			ThisAgent's "Target" = $ListMember (Enemies, 1);
+			$PerformAction (ThisAgent, ThisAgent's "Attack_Action", ThisAgent's "Target");
+		end
+	else
+		if ($randomNumber(1000) > 950)
+			begin
+					$performaction(thisagent,"basic_idle_2",thisagent);
+			end
+		else
+			$performaction(thisagent,"do_nothing",$locationof(thisagent));
+
+End

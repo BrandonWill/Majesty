@@ -1,0 +1,1007 @@
+<Majesty>
+	<Description type="Action" subType="Standard" ID="A010" Name="Henchman_death" Description="A henchman dies">
+		<Engine version="1">
+			<ImageSet value="Die"/>
+			<SoundPhase begin="Death"/>
+			<Rate min="0" max="1500"/>
+			<Script type="0" cProc="0" GPLFunction="henchman_dead"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX10" Name="ztransition-1" Description="ztransition-1">
+		<Engine version="1">
+			<ImageSet value="Stand-to-Walk"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRa0" Name="power_shock" Description="Power Shock">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Energy_Blast"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="power_shock_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="15000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A001" Name="basic_attack" Description="basic_attack">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Rate min="0" max="1100"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A011" Name="do_nothing" Description="do_nothing">
+		<Engine version="1">
+			<ImageSet value="Stand"/>
+			<Rate min="0" max="500"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX11" Name="zactive-1" Description="zactive-1">
+		<Engine version="1">
+			<ImageSet value="Active"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX21" Name="ztransition-2" Description="ztransition-2">
+		<Engine version="1">
+			<ImageSet value="Walk-to-Stand"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="BXA1" Name="goblin_arrow" Description="shoot goblin arrow">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Goblin_Arrow"/>
+			<Distance min="0" max="700"/>
+			<Rate min="0" max="1500"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXB1" Name="ballista_bolt" Description="shoot ballista bolt from ballista tower">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<Sound value="Ballista_Tower"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Ballista_Bolt"/>
+			<Distance min="0" max="1000"/>
+			<Rate min="1500" max="1500"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRC1" Name="level_up" Description="level_up">
+		<Engine version="1">
+			<ImageSet value="Stand"/>
+			<Sound value="Up_Level"/>
+			<SoundPhase begin="Begin"/>
+			<Overlay value="Level_Up"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRE1" Name="message_flag" Description="message_flag">
+		<Engine version="1">
+			<ImageSet value="Stand"/>
+			<Overlay value="message_flag"/>
+			<Script type="0" cProc="8194"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="ARa1" Name="teleport_short" Description="Teleport Short">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Short_Teleport"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Teleport_Short_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="1200"/>
+			<TimeoutDuration value="38000"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="1"/>
+			<ValidationScript value="teleport_short_check"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="CRa1" Name="charm_monster" Description="Charm Monster">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Charm_Monster"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Charm_Monster_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="5300"/>
+			<SpellType value="Attack"/>
+			<SpellType value="CombatUtility"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="HRa1" Name="healer_heal" Description="Healer's Healing">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Healing"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Healer_Heal_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="2400"/>
+			<SpellType value="Attack"/>
+			<SpellType value="CombatUtility"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="LRa1" Name="shield_of_light" Description="Shield of Light">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Shield_of_Light"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Shield_Of_Light_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="16500"/>
+			<TimeoutDuration value="22000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="MRa1" Name="iron_will" Description="Iron Will">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Iron_Will"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Iron_Will_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="40000"/>
+			<TimeoutDuration value="42000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="7"/>
+			<SpellRank value="3"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRa1" Name="acid_bolt" Description="Acid Bolt">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Projectile value="acid_bolt_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="2500"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="PRa1" Name="drain_life" Description="Drain Life">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Life_Drain"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="life_drain_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="2500"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="SRa1" Name="sun_scorch" Description="Solarus Sun Scorch">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Sun_Scorch"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Solarus_Sun_Scorch_Hit"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="1000"/>
+			<TimeoutDuration value="17000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="1"/>
+			<ValidationScript value="solarus_sun_scorch_check"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRa1" Name="energy_blast" Description="Energy Blast">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Energy_Blast"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="energy_blast_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="1000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="CRb1" Name="camouflage" Description="Camouflage">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Invisibility"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Camouflage_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="13500"/>
+			<TimeoutDuration value="21000"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="HRb1" Name="meditation" Description="Meditation">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Meditation"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Meditation_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="52000"/>
+			<TimeoutDuration value="55000"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="MRb1" Name="hands_of_steel" Description="Hand of Steel">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Hands_of_Steel"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Hands_Of_Steel_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="26000"/>
+			<TimeoutDuration value="29000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRb1" Name="electrical_fury" Description="Electrical Fury">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Elect_Fury"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="electrical_fury_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="2000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="PRb1" Name="animate_skeleton" Description="Animate Skeleton">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Raise_Skeleton"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Animate_Skeleton_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="7000"/>
+			<SpellType value="Attack"/>
+			<SpellType value="CombatUtility"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRb1" Name="fire_shield" Description="Fire Shield">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="FireShield"/>
+			<SoundPhase begin="Begin"/>
+			<Info value="NoTarget"/>
+			<Script type="0" cProc="0" GPLFunction="Fire_Shield_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="21000"/>
+			<TimeoutDuration value="25000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="2"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="CRc1" Name="change_shape" Description="Change Shape">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Change_Shape"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Change_Shape_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="26500"/>
+			<TimeoutDuration value="57000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="7"/>
+			<SpellRank value="3"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="HRc1" Name="aura_of_peace" Description="Aura of Peace">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Aura_of_Peace"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Aura_Of_Peace_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="62000"/>
+			<TimeoutDuration value="64000"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="7"/>
+			<SpellRank value="3"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="MRc1" Name="monk_stone_skin" Description="Stone Skin">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Script type="0" cProc="0" GPLFunction="Monk_Stone_Skin_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="33000"/>
+			<TimeoutDuration value="35000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRc1" Name="exploding_aura" Description="Exploding Aura">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Exploding_Aura"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Exploding_aura_cast"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="7000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="2"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="PRc1" Name="control_undead" Description="Control Undead">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Control_Undead"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Control_Undead_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="5000"/>
+			<CharacterLevel value="7"/>
+			<SpellRank value="4"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRc1" Name="fire_blast" Description="Fire Blast">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Fire_Blast"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Fire_blast_cast"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="3500"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="3"/>
+			<SpellRank value="3"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRd1" Name="force" Description="Force">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Force"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Force_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="30000"/>
+			<SpellType value="Attack"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRd1" Name="teleport" Description="Teleport">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Script type="0" cProc="0" GPLFunction="Teleport_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="1200"/>
+			<TimeoutDuration value="36500"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="4"/>
+			<SpellRank value="4"/>
+			<ValidationScript value="teleport_check"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRe1" Name="paralytic_gaze" Description="Paralytic Gaze">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Petrify"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Paralytic_Gaze_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="10000"/>
+			<TimeoutDuration value="45000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="5"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRe1" Name="fire_ball" Description="Fire Ball">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Fireball"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="fireball_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="4500"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="5"/>
+			<SpellRank value="5"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRf1" Name="resist_magic" Description="Resist Magic">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Resist_Magic"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Resist_Magic_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="39500"/>
+			<TimeoutDuration value="41500"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="6"/>
+			<SpellRank value="6"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRg1" Name="insect_swarm" Description="Insect Swarm">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Insect_Swarm"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="insect_swarm_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="3000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRg1" Name="meteor_storm" Description="Meteor Storm">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Script type="0" cProc="0" GPLFunction="meteor_storm_hit"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="21000"/>
+			<TimeoutDuration value="55000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="7"/>
+			<SpellRank value="7"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRh1" Name="life_leach" Description="Life Leach">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Life_Leech"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="life_leech_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="3000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRi1" Name="magic_mirror" Description="Magic Mirror">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Magic_Mirror"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Magic_Mirror_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="23000"/>
+			<TimeoutDuration value="55000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRj1" Name="Summon_Spider">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Summon_Spider"/>
+			<SoundPhase begin="Begin"/>
+			<Rate min="0" max="400"/>
+			<Script type="0" cProc="0" GPLFunction="summon_spider_effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="12000"/>
+			<SpellType value="4"/>
+			<SpellRank value="6"/>
+			<ValidationScript value="summon_spider_check"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRk1" Name="vortex" Description="Vortex">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Script type="0" cProc="0" GPLFunction="Vortex_Hit"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="5000"/>
+			<TimeoutDuration value="20000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="10"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRl1" Name="level_leach" Description="Level Leach">
+		<Engine version="1">
+			<ImageSet value="Inactive"/>
+			<Sound value="Life_Leech"/>
+			<SoundPhase begin="Begin"/>
+			<Projectile value="level_leach_missile"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="6000"/>
+			<SpellType value="Attack"/>
+			<SpellType value="CombatUtility"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="PRl1" Name="summon_skeleton" Description="Summon Skeleton">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Raise_Skeleton"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Summon_Skeleton_Effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="5000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+			<ValidationScript value="summon_skeleton_check"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRm1" Name="get_healer" Description="get the healer">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="Attack"/>
+			<Script type="0" cProc="0" GPLFunction="get_healer_begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="4200"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="NRn1" Name="W_K_teleport" Description="Special teleport">
+		<Engine version="1">
+			<Script type="0" cProc="0" GPLFunction="W_K_teleport"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="1000"/>
+			<TimeoutDuration value="180000"/>
+			<SpellType value="4"/>
+			<SpellRank value="7"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A002" Name="basic_attack_with_stand" Description="basic_attack with stand at completion">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase peak="Attack"/>
+			<Rate min="0" max="1100"/>
+			<Script type="0" cProc="0" GPLFunction="make_attack"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A012" Name="collect_tax" Description="collect tax">
+		<Engine version="1">
+			<ImageSet value="Carry"/>
+			<Rate min="0" max="800"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX12" Name="zinactive-1" Description="zinactive-1">
+		<Engine version="1">
+			<ImageSet value="Inactive"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRA2" Name="flag_attack" Description="flag attack">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<Overlay value="Flag_Attack"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXA2" Name="Ranger_arrow" Description="shoot ranger arrow">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Green_Ranger_Arrow"/>
+			<Distance min="0" max="700"/>
+			<Rate min="0" max="1200"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="BXA2" Name="rust_spit" Description="rust spitter spits">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="Attack"/>
+			<Projectile value="Rust_Spit"/>
+			<Distance min="0" max="400"/>
+			<Rate min="0" max="800"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRB2" Name="got_gold" Description="got gold">
+		<Engine version="1">
+			<ImageSet value="Stand"/>
+			<Sound value="Got_Gold"/>
+			<SoundPhase begin="Begin"/>
+			<Overlay value="Got_Gold"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="ARa2" Name="teleport_short_amulet" Description="Teleport short (Amulet)">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Short_Teleport"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="teleport_short_effect"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="1200"/>
+			<TimeoutDuration value="45000"/>
+			<SpellType value="4"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="WRb2" Name="flame_shield" Description="Flame Shield">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="FireShield"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Flame_Shield_Begin"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<EffectorDuration value="20000"/>
+			<TimeoutDuration value="30000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="1"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A003" Name="Basic_idle" Description="Basic_idle">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="VFX_SPECIAL1"/>
+			<Rate min="0" max="1900"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A013" Name="Basic_idle_2" Description="Basic_idle_2">
+		<Engine version="1">
+			<ImageSet value="Special-2"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="Monster_Idle"/>
+			<Rate min="0" max="1200"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX13" Name="zinterface-00" Description="zinterface-00">
+		<Engine version="1">
+			<ImageSet value="Interface"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRA3" Name="flag_guard" Description="flag guard">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<Overlay value="Flag_Guard"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXA3" Name="elf_arrow" Description="shoot blue elf arrow">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Blue_Elf_Arrow"/>
+			<Distance min="0" max="700"/>
+			<Rate min="0" max="1050"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="BXA3" Name="spore_thorn" Description="strangleweed shoots spore thorn">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase begin="Attack"/>
+			<Projectile value="Strangleweed_spores"/>
+			<Distance min="0" max="400"/>
+			<Rate min="0" max="1000"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRB3" Name="got_armor" Description="got armor">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<Overlay value="Got_Armor"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A004" Name="Basic_Pickup" Description="Basic_Pickup">
+		<Engine version="1">
+			<ImageSet value="Carry"/>
+			<Sound value="Picking_Resource"/>
+			<SoundPhase peak="Begin"/>
+			<Distance min="10" max="10"/>
+			<Rate min="0" max="1000"/>
+			<Script type="0" cProc="0" GPLFunction="collect_object_callback"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A014" Name="chest_open">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<SoundPhase begin="Begin" peak="Peak" end="End"/>
+			<Rate min="0" max="1900"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRA4" Name="flag_explore" Description="flag explore">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<Overlay value="Flag_Explore"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXA4" Name="Rogue_bolt" Description="shoot red rogue bolt">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Red_Rogue_Bolt"/>
+			<Distance min="0" max="600"/>
+			<Rate min="0" max="1200"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="BXA4" Name="Url_shekk_spit" Description="Url Shekk spits">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Url_Shekk_spit"/>
+			<Distance min="0" max="500"/>
+			<Rate min="0" max="400"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRB4" Name="got_item" Description="got_item">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<Overlay value="Got_Item"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A005" Name="Basic_death" Description="Basic_death">
+		<Engine version="1">
+			<ImageSet value="Die"/>
+			<SoundPhase begin="Death"/>
+			<Rate min="0" max="1500"/>
+			<Script type="0" cProc="8192"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX05" Name="zbuild-1" Description="zbuild-1">
+		<Engine version="1">
+			<ImageSet value="Build"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A015" Name="multiple enemy attack" Description="Super Strike">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase begin="VFX_SEE_HOSTILE"/>
+			<Script type="0" cProc="0" GPLFunction="multiple_enemy_attack"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="10000"/>
+			<SpellType value="Attack"/>
+			<CharacterLevel value="3"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXA5" Name="cultist_dagger" Description="throw cultist dagger">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Cultist_dagger"/>
+			<Distance min="0" max="400"/>
+			<Rate min="0" max="500"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="BXA5" Name="dragon_fire" Description="breath dragon fire">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="Attack"/>
+			<Projectile value="Dragon_Fire_Breath"/>
+			<Distance min="100" max="600"/>
+			<Rate min="0" max="1000"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="XRB5" Name="got_weapon" Description="got_weapon">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<Overlay value="Got_Weapon"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A016" Name="monster_idle" Description="for monster idleing - plays Monster_Idle sound">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="Monster_Idle"/>
+			<Rate min="0" max="1900"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="AXA6" Name="Guardhouse_Arrow" Description="Guardhouse Arrow">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<Sound value="Guard_House"/>
+			<SoundPhase peak="Attack"/>
+			<Projectile value="Green_Ranger_Arrow"/>
+			<Distance min="0" max="1000"/>
+			<Rate min="1500" max="1500"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A007" Name="Basic_Cast" Description="Basic_Cast">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<SoundPhase begin="VFX_CAST_SPELL1"/>
+			<Rate min="0" max="800"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A017" Name="monster_multi_attack" Description="Super Strike">
+		<Engine version="1">
+			<ImageSet value="Attack"/>
+			<SoundPhase peak="Attack"/>
+			<Script type="0" cProc="0" GPLFunction="multiple_enemy_attack"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="8000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="1"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="SRa7" Name="inferno" Description="Inferno">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Inferno"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Inferno_Hit"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="10000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="111"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A008" Name="Basic_build">
+		<Engine version="1">
+			<ImageSet value="Carry-2"/>
+			<CompletionImageSet value=""/>
+			<SoundPhase begin="Begin" peak="Peak"/>
+			<Rate min="0" max="300"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A018" Name="WizTower_Build" Description="this is for the Wiz Tower punching through ground anim/sound">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<SoundPhase begin="Buildup"/>
+			<Rate min="0" max="1900"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="SRa8" Name="radiate_energy" Description="Radiate Energy">
+		<Engine version="1">
+			<ImageSet value="Cast"/>
+			<CompletionImageSet value="Stand"/>
+			<Sound value="Radiate_Energy"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="0" GPLFunction="Radiate_Energy_Hit"/>
+		</Engine>
+		<Game version="1">
+			<Flags value="IsSpell"/>
+			<TimeoutDuration value="10000"/>
+			<SpellType value="Attack"/>
+			<SpellRank value="111"/>
+		</Game>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A009" Name="Become_Rubble" Description="Become_Rubble">
+		<Engine version="1">
+			<ImageSet value="Crumble"/>
+			<Sound value="Building_Collapse"/>
+			<SoundPhase begin="Begin"/>
+			<Script type="0" cProc="8192"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="TX09" Name="zrecoil-1" Description="zrecoil-1">
+		<Engine version="1">
+			<ImageSet value="Recoil"/>
+		</Engine>
+	</Description>
+	<Description type="Action" subType="Standard" ID="A019" Name="be_dumb_idle" Description="Idle for cursed heroes - doesn't say voice line.">
+		<Engine version="1">
+			<ImageSet value="Special"/>
+			<CompletionImageSet value="Stand"/>
+			<Rate min="0" max="1900"/>
+		</Engine>
+	</Description>
+</Majesty>

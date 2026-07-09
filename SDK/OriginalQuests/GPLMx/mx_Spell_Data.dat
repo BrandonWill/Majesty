@@ -1,0 +1,116 @@
+[Earthquake]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Earthquake)
+		(activeScript	Earthquake_Active)
+	}
+[end]
+
+[Fire_Ball]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Fire_Ball)
+		(activeScript	Fire_Ball_Active)
+	}
+[end]
+
+[Lightning_Storm]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Lightning_Storm)
+		(activeScript	Lightning_Storm_Active)
+	}
+[end]
+
+[Meteor_Storm]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Meteor_Storm)
+		(activeScript	Meteor_Storm_Active)
+	}
+[end]
+
+[Helia_Sun_Scorch]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Helia_Sun_Scorch)
+		(activeScript	Helia_Sun_Scorch_Active)
+	}
+[end]
+
+[Wind_Storm]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Wind_Storm)
+		(activeScript	Wind_Storm_Active)
+	}
+[end]
+
+[farseeing]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Farseeing)
+		(activeScript	Farseeing_Active)
+	}
+[end]
+
+[Lightning_Bolt]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Lightning_Bolt)
+		(activeScript	Lightning_Bolt_Unit_Active)
+	}
+[end]
+
+[Fire_Strike]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Fire_Strike)
+		(activeScript	Fire_Strike_Active)
+	}
+[end]
+
+[Vortex]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Vortex)
+		(activeScript	Vortex_Active)
+	}
+[end]
+
+[Gate]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Gate)
+		(activeScript	Gate_Active)
+	}
+[end]
+
+[ChainLightning]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		ChainLightning)
+		(activeScript	ChainLightning_Active)
+	}
+[end]
+
+
+[Critical_Hit]
+	{Spell
+		(type		spell)
+		(subtype	spell)
+		(title		Critical_Hit)
+	}
+[end]

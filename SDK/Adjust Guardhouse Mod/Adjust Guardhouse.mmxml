@@ -1,0 +1,20 @@
+<Majesty>
+	<Mod id="{D666FCBE-9906-4582-A6A0-DC96F812441E}">
+		<Name>AdjustGuardHouse</Name>
+		<DisplayName lang="en_US">Adjust Guardhouse</DisplayName>
+		<Description lang="en_US">
+			<Short>Upgraded guard houses increase the number of guards posted at the guard house to two.</Short>
+			<Long/>
+		</Description>
+		<DataConfiguration>
+			<Dataset base="Any">
+				<Load>
+					<GPL>
+						<Target>Data\AdjustGuardhouse.bcd</Target>
+						<Source>GPL\Guardhouse.dat</Source>
+					</GPL>
+				</Load>
+			</Dataset>
+		</DataConfiguration>
+	</Mod>
+</Majesty>

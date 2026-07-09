@@ -1,0 +1,51 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Reset_Controlled (Agent ThisAgent)
+Declare
+	string	Title;
+
+Begin
+	Title = thisagent's "title";
+
+	ThisAgent's "Type" = "Monster";
+	ThisAgent's "Original_Type" = "Monster";
+
+	ThisAgent's "ActiveScript" = ThisAgent's "StartingScript";
+	ThisAgent's "BackScript" = ThisAgent's "StartingScript";
+	ThisAgent's "BasicScript" = ThisAgent's "StartingScript";
+	ThisAgent's "IGDeathScript" = $Monster_GraveStone;
+
+	thisagent's "familiar" = FALSE; // this resets any familiars (skeletons) to normal
+
+	thisagent's "target" == $nullagent();
+	$clearlist(thisagent's "hostiles");
+
+	$setunitplayernumber(thisagent,#Monster_Player);
+
+	$deleteEffector(thisagent,"charm_icon");
+
+	If (Title == "Skeleton" || Title == "Vampire" || Title == "Zombie")
+		begin
+			ThisAgent's "SubType" = "UnDead";
+		end
+	Else
+		begin
+			If (Title == "Giant_Eagle" || Title == "White_Wolf" || Title == "Red_Bear" || Title == "Giant_Rat" || title == "medusa" || title == "giant_spider" || title == "werewolf" || title == "rust_spitter")
+				begin
+					ThisAgent's "SubType" = "Animal";
+				end
+			Else
+				begin
+					If (Title == "Rock_Golem")
+						begin
+							ThisAgent's "SubType" = "Golem";
+						end
+					Else
+						$DebugOut (911,Title,"isn't covered in Reset_Controlled!");
+				end
+		end
+End

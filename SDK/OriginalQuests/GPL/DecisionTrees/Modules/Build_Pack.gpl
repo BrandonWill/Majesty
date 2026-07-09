@@ -1,0 +1,62 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Build_Pack (agent ThisAgent, integer Chance) is boolean
+Declare
+	list	Animals;
+	integer monster_limit;
+
+Begin
+
+	$DebugOut ("Should I Build a Pack?");
+	If ($RandomNumber (100) + 1 > Chance)
+		begin
+			$DebugOut ("Not Interested!");
+			return False;
+		End
+
+	if ($isspellavailable(thisagent,"charm_monster") == FALSE)
+		return FALSE;
+
+	//This check to see if they already have their max. complement of Animals
+	If (ThisAgent's "Num_Followers" >= #Max_Number_Cultist_Followers)
+		return False;
+
+	// the following means: 1 at lvls < 3, 2 at 4 to 6, 3 at 7 to 9, and so on
+	monster_limit = (($getattribute(thisagent,#ATTRIB_experienceLevel) - 1) / 3) + 1;
+
+	//This makes sure the Cultist has an empty slot
+	If (ThisAgent's "Num_Followers" < monster_limit)
+		begin
+
+			Animals = $ListSubtypesInRadius (ThisAgent, "monster", "Animal", $getattribute (ThisAgent, #ATTRIB_SightRange) * #Charm_Animal_Mod);
+
+			If ($ListSize (Animals) > 0)
+				begin
+					ThisAgent's "Target" = $ListMember (Animals, 1);
+
+					//ThisAgent's "Target" = $Pick_Closest (ThisAgent, Animals);
+					$DebugOut (thisagent's "title","wants to control a",$gettitle(ThisAgent's "Target"));
+					ThisAgent's "ActiveScript" = $Go_Control_Monster;
+					$SpecifyIntent (ThisAgent, #intent_charming_animals);
+					return True;
+				end
+
+
+			Else
+				begin
+					$DebugOut ("No Animals Nearby!!");
+					return False;
+				end
+
+		end
+
+	Else
+		begin
+			$DebugOut ("All of my slots are full!!!");
+			return False;
+		end
+End

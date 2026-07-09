@@ -1,0 +1,54 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function defend_object(agent thisagent)
+
+declare
+
+	agent target;
+	integer targetrange;
+
+begin
+	target = thisagent's "target";
+
+	// is target still valid
+	if ($notvalid(target))
+		begin
+			$stopmoving(thisagent);
+			$reset_tasks(thisagent);
+		end
+	else
+		begin
+			// is thisagent low on HP
+			if ($haslowHP(thisagent))
+				begin
+					$heal_self(thisagent);
+				end
+			else
+				begin
+					// is thiaagent in range of target
+					targetrange = $distanceBetweenAgents(thisagent,target);
+
+					if (targetrange > ($gettargetrange(thisagent)))
+						begin
+							// move towards target
+							thisagent's "destination" = $RandomCoord (Target, $getattribute (ThisAgent, #ATTRIB_SightRange) * #Def_Object_Wander_Mod);
+							thisagent's "activeScript" = $travel_to;
+							thisagent's "backScript" = $defend_object;
+							$move(thisagent,thisagent's "destination");
+						end
+					else
+						begin
+							// check for danger nearby
+//							if ($D_eval_enemies_nearby(thisagent) == FALSE)
+//								begin
+//									// do idle or something
+//									// decide whether or not to continue the task
+//								end
+						end
+				end
+		end
+end

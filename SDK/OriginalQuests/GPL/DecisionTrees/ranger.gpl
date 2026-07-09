@@ -1,0 +1,63 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function ranger_tree (agent thisagent)
+
+declare
+
+begin
+
+	$createeffector(thisagent,"thought_bubble_think",#think_bubble_time);
+	$SpecifyIntent (ThisAgent, #Intent_Thinking);
+
+	if ($check_nearby(thisagent) == False)
+
+	if ($Check_rewards(thisagent,FALSE) == False)
+
+	if ($Defend_home(thisagent) == False)
+
+	if ($defend_building(thisagent,"trading_post") == FALSE)
+
+	if ($rest(thisagent) == False)
+
+	if ($Purchase_equipment(thisagent) == False)
+
+	if ($pursue_entertainment(thisagent) == False)
+
+	if ($Collect_resource(thisagent,"healing_herbs",95) == FALSE)
+
+	if ($follow_support_check(thisagent,"barbarian",90) == FALSE)
+
+	if ($explore_map(thisagent,95) == false)
+
+	if ($Combat_wandering(thisagent,75) == False)
+
+	if ($combat_wandering_heroes(thisagent,55) == False)
+
+// if ($Heal_another(thisagent,80) == False)
+
+   if ($Journey_Offmap_Check (thisagent,30) == false)
+
+	if ($Go_home(thisagent,15) == False)
+
+	if ($check_library(thisagent,15, "Train_magic_resist") == FALSE)
+
+	if ($check_library(thisagent,30, "Learn_generic_spell") == FALSE)
+
+	if ($Raid_lair(thisagent,15) == False)
+
+	if ($raid_enemy_building(thisagent,10) == False)
+
+	if ($Visit_Building(ThisAgent, "Royal_gardens", 30) == False)
+
+	if ($Visit_Building(ThisAgent, "Inn", 15) == False)
+		begin
+			$SpecifyIntent (ThisAgent, #intent_wandering);
+			thisagent's "counter" = 0;
+			thisagent's "activescript" = $hero_wander;
+		end
+
+end

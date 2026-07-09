@@ -1,0 +1,153 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is specific to the Wizard's Curse Quest
+Function Hooligan_Basic (agent ThisAgent)
+Declare
+	agent 	Hero;
+	list		Heroes, Player1_Heroes;
+	integer	SightRange;
+
+Begin
+	SightRange = $GetAttribute (ThisAgent, #ATTRIB_Sightrange);
+
+
+	If ($IsMoving (ThisAgent) == False)
+		begin
+			if ($randomNumber(100) > 98)
+				$performaction(thisagent,thisAgent's "Idle_action",$locationof(thisagent));
+			else
+				//If ($IsDead (ThisAgent's "Home") == False)
+					//$Move (ThisAgent, $RandomCoord (ThisAgent's "Home", (SightRange * ThisAgent's "Guardian_Mod")));
+
+				//Else
+					$Move (ThisAgent, $RandomCoord (ThisAgent's "coord_home", (SightRange * #Hooligan_Wander_Mod)));
+		end
+
+
+	//See if there are any of Player 1's heroes nearby
+	$ListObjects (ThisAgent, "Hero", SightRange, Heroes);
+	Heroes = $ListSubtypes (Heroes, "hero");
+
+	Foreach Hero in Heroes do
+		begin
+
+			//see if they are player 1
+			If ($getunitplayernumber (Hero) == #Player_1)
+				//see if they are here to arrest me
+				If (Hero's "Target" == ThisAgent)
+					begin
+
+							Player1_Heroes << Hero;
+
+					end
+
+		end
+
+
+
+	//If so, go to palace.
+	If ($ListSize (Player1_Heroes) > 0)
+		begin
+
+			$StopMoving (ThisAgent);
+
+			$MessageFlag (ThisAgent, #message_found_hooligan);
+
+			//Set the Special_Boolean to true, so that Heroes know this Hooligan has already been found
+			ThisAgent's "Special_Boolean" = True;
+
+			ThisAgent's "ActiveScript" = $Hooligan_Goto_Palace;
+
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+Function Hooligan_Goto_Palace (agent ThisAgent)
+Declare
+	list 	Palaces, Hooligans, Heroes;
+	agent Palace, AIRootAgent, Hooligan, Hero;
+
+
+
+Begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	AIRootAgent = $RetrieveAgent ("GPLAiRoot");
+
+	//Goto and enter the palace
+	If ($IsMoving (ThisAgent) == False)
+		begin
+			//$Move (ThisAgent, Palace);
+			//ThisAgent's "Target" = Palace;
+			//ThisAgent's "ActiveScript" = $Henchmen_Travel_To;
+			//ThisAgent's "BackScript" = $Hooligan_Goto_Palace;
+
+			$Hide (ThisAgent, Palace);
+		end
+
+	If ($IsHidden (ThisAgent))
+		begin
+			$ListObjects (Palace, "Hooligan", -1, Hooligans, #NoHiddenMap);
+			//Was this the last Hooligan?
+			If ($ListSize (Hooligans) == 0)
+				begin
+					$MessageFlag (Palace, #message_arrested_all_hooligans);
+
+					//Set quest flag 2 to TRUE so that the epic quest script will know to put a message flag on the enemy
+					//Wiz Guild, and the Badass Hooligan gets spawned
+					AIRootAgent's "Quest_Flag_2" = True;
+
+					//Blow away all the other Hooligans on the map
+					//$ListObjects (Palace, "Hooligan", -1, Hooligans, #NoHiddenMap);
+
+					//Foreach Hooligan in Hooligans do
+						//begin
+
+							//Flip the quest-specific boolean, so heroes think the Hooligan has been found
+						  //	Hooligan's "Special_Boolean" = True;
+
+							//Leave the map
+						  //	Hooligan's "ActiveScript" = $Henchmen_Travel_to;
+							//Hooligan's "BackScript" = $Hooligan_Leave_Map;
+
+
+
+							//$Move (ThisAgent, $Closestmapedge (ThisAgent));
+
+						//end
+
+					//Reset_tasks for all heroes that are arresting hooligans
+					$ListObjects (ThisAgent, "Hero", -1, Heroes, #NoHiddenMap);
+					Foreach Hero in Heroes do
+						begin
+							If (Hero's "ActiveScript" == $Arrest_Hooligan || Hero's "BackScript" == $Arrest_Hooligan)
+								begin
+
+									$Reset_Tasks (Hero);
+
+								end
+						end
+
+
+				end
+
+
+			$DeleteGamePiece (ThisAgent);
+		end
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function Hooligan_Leave_Map (agent ThisAgent)
+Declare
+
+Begin
+
+	$DeleteGamePiece (ThisAgent);
+
+End

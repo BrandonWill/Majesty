@@ -1,0 +1,236 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+Function Drop_QItems (agent ThisAgent)
+Declare
+	integer	WhatItem;
+	string  agentType;
+Begin
+	WhatItem = -1;
+
+	//Do I have an item?
+	While ($AgentHasInventoryItem (WhatItem, ThisAgent) ) do
+		begin
+   			// Drop the item nearby, using the item art piece
+   			
+		  	// Remove the item from the owner's inventory
+			$DeleteInventoryItem (WhatItem, ThisAgent);
+   			
+			// Check the old style inventory items first. Some items can't be dropped
+			If (WhatItem != #MarketItem_Ring_Protection && WhatItem != #MarketItem_Market3_Item)
+				begin
+					// Check the new inventory system if this item can be dropped
+					if ($CanDropInventoryItem(WhatItem) == True)
+						begin
+							// Get what type of agent the inventory item will be while it exists on the map
+							agentType = $GetInventoryItemAgentType(WhatItem);
+							// Create the item, adding a copy of its type to its attibute list for the inventory system to use.
+							$SpawnUnit (ThisAgent, agentType, "Override", $Concatenate($MakeInventoryAttribute( WhatItem ), 0) );
+						end
+				end
+	
+			// Set WhatItem back, so that AgentHasInventoryItem can fill it up again
+			WhatItem = -1;
+	  	end
+End
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// A special function to drop only items that are marked as immediate drop.
+function Drop_Immediate_Items(agent thisAgent)
+declare
+	integer	item;
+	string  agentType;
+	list	items;
+begin
+	
+	items = $GetInventoryItems(thisAgent);
+
+	foreach item in items do
+		begin
+			if ($GetInventoryItemDropType(item) >= 2)
+				begin
+					// Get what type of agent the inventory item will be while it exists on the map
+					agentType = $GetInventoryItemAgentType(item);
+					// Create the item, adding a copy of its type to its attibute list for the inventory system to use.
+					$SpawnUnit (thisAgent, agentType, "Override", $Concatenate($MakeInventoryAttribute(item), 0) );
+					// Delete the item from their inventory
+					$DeleteInventoryItem(item, thisAgent);
+				end				
+		end	
+end
+
+
+Function QItem_Stat_Boost (agent ThisAgent, integer QItem)
+Declare
+	agent AIRootAgent;
+
+Begin
+	//If this is the Magic Sword, then set AIRootAgent's Quest Flag 1 to TRUE
+	//So that the victory condition starts looking for the Dwarven Settlement
+	If (QItem == #QItem_Magic_Sword)
+		begin
+			AIRootAgent = $RetrieveAgent ("GPLAIRoot");
+
+			AIRootAgent's "Quest_Flag_1" = True;
+
+			$MessageFlag (ThisAgent, #message_slay_dragon_found_sword);
+		end
+
+	//Learn Fireball spell
+	If (QItem == #QItem_Shard_Combustion)
+		begin
+			$LearnSpell (ThisAgent, "Fire_Ball");
+			return;
+		end
+
+	//Learn exploding aura
+	If (QItem == #QItem_Shard_Detonation)
+		begin
+			$LearnSpell (ThisAgent, "Exploding_Aura");
+		   return;
+		end
+
+	//Learn teleport spell
+	If (QItem == #QItem_Shard_Displacement)
+		begin
+			$LearnSpell (ThisAgent, "Teleport");
+			return;
+		end
+
+	//Learn Paralytic Gaze
+	If (QItem == #QItem_Shard_Transfixion)
+		begin
+			$LearnSpell (ThisAgent, "Paralytic_Gaze");
+			return;
+		end
+
+	//MaxHP boost and Poison Immunity
+	If (QItem == #QItem_Shard_Health)
+		begin
+			ThisAgent's "Immune_to_poison" = True;
+
+			$AdjustAttribute (ThisAgent, #ATTRIB_MaxHP, 50);
+			$AdjustAttribute (ThisAgent, #ATTRIB_HP, 50);
+			return;
+		end
+
+	//Learn Fireblast spell
+	If (QItem == #QItem_Shard_Burning)
+		begin
+			$LearnSpell (ThisAgent, "Fire_Blast");
+		   return;
+		end
+
+	//Movement speed boost
+	If (QItem == #QItem_Shard_Haste)
+		begin
+			$adjustattribute(thisagent,#ATTRIB_MovementRateModifier, -200 );
+			$adjustattribute(thisagent,#ATTRIB_ActionRateModifier, -500);
+
+			$turnonSPeedTrail(thisagent,10);
+			return;
+		end
+
+	if (Qitem == #qitem_bell)
+		begin
+			$adjustattribute(thisagent,#ATTRIB_MaxHP,50);
+			return;
+		end
+
+	if (Qitem == #qitem_book)
+		begin
+			$Magicaladjustattribute(thisagent,#ATTRIB_intelligence,20);
+			return;
+		end
+
+	if (Qitem == #qitem_candle)
+		begin
+			$adjustattribute(thisagent,#ATTRIB_sightrange,150);
+			return;
+		end
+
+	If (QItem == #MarketItem_Ring_Protection)
+		begin
+			$MagicalAdjustAttribute (ThisAgent, #ATTRIB_Dodge, 10);
+			$MagicalAdjustAttribute (ThisAgent, #ATTRIB_Parry, 10);
+			$MagicalAdjustAttribute (ThisAgent, #ATTRIB_MagicResistance, 10);
+			$AdjustAttribute (ThisAgent, #ATTRIB_Armor_Basic_Damage, 2);
+		   return;
+		end
+
+	If (QItem == #QItem_Magic_Ring)
+		begin
+			//Put the ring art over the unit, so the player knows who has it.
+			$CreateEffector (ThisAgent, "Ring_Icon", 1, "Infinite");
+
+
+			//If Player 1 has the ring, then they need to deliver it to the ring site
+			If ($GetUnitPlayerNumber (ThisAgent) == #Player_1)
+				begin
+					ThisAgent's "ActiveScript" = $Deliver_Ring;
+					ThisAgent's "BasicScript" = $Deliver_Ring;
+					ThisAgent's "BackScript" = $Deliver_Ring;
+
+					//Put this agent's "StartingScript" into their questscript
+					//This is what ThisAgent is reset to after they drop the ring
+					ThisAgent's "QuestScript" = ThisAgent's "StartingScript";
+
+					//Then, set starting script to deliver_ring, so that if the holder of the ring gets ressed they
+					//keep trying to deliver the ring
+					ThisAgent's "StartingScript" = $Deliver_Ring;
+
+				end
+
+			//Another player's hero got the ring. They try to bring it back to their palace!
+			Else
+				begin
+					ThisAgent's "ActiveScript" = $Steal_Ring;
+					ThisAgent's "BasicScript" = $Steal_Ring;
+					ThisAgent's "BackScript" = $Steal_Ring;
+
+					//Put this agent's "StartingScript" into their questscript
+					//This is what ThisAgent is reset to after they drop the ring
+					ThisAgent's "QuestScript" = ThisAgent's "StartingScript";
+
+					//Then, set starting script to deliver_ring, so that if the holder of the ring gets ressed they
+					//keep trying to deliver the ring
+					ThisAgent's "StartingScript" = $Steal_Ring;
+				end
+
+			$Reset_Tasks (ThisAgent);
+		end
+
+	If (QItem == #QItem_Holy_Chalice)
+		begin
+			AIRootAgent = $RetrieveAgent ("GplAIRoot");
+			//This tells the VictoryScript that the chalice site is destroyed, and the player wins
+			AIRootAgent's "Quest_Flag_1" = True;
+
+			return;
+		end
+
+	//Learn the Teleport Short spell
+	If (QItem == #MarketItem_Market3_Item)
+		begin
+
+			$LearnSpell (ThisAgent, "Teleport_Short_Amulet");
+
+			//$DebugOut (911, "Learned teleport short!");
+			return;
+
+		end
+
+	//Learn a bunch of Wizard spells from the book
+	If (QItem == #QItem_Spellbook)
+		begin
+			$LearnSpell (ThisAgent, "Fire_Shield");
+			$LearnSpell (ThisAgent, "Teleport");
+			$LearnSpell (ThisAgent, "Resist_Magic");
+			$LearnSpell (ThisAgent, "Fire_Blast");
+		end
+
+
+End

@@ -1,0 +1,48 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Go_Heal (agent ThisAgent)
+
+Declare
+	integer 	targetrange;
+	agent 	target;
+
+Begin
+	Target = ThisAgent's "Target";
+
+	// Make sure that ThisAgent's "Target" isn't dead, and that it still needs healing.
+	if ($notvalid (Target))
+		begin
+		 	$reset_tasks(thisagent);
+		end
+	else
+		begin
+
+			TargetRange = $DistanceBetweenAgents (ThisAgent, Target);
+
+			if ($getattribute(Target,#ATTRIB_HP) == $getattribute(Target,#ATTRIB_MaxHP))
+				begin
+					$reset_tasks(thisagent);
+				end
+			else
+				begin
+					if (TargetRange > thisagent's "castingrange")
+						begin
+							// move towards target
+							thisagent's "destination" = $LocationOf(Target);
+							thisagent's "activeScript" = $Travel_To_Safe;
+							thisagent's "backScript" = $Go_Heal;
+							$Move(ThisAgent,Target,"avoid_vehicles");
+						end
+					else
+						begin
+							// Heal the target
+							if ($isspellavailable(thisagent,"healer_heal"))
+								$Cast (ThisAgent, "Healer_heal", Target, "");
+						end
+				end
+		end
+End

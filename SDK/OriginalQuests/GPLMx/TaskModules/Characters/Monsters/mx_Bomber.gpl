@@ -1,0 +1,112 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Bomber (agent ThisAgent)
+Declare
+	list		Buildings;
+
+Begin
+	$DebugOut (thisagent's "title","is picking a target.");
+
+	//First, try a small search
+	$ListObjects (ThisAgent, "Building", #Bomber_Preferred_Range, Buildings);
+
+	//If there are no buildings in the small search or the monster randomly decides to
+	//search the whole map, then build a global list
+	If ($ListSize (Buildings) == 0 || $RandomNumber (100) + 1 > 95)
+		begin
+			$ListObjects (ThisAgent, "Building", -1, Buildings );
+		end
+
+	If ($ListSize (Buildings) > 0)
+		begin
+			ThisAgent's "Target" = $ListMember (Buildings, $RandomNumber ($ListSize (Buildings)) + 1 );
+
+			ThisAgent's "ActiveScript" = $Bomber_Attack;
+		end
+	Else
+		begin
+			$DebugOut ("No Buildings to Attack!!");
+			ThisAgent's "ActiveScript" = $Sleeper_Go_Home;
+		end
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function bomber_attack(agent thisagent)
+
+declare
+
+	list buildings;
+	agent target;
+	boolean casting;
+	integer attackrange;
+	string spell_name;
+
+begin
+	Target = ThisAgent's "Target";
+
+
+	If ($NotValid (Target))
+		begin
+			$Reset_Tasks (ThisAgent);
+		end
+	Else
+		begin
+			// pick weapon or spell
+			spell_name = $getbestspell(thisagent,#list_attack);
+
+			if (spell_name == "nothing")
+				begin
+					attackrange = $getattribute(thisagent,#ATTRIB_maxattackrange);
+					casting = FALSE;
+				end
+			else
+				begin
+					attackrange = thisagent's "castingrange";
+					casting = TRUE;
+				end
+
+			$bomber_eval_enemies(thisagent);
+
+			if ($distancebetweenagents(thisagent,thisagent's "target") < attackrange)
+				begin
+					// check for peasants nearby who are repairing buildings
+					if ($peasants_near(thisagent) == FALSE)
+						begin
+							if (casting)
+								$castspell(thisagent,spell_name,target, "");
+							else
+								$PerformAction (ThisAgent, ThisAgent's "Attack_Action", ThisAgent's "Target");
+
+							//Possibly pick a new target to attack (ie. 'Bomb')
+							If (#Bomber_Pick_New_Target_Chance > $RandomNumber (100) + 1)
+								$Reset_Tasks (ThisAgent);
+
+						end
+				end
+			else
+				begin
+					thisagent's "destination" = $locationof(thisagent's "target");
+ 					thisagent's "activescript" = $monster_travel_to;
+					thisagent's "backscript" = $bomber_attack;
+					$move(thisagent,thisagent's "target");
+				end
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function bomber_eval_enemies(agent thisagent)
+
+declare
+
+begin
+	$cleanse_hostiles(thisagent);
+
+	if ($listsize(thisagent's "hostiles") > 0)
+		begin
+			$monster_eval_enemies(thisagent);
+		end
+end

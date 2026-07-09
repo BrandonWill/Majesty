@@ -1,0 +1,616 @@
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function make_attack( agent thisagent, agent target)
+
+declare
+	integer hitresult,exp_given;
+
+begin
+	// these two checks are here due to the time delay between the action initiation
+	// and the action conclusion;
+	if ($notvalid(target))
+		return;
+
+
+	if ($notvalid_attacker(thisagent))
+		return;
+
+
+	// attacking removes camouflage effect
+	if ($GetAttribute( thisagent, #ATTRIB_HasEffectCamouflage ) != 0)
+		begin
+			$DeleteEffector( thisagent, "camouflage_icon" );
+		end
+
+
+	$react(thisagent,target);
+
+
+	hitresult = $hit(thisagent,target);
+
+	// expereience checking
+
+	exp_given = $exp_value(thisagent,target);
+
+
+	if (hitresult == 1) // hit!
+		begin
+//			$debugout(thisagent's "title","HIT the",$gettitle(Target));
+			$damage(thisagent,target);
+		end
+//	else
+//		if (hitresult == 2) // parried
+//			begin
+////					$debugout(thisagent's "title","attack was PARRIED/DODGED by",$gettitle(Target));
+//			end
+//		else
+//			if (hitresult == 3) // missed
+//				begin
+//  //					$debugout(thisagent's "title","MISSED the",$gettitle(Target));
+//				end
+
+	$attack_end(thisagent,exp_given);
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function react(agent thisagent,agent target)
+
+declare
+	string type;
+	agent guy,palace;
+	list guys;
+
+begin
+	// do a reaction for the thing being hit
+	//Have the target flash on the MiniMap
+	$CombatSignal (Target);
+
+	//	the target may need to have thisagent 'revealed' to them
+	// a check here would be too expensive, a reveal area call is faster
+	$revealArea(target,$locationof(thisagent),75);
+
+	if ((target's "type" != "Building") && (target's "type" != "lair"))
+	  	begin
+
+			// add thisagent to target's hostilelist?
+			if (thisagent != target)
+				begin
+					if ($agentinlist(thisagent,target's "Hostiles") == FALSE)
+						if ($GetAttribute( thisagent, #ATTRIB_HasEffectInvisibility) != 1)
+							target's "Hostiles" << thisagent;
+				end
+			else
+				begin
+
+					//This is here because if the unit just attacked themselves, then they
+					//should flee if they are a magic-based class
+					If (ThisAgent's "Title" == "Wizard" || ThisAgent's "Title" == "Priestess")
+ 						$Flee_Absolute ( ThisAgent, #intent_flee_scared );
+
+				end
+		end
+
+	else
+		if (target's "type" == "Building")
+			begin
+				type = $getsubtype(target);
+				if ((type == "guild") || (type == "Palace"))
+					target's "In_danger" = TRUE;
+
+				$release_occupants(target);
+
+					begin
+						palace = $getpalace(target);
+						if ($isvalidgamepiece(palace))
+							begin
+								If ($AgentInList (Target, Palace's "Buildings_Under_Construction") == False)
+									palace's "buildings_under_construction" << target;
+							end
+					end
+
+				If (Target's "Title" == "Palace")
+					begin
+
+						$PlaySound (Target, "Advisor_Palace_Beseiged", "VFX_ADVISOR");
+
+					end
+
+			end
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function exp_value(agent thisagent,agent target) is integer
+
+declare
+	integer exp_given;
+
+begin
+	if (target's "type" == "monster")
+		begin
+			exp_given = $getattribute(target,#ATTRIB_LevelXP);
+			$debugout(exp_given);
+		end
+	else
+		if (target's "type" == "lair")
+			exp_given = target's "difficulty" * #lair_exp;
+		else
+			if (target's "subtype" == "hero")// && ($getsubtype(target) != "Henchman" && $GetSubtype(target) != "Controlled"))
+				exp_given = $getattribute(target,#ATTRIB_experienceLevel) * #attack_hero_exp;
+			else
+				if ((target's "type" == "building") || (target's "subtype" == "henchman"))
+					begin
+						if ($getunitplayernumber(thisagent) == $getunitplayernumber(target))
+							exp_given = 0;
+						else
+							exp_given = #attack_other_exp;
+					end
+				else
+					exp_given = #attack_other_exp;
+
+	return exp_given;
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function hit(agent attacker, agent defender) is integer
+
+declare
+	integer attackertohit;
+	integer defenderavoid;
+begin
+
+	if ((defender's "type" == "building") ||
+		 (defender's "type" == "lair")) return 1;
+
+	attackertohit = $gettohit(attacker);
+	defenderavoid = $gettoavoid(attacker,defender);
+
+	if ($randomnumber(100) <= attackertohit)
+		begin
+			if ($randomnumber(100) > defenderavoid)
+				begin
+					return 1;
+				end
+			else
+				begin
+					return 2;
+				end
+		end
+	else
+		return 3;
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function gettohit(agent attacker) is integer
+
+declare
+	integer value;
+
+begin
+	if (attacker's "attacktype" == 1)
+		begin
+			value = $getattribute(attacker,#ATTRIB_HtoH);
+		end
+	else
+		begin
+			if (attacker's "attacktype" == 2)
+				begin
+					value = $getattribute(attacker,#ATTRIB_Ranged);
+
+				end
+			else
+				if (Attacker's "AttackType" == 5)
+					begin
+						value = Attacker's "Ranged";
+					end
+		end
+
+	if (value > #max_tohit)
+		value = #max_tohit;
+
+	return value;
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function gettoavoid(agent attacker, agent defender) is integer
+
+declare
+	integer value;
+	agent AIRootAgent;
+
+begin
+	if (attacker's "attacktype" == 1)
+		begin
+			value = $getattribute(defender,#ATTRIB_Parry);
+		end
+	else
+		if (attacker's "attacktype" == 2)
+			begin
+				value = $getattribute(defender,#ATTRIB_Dodge);
+			end
+		else
+			if (Attacker's "AttackType" == 5)
+				begin
+					value = $getattribute(defender,#ATTRIB_Dodge);
+				end
+
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+		begin
+			if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+				begin
+					if (value > #Deathmatch_max_toavoid)
+						value = #Deathmatch_max_toavoid;
+				end
+			else
+				begin
+					if (value > #max_toavoid)
+						value = #max_toavoid;
+				end
+		end
+	else
+		begin
+			if (value > #max_toavoid)
+				value = #max_toavoid;
+		end
+
+
+	return value;
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function BuildingDamageModifier ( agent attacker, agent defender, integer dmg ) is integer
+// This function checks to see how damage from normal attacks is modified when attacking buildings.
+declare
+	agent AIRootAgent;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	// If the attacker is a hero and deathmatch rules apply, multiply the building damage appropriately.
+	if ( attacker's "subtype" == "hero" )
+		if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+			if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+				begin
+					dmg *= #Deathmatch_Building_Damage_Multiplier;
+					return dmg;
+				end
+
+	// Otherwise damage against buildings is halved.
+	dmg /= 2;
+	return dmg;
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function damage(agent attacker, agent defender)
+
+declare
+
+integer dmg,dmg_stopped,t,t2;
+	boolean magic_effect;
+	boolean do_poison,critical_effect;
+
+begin
+	//This is a hack so that the Towers can attack
+	magic_effect = FALSE;
+	if (Attacker's "Type" == "Building")
+		begin
+			dmg = $RandomNumber (Attacker's "Strength") + 1;
+		end
+
+	Else
+		begin
+//			dmg = $randomnumber($getattribute(attacker,#ATTRIB_Strength)) + 1;
+			if (attacker's "subtype" == "hero") //&&
+				begin
+					if (((defender's "type" != "building") && (defender's "type" != "lair")) &&
+						($randomnumber(100) < attacker's "critical_chance"))
+							begin
+								dmg = $getattribute(defender,#ATTRIB_MAXHP);
+								critical_effect = TRUE;
+								if ($hasattribute("resist_critical",defender))
+									if (defender's "resist_critical" == TRUE)
+										dmg = dmg / 6;
+							end
+						else
+							begin
+								dmg = $randomnumber($GetAttribute(attacker, #ATTRIB_weapon_basic_damage)) + 1;
+								dmg += $GetAttribute (attacker, #ATTRIB_weapon_struct_bonus);
+								dmg += $GetAttribute (attacker, #ATTRIB_weapon_magic_bonus);
+								if ($GetAttribute (attacker, #ATTRIB_weapon_magic_bonus) > 0)
+									magic_effect = TRUE;
+								dmg += ($getattribute(attacker,#ATTRIB_Strength) / #strength_div);
+
+								// give a bonus for heroes attacking other heroes
+								if ($getunitplayernumber(attacker) != $getunitPlayerNumber(defender))
+									if ((attacker's "subtype" == "hero") && (defender's "subtype" == "hero"))
+										begin
+											dmg += $getattribute(attacker,#ATTRIB_experienceLevel) / #level_div;
+										end
+							end
+				end
+			else
+				begin
+					if (((defender's "type" != "building") && (defender's "type" != "lair")) &&
+						($randomnumber(100) < attacker's "critical_chance"))
+							begin
+								dmg = $getattribute(defender,#ATTRIB_MAXHP);
+								critical_effect = TRUE;
+								if ($hasattribute("resist_critical",defender))
+									if (defender's "resist_critical" == TRUE)
+										dmg = dmg / 6;
+							end
+						else
+							begin
+								t = $getattribute(attacker,#ATTRIB_strength) / 4;
+								t2 = $getattribute(attacker,#ATTRIB_strength) - t;
+								dmg = $randomnumber(t2) + 1 + t;
+							end
+				end
+		end
+
+		if ((defender's "type" == "building") || (defender's "type" == "lair"))
+			begin
+				dmg = $BuildingDamageModifier ( attacker, defender, dmg );
+			end
+		else
+			begin
+				dmg_stopped = $GetAttribute (defender, #ATTRIB_armor_basic_damage);
+
+				if (defender's "subtype" == "hero")// &&
+						begin
+							dmg_stopped += $GetAttribute (defender, #ATTRIB_armor_struct_bonus);
+							dmg_stopped += $GetAttribute (defender, #ATTRIB_armor_magic_bonus);
+						end
+
+				t = dmg_stopped / 4;
+
+				t2 = $randomnumber(dmg_stopped - t);
+
+//				$debugout(911,"lowdamage",t,"variabledamage",t2,defender's "type");
+				dmg_stopped = t + t2;
+
+				dmg -= dmg_stopped;
+
+			end
+
+	if (dmg < 0) dmg = 0;
+
+	if (dmg > 0)
+		begin
+			if (defender's "type" != "building" && defender's "type" != "lair")
+				begin
+					if (magic_effect)
+						$createeffector(defender,"wound_special",0);
+					else
+						if (critical_effect)
+							$createeffector(defender,"wound_critical",0);
+						else
+							$createeffector(defender,"wounded_large",0);
+
+					$playsound(defender,"gethit");
+
+					if ($getattribute(attacker,#ATTRIB_weaponpoisoned) == 1)
+						begin
+							do_poison = TRUE;
+							if ($hasattribute("Immune_to_poison",defender))
+								if (defender's "immune_to_poison" == TRUE)
+									do_poison = FALSE;
+
+							if (do_poison)
+								$poison_begin(attacker,defender);
+						end
+				end
+			else
+				$playsound(defender,"gethit");
+
+			// does the creature have a special splat?
+			if ($hasattribute("special_splat",attacker))
+				if (attacker's "special_splat" != "")
+					begin
+						$createeffector(defender,attacker's "special_splat",0);
+					end
+
+			$adjustattribute(defender,#ATTRIB_HP,-dmg);
+		end
+
+	// check for defender recoil
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function attack_end(agent thisagent,integer exp_given)
+
+declare
+	integer new_exp_div;
+	agent leader;
+
+begin
+//	if (thisagent's "type" != "building")
+//		$clearlist(thisagent's "hostiles");
+
+	if (thisagent's "subtype" == "hero")
+		//if ($getsubtype(thisagent) != "henchman")
+		  //	if ($GetSubtype (ThisAgent) != "Controlled")
+				begin
+					new_exp_div = $getattribute(thisagent,#ATTRIB_experiencelevel) / #combat_exp_div;
+					if (new_exp_div < 1)
+						new_exp_div = 1;
+					$give_exp(thisagent,exp_given / new_exp_div);
+				end
+
+	if ($hasattribute("familiar",thisagent))
+		if (thisagent's "familiar" == TRUE)
+			begin
+				leader = thisagent's "leader";
+				if ($isdead(leader) == FALSE)
+					$give_exp(leader,#familiar_fight_exp);
+			end
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function spell_attack(agent thisagent, agent target,integer damage)
+
+declare
+	integer exp_given,hitresult;
+
+begin
+	if ($notvalid(target))
+		return;
+
+	if ($notvalid_attacker(thisagent))
+		return;
+
+	$react(thisagent,target);
+
+	exp_given = $exp_value(thisagent,target);
+
+	hitresult = $spellhit(target);
+
+	if (hitresult == 1) // hit
+		begin
+			$spelldamage(thisagent,target,damage,1);
+		end
+	else
+		if (hitresult == 2) // resisted
+			begin
+			end
+
+	$attack_end(thisagent,exp_given);
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// this is a player cast spell attacking, not from
+// an agent, but from a mouse-click
+function player_spell_attack(agent target,integer damage, integer damage_minimum)
+
+declare
+	integer hitresult;
+
+begin
+	if ($notvalid(target))
+		return;
+
+	$react_player_spell(target);
+
+	hitresult = $spellhit(target);
+
+	if (hitresult == 1) // hit
+		begin
+			$spelldamage($nullagent(),target,damage,damage_minimum);
+		end
+	else
+		if (hitresult == 2) // resisted
+			begin
+			end
+
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function react_player_spell(agent target)
+
+declare
+	string type;
+	agent guy,palace;
+	list guys;
+
+begin
+	// do a reaction for the thing being hit
+	if (target's "type" == "Building")
+		begin
+			$release_occupants(target);
+
+				begin
+					palace = $getpalace(target);
+					if ($isvalidgamepiece(palace))
+						begin
+							If ($AgentInList (Target, Palace's "Buildings_Under_Construction") == False)
+								palace's "buildings_under_construction" << target;
+						end
+				end
+
+			If (Target's "Title" == "Palace")
+				$PlaySound (Target, "Advisor_Palace_Beseiged", "VFX_ADVISOR");
+
+
+		end
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function spellhit(agent defender) is integer
+
+declare
+	integer attackertohit,defenderavoid;
+	agent AIRootAgent;
+
+begin
+	if ((defender's "type" == "building") ||
+		 (defender's "type" == "lair")) return 1;
+
+	attackertohit = 100;
+	defenderavoid = $getattribute(defender,#ATTRIB_magicresistance);
+
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+		if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+			begin
+				if ( defender's "type" == "hero" )
+					if ( defenderavoid < #Deathmatch_Hero_Magic_Resist )
+						defenderavoid = #Deathmatch_Hero_Magic_Resist;
+			end
+
+	if ($getAttribute( defender, #ATTRIB_HasEffectMagicMirror) == 1)
+		defenderavoid = 105;
+
+	if ($randomnumber(100) <= attackertohit)
+		begin
+			if ($randomnumber(100) > defenderavoid)
+				begin
+					return 1; // hit
+				end
+			else
+				begin
+					return 2; // resisted
+				end
+		end
+	else
+		return 3; // missed - won't happen
+end
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+function spelldamage(agent attacker,agent defender,integer damage, integer damage_minimum)
+
+declare
+	integer dmg;
+
+begin
+	dmg = $randomnumber(damage) + 1;
+
+	if (dmg < damage_minimum)
+		 dmg = damage_minimum;
+
+	// if attacker wasn't a spell unit, intelligence affects damage amount
+	if (attacker != $nullagent())
+		begin
+			if (attacker's "type" == "hero")
+				dmg += $getattribute(attacker,#ATTRIB_intelligence) / #intelligence_div;
+		end
+
+	// if defender is hero with enchanted armor, reduce the damage
+	if (defender != $nullagent())
+		begin
+			if (defender's "subtype" == "hero")
+				//if ((defender's "subtype" != "Hero") && (defender's "subtype" != "controlled"))
+				begin
+					dmg -= $getattribute(defender,#ATTRIB_armor_magic_bonus) * #armor_magic_mult;
+					if (dmg < 0) dmg = 0;
+				end
+		end
+
+	$adjustattribute(defender,#ATTRIB_HP,-dmg);
+end

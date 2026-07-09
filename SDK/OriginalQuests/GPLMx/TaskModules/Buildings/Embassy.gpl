@@ -1,0 +1,266 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+//When the ON button is pushed, then this function is run once
+//It tells the UI how long to run the timer bar for, and how much to charge
+//when it is up
+Function Embassy_Init (agent ThisAgent)
+Declare
+	integer	Time;
+	integer	Cost;
+
+Begin
+	Time = ( $GetAttribute (ThisAgent, #ATTRIB_EmbassyTimerDuration) );
+	Cost = ( $GetAttribute (ThisAgent, #ATTRIB_EmbassyRecruitCost) );
+
+	//Set the time
+	If (Time == 0)
+		Time = (#Embassy_Min_Spawn_Hero_Time + $RandomNumber (#Embassy_Max_Spawn_Hero_Time - #Embassy_Min_Spawn_Hero_Time));
+
+
+
+	//Set the cost
+	If (Cost == 0)
+		Cost = $RandomNumber (500) + 800;
+
+
+	$SetAttribute( thisAgent, #ATTRIB_EmbassyTimerDuration, Time );
+	$SetAttribute( thisAgent, #ATTRIB_EmbassyRecruitCost, Cost );
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+//This has a chance of spawning a hero for a guild that is currently on map on myplayer.
+//It only charges money if it spawns a hero
+Function Embassy_Spawn (agent ThisAgent)
+Declare
+	list		Guilds, Guilds1, Guilds2, Potentials, Embassies, Outposts;
+	agent 	Guild, Spawn_Unit;
+	string	Type;
+	integer	ListSize, Interval;
+	boolean	Open_Guild;
+	list		Palaces;
+	agent 	Palace;
+	integer	heroCost;
+
+Begin
+	Palaces = $ListPalaces ();
+	Palace = $ListMember (Palaces, 1);
+
+	//Assume that no guilds have open slots
+	Open_Guild = False;
+
+	// get the hero cost from the attribute
+	heroCost = $GetAttribute( thisAgent, #ATTRIB_EmbassyRecruitCost );
+
+	//Set Time to 0
+	$SetAttribute( thisAgent, #ATTRIB_EmbassyTimerDuration, 0 );
+
+	//Set Cost to 0
+	$SetAttribute( thisAgent, #ATTRIB_EmbassyRecruitCost, 0 );
+
+
+	$ListObjects (ThisAgent, "Building", -1, Guilds, #MyPlayer, #ATTRIB_FirstStageBuilt, 1);
+	//Find Guilds
+	Guilds1 = $ListSubtypes (Guilds, "Guild");
+	//Find Outposts
+	Guilds2 = $ListSubtypes (Guilds, "Outpost");
+
+	Guilds = $AddLists (Guilds1, Guilds2);
+
+	//Only buildings that are completed
+	//Guilds = $ListCompleted (Guilds);
+
+	Guilds += ThisAgent;
+
+
+	Foreach Guild in Guilds do
+		begin
+			//make sure that they are alive
+			If ($IsDead (Guild) == False)
+				//See if they have an open slot
+				If ($GuildHasOpenSlots (Guild))
+					begin
+						//Embassies get filled first
+						If (Guild's "Title" == "Embassy")
+							begin
+
+								Embassies << Guild;
+
+							end
+
+						//Then Outposts
+						Else if (Guild's "Subtype" == "Outpost")
+							begin
+
+								Outposts << Guild;
+
+							end
+
+						//Then other guilds
+						Else
+							begin
+
+								Potentials << Guild;
+
+							end
+
+						//There are open guild slots!
+						Open_Guild = True;
+
+					end
+		end
+
+	If ( Open_Guild )
+		begin
+
+			//If Embassy, Random hero type
+			If ($ListSize (Embassies) > 0)
+				begin
+
+					//Fill up ThisAgent first
+					If ($AgentInList (ThisAgent, Embassies) )
+						begin
+
+							Guild = ThisAgent;
+
+						end
+
+					Else
+						Guild = $ListMember (Embassies, 1);
+
+					Type = $Random_Hero_Type (Guild);
+
+				end
+
+			//If Outpost, Random hero type
+			Else if ($ListSize (Outposts) > 0)
+				begin
+
+					Guild = $ListMember (Outposts, $RandomNumber ($ListSize (Outposts) ) + 1 );
+					Type = $Random_Hero_Type (Guild);
+
+				end
+
+			Else
+				begin
+					//Pick a random guild off the list
+					Guild = $ListMember (Potentials, $RandomNumber ($ListSize (Potentials) ) + 1 );
+
+					//If warriors guild, get a random warrior type
+					If (Guild's "Title" == "Warriors_Guild")
+						begin
+
+							Type = $Random_Warriors_Guild_Hero_Type (Guild);
+
+						end
+
+					Else
+						begin
+
+							Type = Guild's "Member_Title";
+
+						end
+				end
+
+			//See if the player can afford the new hero
+			If ($GetPlayerData (Guild, "Gold") > heroCost)
+				begin
+
+					//If yes, spawn them and deduct the gold
+					$AdjustPlayerData (Guild, "gold", -heroCost, Type);
+
+					//Have guild spawn the hero at the entrance of the Embassy
+					Spawn_Unit = $SpawnUnit (Guild, Type, $GetEntranceLoc(ThisAgent) );
+					
+					// Make sure it was created.  There is case where it does not.
+					// I believe it is caused by the GPL function GuildHasOpenSlots returning true
+					// when the C++ side thinks the guild is full.  It is probably because the GPL
+					// side has its own list of members.  If you dismiss a unit from the Embassy, the GPL side
+					// thinks the guild has space, but the C++ side does not until the dismissed unit leaves the game.
+					// Rather than changing the dismiss, which would effect lots of operations, we'll just quietly fail.
+					// It will try again shortly.
+					if ( $IsValidGamePiece(Spawn_Unit) )
+						begin
+							//Tell the player that a hero just arrived at the Embassy
+							$LocalChatMessage( $GetUnitPlayerNumber( Spawn_Unit  ), #chat_embassy_Spawn, Spawn_Unit );
+
+							//Say the voice line
+							$PlaySound (Palace, "Advisor_Hero_Arrived", "VFX_ADVISOR");
+
+
+							//Start out at higher than 1st level
+							$Advance_to_Level (Spawn_Unit, $RandomNumber (2) + 2);
+						end
+
+				end
+
+		end
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+//This returns a random hero type that is associated with the Warrior's Guild
+Function Random_Warriors_Guild_Hero_Type (agent ThisAgent) is string
+Declare
+	integer	Random;
+
+Begin
+
+	Random = $RandomNumber (3) + 1;
+	If (Random == 1)
+		return "Warrior";
+	Else if (Random == 2)
+		return "Paladin";
+	Else
+		return "Warrior_of_Discord";
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+//This just returns a random hero type. Used by the Embassy for the Outpost.
+Function Random_Hero_Type (agent ThisAgent) is string
+Declare
+	integer	Random;
+
+Begin
+	Random = $RandomNumber (16) + 1;
+
+	If (Random == 1)
+		return "Adept";
+	Else if (Random == 2)
+		return "Barbarian";
+	Else if (Random == 3)
+		return "Cultist";
+	Else if (Random == 4)
+		return "Healer";
+	Else if (Random == 5)
+		return "Monk";
+	Else if (Random == 6)
+		return "Priestess";
+	Else if (Random == 7)
+		return "Ranger";
+	Else if (Random == 8)
+		return "Rogue";
+	Else if (Random == 9)
+		return "Solarus";
+	Else if (Random == 10)
+		return "Warrior";
+	Else if (Random == 11)
+		return "Wizard";
+	Else if (Random == 12)
+		return "Paladin";
+	Else if (Random == 13)
+		return "Warrior_of_Discord";
+	Else if (Random == 14)
+		return "Dwarf";
+	Else if (Random == 15)
+		return "Elf";
+	Else
+		return "Gnome";
+
+End

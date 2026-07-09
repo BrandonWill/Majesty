@@ -1,0 +1,73 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Swarm (agent ThisAgent, integer Chance) is Boolean
+Declare
+
+	list wandering_monsters;
+	integer current_best_score;
+	agent current_best_monster;
+	integer temp_score;
+	agent monster;
+	agent	Palace;
+
+begin
+	$debugout("Should I Swarm?");
+	Palace = $GetPalace (ThisAgent);
+
+	if ($isdead(palace))
+		return FALSE;
+
+	//If this is a valid target, just go and attack it.
+	If ($NotValid (Palace's "Swarm_Target") == False)
+		begin
+			ThisAgent's "Target" = Palace's "Swarm_Target";
+			ThisAgent's "ActiveScript" = $Attack_Object;
+			$SpecifyIntent (ThisAgent, #intent_swarming);
+			return True;
+		end
+
+	Else
+		begin
+			//Clear the palace's swarm target. This is neceassary because it might have a
+			//unit in it that became controlled/charmed/etc...
+			Palace's "Swarm_Target" = $NullAgent ();
+
+
+			//See if you want to look for wandererd
+			if ($randomnumber(100) + 1 > chance) return FALSE;
+
+			current_best_score = 0;
+
+			$ListObjects(thisagent,"monster",-1, wandering_monsters );
+
+			foreach monster in wandering_monsters do
+				begin
+					temp_score = $target_eval(thisagent,monster);
+					if (temp_score > current_best_score)
+						begin
+							current_best_score = temp_score;
+							current_best_monster = monster;
+						end
+				end
+
+			if (current_best_score > 0)
+				begin
+					//Attack the target, and put it in the Palace's Gnome_Target slot
+					Palace's "Swarm_Target" = current_best_monster;
+					thisagent's "activescript" = $Attack_object;
+					thisagent's "target" = current_best_monster;
+
+  					$debugout("Yes");
+					$SpecifyIntent (ThisAgent, #intent_swarming);
+					return TRUE;
+				end
+		end
+
+	$debugout("No");
+	return FALSE;
+
+end

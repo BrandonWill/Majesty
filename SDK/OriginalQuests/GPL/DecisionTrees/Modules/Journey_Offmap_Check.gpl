@@ -1,0 +1,31 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Journey_Offmap_Check (agent ThisAgent, integer Chance) is Boolean
+Declare
+	coordinate	dest;
+
+
+Begin
+//	$DebugOut ("Should I Journey Offmap?");
+	if ($RandomNumber (100) + 1 > Chance)
+		begin
+//			$DebugOut ("No, not interested!");
+			return False;
+		end
+
+  	if ($getnearesthiddencoord(thisagent,dest))
+	 	begin
+//			$DebugOut ("Still Hidden Map to explore!");
+		  	return False;
+		end
+
+//	$DebugOut ("YES! I'm going to journey offmap!");
+	ThisAgent's "Destination" = $FarthestMapEdge (ThisAgent);
+	ThisAgent's "ActiveScript" = $Journey_Offmap;
+	$SpecifyIntent (ThisAgent, #intent_journey_offmap);
+	return True;
+End

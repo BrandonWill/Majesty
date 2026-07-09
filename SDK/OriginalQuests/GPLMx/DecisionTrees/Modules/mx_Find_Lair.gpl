@@ -1,0 +1,76 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function Find_Lair(agent thisagent,integer chance) is Boolean
+
+declare
+
+	list seen_lairs, lairs;
+	agent lair;
+	integer easiest_lair_score;
+	agent easiest_lair;
+	integer score;
+
+begin
+
+	if ($randomnumber(100) + 1 > chance) return;
+
+	//Just search the hidden map
+	$ListObjects(thisagent,"lair",-1, lairs, #NoHiddenMap, #NotMyTeam);
+
+	//Find all the lairs that are visible
+	$ListObjects(thisagent,"lair",-1, seen_lairs, #NotMyTeam);
+
+
+	if ($listsize(lairs) > 0)
+		begin
+			easiest_lair_score = 90000;
+			easiest_lair = $NullAgent();
+			foreach lair in lairs do
+				begin
+					score = lair's "difficulty";
+					score = score * $distancebetweenagents(thisagent,lair) / #Solarii_Raid_Find_Lair_Mod;
+					if (score < easiest_lair_score)
+						begin
+							easiest_lair_score = score;
+							easiest_lair = lair;
+						end
+				end
+
+			// modify easiest_lair score by thisagent's enemy_estimation
+
+  //			$debugout("final score - ",easiest_lair_score);
+
+			if (easiest_lair_score < $getattribute(thisagent,#ATTRIB_experienceLevel) * 100 * thisagent's "Self_estimation")
+				begin
+					thisagent's "ActiveScript" = $Attack_object;
+					thisagent's "Target" = easiest_lair;
+
+					//See if the lair was hidden or not in order to reveal it or not
+					If ($AgentInList (Easiest_Lair , Seen_Lairs) == False)
+						begin
+
+							//Reveal an area around the Lair
+							$PerformAction (ThisAgent, thisagent's "cast_action", Easiest_Lair);
+							$RevealArea (ThisAgent, $LocationOf (Easiest_Lair), #reveal_found_lair_dist);
+
+							$SpecifyIntent (ThisAgent, #Intent_Finding_Lairs);
+//
+
+							$debugout("Yes.");
+						end
+
+					//Otherwise, the hero is "raiding lairs", not finding them
+					Else
+						$SpecifyIntent (ThisAgent, #intent_raiding);
+
+					return True;
+				end
+		end
+
+//	$debugout("No.");
+	return False;
+end

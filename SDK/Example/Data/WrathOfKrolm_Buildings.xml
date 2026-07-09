@@ -1,0 +1,24 @@
+<Majesty>
+	<Description type="Unit" subType="Building" ID="BB01" Name="Krolm_Altar" Description="Altar to Krolm">
+		<Engine version="1">
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="BlockFlying"/>
+			<Info value="ModifyTerrainTextureOnPlacement"/>
+			<Info value="ModifyTerrainHeightOnPlacement"/>
+			<CanUse value="Monster"/>
+			<Menu value="2"/>
+			<ImageIDBase value="BB0t"/>
+			<DefaultSound value="Akrolm_Building"/>
+		</Engine>
+		<Game version="1">
+			<DialogID value="APa5"/>
+			<MaxHP value="500"/>
+			<Gold value="1500"/>
+			<Flags value="NotBuildable"/>
+			<Flags value="HasHPBar"/>
+			<Flags value="HasGoldToolTip"/>
+			<HelpID value="h201"/>
+		</Game>
+	</Description>
+</Majesty>

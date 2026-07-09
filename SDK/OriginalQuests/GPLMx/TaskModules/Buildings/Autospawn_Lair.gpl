@@ -1,0 +1,35 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function is responsible for auto-spawning more lairs if certain conditions are met.
+Function Autospawn_Lair (agent ThisAgent)
+Declare
+	list		Lairs, Lairs2;
+	integer	Chance;
+
+Begin
+	//$ListObjects (ThisAgent, "Lair", -1, Lairs, #CheckTitles, ThisAgent's "Title");
+	//Lairs = $ListTitles (lairs, ThisAgent's "Title");
+
+	//Get the lair spawn chance
+	Chance = 20.0 / ($ListObjects (ThisAgent, "Lair", -1, Lairs, #CheckTitles, ThisAgent's "Title") + 1);
+
+	//First, see if ThisAgent makes its autospawn lair chance, otherwise don't do anything...
+	If (Chance >= $RandomNumber (100) + 1)
+		begin
+
+			//If there aren't any other lairs within range, then have a chance of spawning a new one...
+			If ($ListSize (Lairs2) == 0)
+				begin
+
+					$SpawnUnit (ThisAgent, ThisAgent's "Title", $RandomCoord (ThisAgent, #Autospawn_Lair_Min_Dist, #Autospawn_Lair_Max_Dist), "MaxHP");
+
+				end
+
+		end
+
+End

@@ -1,0 +1,28 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// This function creates a signpost of type and posts the passed message on it
+Function Create_Sign (agent ThisAgent, string type, integer Message, coordinate Loc)
+Declare
+
+Begin
+
+	$SpawnUnit (ThisAgent, Type, Loc, #Monster_Player, $Concatenate( #ATTRIB_Message_Text, Message));
+
+End
+
+
+///////////////////////////////////////////////////////////////////////////////
+// This function posts the passed message on the passed agent
+Function Post_Message (agent ThisAgent, integer Message)
+Declare
+
+
+Begin
+
+	$SetAttribute (ThisAgent, #ATTRIB_Message_Text, Message);
+
+End

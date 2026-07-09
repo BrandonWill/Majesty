@@ -1,0 +1,411 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function check_rewards ( agent thisagent, boolean no_attack ) is Boolean
+
+declare
+	list flags;
+	agent flag, bestflag, target;
+	integer bestscore, score, greedmod, others, rewardcost, distance;
+
+begin
+	$ListObjects ( thisagent, "RewardFlag", -1, flags, #RewardFlags );
+
+	bestscore = 1;
+	greedmod = thisagent's "greed" / #greed_div;
+	if ( greedmod == 0 ) greedmod = 1;
+
+	greedmod = greedmod * #reward_multiplier;
+
+	foreach flag in flags do
+		begin
+			rewardcost = $getattribute ( flag, #ATTRIB_rewardcost );
+
+			if ( rewardcost > 0 )
+				begin
+					distance = $distancebetweenagents ( thisagent, flag );
+
+					if ( distance < 100 ) // This check ensures that the evaluation does not spike up to
+						distance = 100;    // unrealistically high values as you move close to flags.
+												 // This made if very likely for	heroes to attack their own guilds.
+
+					score = ( rewardcost * greedmod ) / distance;
+					others = $listsize ( flag's "heroes" );
+
+					if ( flag's "title" == "flag_attack" )
+						begin
+							if ( no_attack )
+								score = 0;
+							else
+								if ( $notvalid ( $agentnumber ( $getattribute ( flag, #ATTRIB_TargetID ))))
+									begin
+										score = 0;
+									end
+								else
+									begin
+										target = $agentnumber( $getattribute ( flag, #ATTRIB_targetID ));
+										if ( target == thisagent )
+											score = 0;
+										else
+											if (( target's "type" != "building" ) && ( target's "type" != "lair" ))
+												score += $target_eval ( thisagent, target );
+
+										// if units belong to the same player, they are harder to make fight
+										// same if on the same team - this can happen if plyr 3 puts a flag
+										// on plyr 1's unit, plyr 2 heroes should be harder to make fight
+										// against plye 1,
+
+										if ( $getunitplayernumber ( thisagent ) == $getunitplayernumber ( target ))
+											score -= thisagent's "loyalty" * #attack_flag_loyalty_mod;
+										else
+											if ( $getplayerteamnumber ( thisagent ) == $getplayerteamnumber ( target ))
+												score -= thisagent's "loyalty" * #attack_flag_loyalty_mod;
+
+
+										score -= others * #attack_flag_mod;
+									end
+						end
+					else
+						if ( flag's "title" == "flag_explore" )
+							begin
+								// a unit can't go to any other player's explore flags
+								if ( $getunitplayernumber ( thisagent ) != $getunitplayernumber ( flag ))
+									score = 0;
+								else
+									score -= others * #explore_flag_mod;
+							end
+
+					$debugout ( score );
+
+					if ( score > bestscore )
+						begin
+							bestscore = score;
+							bestflag = flag;
+						end
+				end
+		end
+
+	if ( bestscore > 1 )
+		begin
+			// what kind of flag was it?
+			// what should they do now, explore or attack?
+			if ( bestflag's "title" == "flag_explore" )
+				begin
+					$SpecifyIntent ( ThisAgent, #Intent_Going_To_Explore_Flag );
+					thisagent's "activescript" = $travel_to;
+					thisagent's "backscript" = thisagent's "basicscript";
+					thisagent's "target" = thisagent;
+					thisagent's "destination" = $locationof ( bestflag );
+					$move ( thisagent, thisagent's "destination" );
+					bestflag's "heroes" << thisagent;
+					$setparent ( thisagent, bestflag );
+				end
+
+			if (( bestflag's "title" == "flag_attack" ) || ( bestflag's "title" == "flag_guard" ))
+				begin
+					$SpecifyIntent ( ThisAgent, #Intent_Going_To_Attack_Flag );
+					thisagent's "target" = $agentnumber ( $getattribute ( bestflag, #ATTRIB_targetID ));
+					thisagent's "activescript" = $attack_object;
+					bestflag's "heroes" << thisagent;
+					$setparent ( thisagent, bestflag );
+				end
+
+			$say ( thisagent, "VFX_GO_REWARD" );
+			return TRUE;
+		end
+
+	return FALSE;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function explore_flag_birth ( agent thisagent )
+
+declare
+
+begin
+	$NewThread ( thisagent's "activeScript", #flag_Cycle, thisagent );
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function explore_flag_poll ( agent thisagent )
+
+declare
+	list new_heroes,heroes_near;
+	agent hero;
+
+begin
+	// check to see if all the guys on my list are alive,
+	// then are they coming to explore me?
+	if ( $listsize(thisagent's "heroes" ) > 0 )
+		begin
+			foreach hero in thisagent's "heroes" do
+				begin
+					if ( $isdead ( hero ) == FALSE )
+						if ( hero's "destination" == $locationof ( thisagent ))
+							new_heroes << hero;
+						else
+							$clearflag ( hero );
+				end
+		end
+
+	thisagent's "heroes" = new_heroes;
+	$setattribute ( thisagent, #ATTRIB_flagseekers, $listsize ( new_heroes ));
+
+	// is anyone in their sightrange of me?
+	heroes_near = $list_heroes_near_flag ( thisagent );
+
+	if ( $listsize ( heroes_near ) > 0 )
+		begin
+			$playsound ( thisagent, "completed_reward", "begin" );
+			$dropgoldinradius_samePlayer ( thisagent, $getattribute ( thisagent, #ATTRIB_rewardcost ));
+			$deletegamepiece ( thisagent );
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function explore_flag_death ( agent thisagent )
+
+declare
+	agent hero;
+
+begin
+	begin
+		// someone has removed the flag!
+		// reset all the tasks of the heroes attempting
+		if ( $listsize ( thisagent's "heroes" ) > 0 )
+			begin
+				foreach hero in thisagent's "heroes" do
+					begin
+						if ( $isdead ( hero ) == FALSE )
+							$reset_tasks ( hero );
+					end
+			end
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function attack_flag_birth ( agent thisagent )
+
+declare
+
+	agent target;
+	integer flagplayer,targetplayer;
+
+begin
+	$NewThread ( thisagent's "activeScript", #flag_Cycle, thisagent );
+	thisagent's "gavereward" = FALSE;
+
+	target = $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID ));
+	targetplayer = $getunitplayernumber ( target );
+	flagplayer = $getunitplayernumber ( thisagent );
+	//$debugout(911,"targetplayer",targetplayer,"flagplayer",flagplayer);
+	//$debugout(911,$getplayerteamnumber(target),$getplayerteamnumber(thisagent));
+
+//	if ($gettitle(target) == "Palace")
+	if ( targetplayer != #monster_player )
+		if ( targetplayer != flagplayer )
+			if ( $getplayerteamnumber ( target ) == $getplayerteamnumber ( thisagent ))
+				begin
+					$setplayerteamnumber ( thisagent, $newteamnumber ());
+				end
+	//$debugout(911,$getplayerteamnumber(target),$getplayerteamnumber(thisagent));
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function attack_flag_poll ( agent thisagent )
+
+declare
+	list new_heroes;
+	agent hero,target;
+
+begin
+	if ( $isvalidgamepiece ( thisagent ) == FALSE )
+		return;
+
+	// is my target dead?
+	if ( thisagent's "gavereward" != TRUE )
+		begin
+			target = $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID ));
+			if ( $isdead ( target ))
+				begin
+					$playsound ( thisagent, "completed_reward", "begin" );
+					thisagent's "gavereward" = TRUE;
+					// distrubute gold
+					$dropgoldinradius ( thisagent, $getattribute ( thisagent, #ATTRIB_rewardcost ));
+					// destroy myself
+					$deletegamepiece ( thisagent );
+					return;
+				end
+		end
+
+	// check to see if all the guys on my list are alive,
+	// then, are they coming to attack my target
+	if ( $listsize ( thisagent's "heroes" ) > 0 )
+		begin
+			foreach hero in thisagent's "heroes" do
+				begin
+					if ( $isdead ( hero ) == FALSE )
+						if ( hero's "target" == $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID )))
+							new_heroes << hero;
+						else
+							$clearflag ( hero );
+
+				end
+		end
+
+	thisagent's "heroes" = new_heroes;
+	$setattribute ( thisagent, #ATTRIB_flagseekers, $listsize ( new_heroes ));
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function Attack_flag_death_callback ( agent thisagent )
+// when the unit the flag is on dies, this function gets called
+declare
+	agent target,hero;
+
+begin
+	// is my target dead?
+	if ( thisagent's "gavereward" != TRUE )
+		begin
+			target = $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID ));
+			if ( $isdead ( target ))
+				begin
+					$playsound ( thisagent, "completed_reward", "begin" );
+					// distrubute gold
+					$dropgoldinradius ( thisagent, $getattribute ( thisagent, #ATTRIB_rewardcost ));
+					thisagent's "gavereward" = TRUE;
+					// destroy myself
+//					$deletegamepiece(thisagent);
+					$check_revert_teams ( thisagent );
+					return;
+				end
+//-------------- new code for if a reward flag is rermoved
+//			else
+//				begin
+//					 someone has removed the flag!
+//					 reset all the tasks of the heroes attempting
+//					$debugout(911,"got to reset flag heroes.");
+//					if ($listsize(thisagent's "heroes") > 0)
+//						begin
+//							$debugout(911,thisagent's "heroes");
+//							foreach hero in thisagent's "heroes" do
+//								begin
+//									if ($isdead(hero) == FALSE)
+//										if (hero's "target" == $agentnumber($getattribute(thisagent,#ATTRIB_targetID)))
+//											$reset_tasks(hero);
+//								end
+//						end
+//				end
+//-----------------
+	end
+
+	// run a GPL script on the palace to see if it wants to become neutral again
+//	$check_revert_teams(thisagent);
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function attack_flag_death ( Agent thisagent )
+
+declare
+	agent hero;
+
+begin
+	begin
+		// someone has removed the flag!
+		// reset all the tasks of the heroes attempting
+		//$debugout ( 911, "got to reset flag heroes." );
+		if ( $listsize ( thisagent's "heroes" ) > 0 )
+			begin
+				//$debugout ( 911, thisagent's "heroes" );
+				foreach hero in thisagent's "heroes" do
+					begin
+						if ( $isdead ( hero ) == FALSE )
+							if ( hero's "target" == $agentnumber ( $getattribute ( thisagent, #ATTRIB_targetID )))
+								$reset_tasks ( hero );
+					end
+			end
+	end
+
+	$check_revert_teams ( thisagent );
+
+end
+
+///////////////////////////////////////////////////////////////////////////////
+function check_revert_teams ( agent thisagent )
+
+declare
+	list flags;
+	boolean reset_team;
+	agent AIRootAgent, flag, target;
+	integer flagplayer,targetplayer;
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+
+	if ( $HasAttribute ( "Permanent_Hostility", AIRootAgent ))
+		if ( AIRootAgent's "Permanent_Hostility" == TRUE )
+			return;
+
+	reset_team = TRUE;
+	// see if thisagents player has any more flags
+	// see if they are on another player's unit
+	$listobjects ( thisagent, "rewardFlag", -1, flags, #rewardflags, #Myplayer, #NoHiddenMap );
+	flagplayer = $getunitplayernumber ( thisagent );
+
+	if ( $listsize ( flags ) > 0 )
+		begin
+			foreach flag in flags do
+				begin
+					if ( flag's "title" == "flag_attack" )
+						begin
+							target = $agentnumber ( $getattribute ( flag, #ATTRIB_targetID ));
+
+							if ( $isvalidgamepiece ( target ))
+								begin
+									targetplayer = $getunitplayernumber ( target );
+
+									if (( targetplayer != flagplayer ) && ( targetplayer != #monster_player ))
+										reset_team = FALSE;
+								end
+						end
+				end
+		end
+
+	if ( reset_team )
+		$setplayerteamnumber ( thisagent, $neutralteamnumber() );
+
+end
+
+
+///////////////////////////////////////////////////////////////////////////////
+Function List_Heroes_near_flag ( agent ThisAgent ) is List
+Declare
+	list	Heroes, invisible, camouflaged, hidden;
+	agent hero;
+
+Begin
+	$ListObjects ( ThisAgent, "Hero", #explore_flag_dist, Heroes, #NoHiddenMap, #MyPlayer );
+	$listObjects ( thisagent, "Invisible", #explore_flag_dist, invisible, #MyPlayer );
+	$listObjects ( thisagent, "Camouflaged", #explore_flag_dist, camouflaged, #MyPlayer );
+	$listObjects ( thisagent, "Hidden", #explore_flag_dist, hidden, #MyPlayer );
+
+	invisible = $addlists ( invisible, camouflaged );
+
+	hidden = $AddLists ( invisible, hidden );
+
+	heroes = $addlists ( heroes, hidden );
+
+
+
+//	foreach hero in heroes do
+//		begin
+//			//Make sure these are real heroes by checking their subtype
+//			if (Hero's "subtype" == "Hero")
+//				newheroes << hero;
+//		end
+	Return $ListSubtypes ( Heroes, "Hero" );
+End

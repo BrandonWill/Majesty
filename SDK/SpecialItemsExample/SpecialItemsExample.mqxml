@@ -1,0 +1,25 @@
+<Majesty>
+	<Quest id="{BE9E6DFC-10F1-4984-9C79-A2F8F8F8C4A5}">
+		<DataConfiguration>
+			<Dataset base="MajestyExpansion">
+				<Load>
+					<Template>SpecialItemsExample.q</Template>
+					<Descriptions>Data\SpecialItem_Descriptions.xml</Descriptions>
+					<Strings>Data\SpecialItem_Text.xml</Strings>
+					<GPL>
+						<Target>Data\SpecialItemsExample.bcd</Target>
+						<Source>SpecialItemsExample.gpl</Source>
+						<Source>SpecialItemsExample_prototypes.dat</Source>
+					</GPL>
+				</Load>
+			</Dataset>
+		</DataConfiguration>
+		<DisplayName lang="en_US">Dorgo's Magic Ball</DisplayName>
+		<Description lang="en_US">
+			<Short>Locate Dorgo's Magic Ball</Short>
+			<Long>Locate Dorgo The Destroyer's Magic Ball and bring it back to the palace before he can recover it and stop Dorgo's rampage of the countryside.</Long>
+		</Description>
+		<Difficulty>Easy</Difficulty>
+		<Name>SpecialItemExample</Name>
+	</Quest>
+</Majesty>

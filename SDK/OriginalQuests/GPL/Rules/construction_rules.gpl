@@ -1,0 +1,145 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+function CanIBuildThisBuilding (agent thisBuilding, list dependencies) is integer
+
+declare
+	list masterlist, list1, list2, list3;
+	string title;
+	agent AIRootAgent;
+	integer Distance, x_size;
+	coordinate board_size;
+
+
+begin
+	AIRootAgent = $RetrieveAgent ( "GplAIRoot" );
+	title = thisbuilding's "title";
+
+	if (title == "wizards_tower")
+		begin
+			$ListObjects(thisbuilding,"building",#wiz_tower_range, masterlist, #MyPlayer);
+
+			masterlist = $listcompleted(masterlist);
+
+			list1 = $listtitles(masterlist,"wizards_tower");
+			list2 = $listtitles(masterlist,"wizards_guild");
+
+			if (($listsize(list1) > 0) || ($listsize(list2) > 0))
+				return 0;
+			else
+				return #chat_out_range_wiz_guild_tower;      //out of ranghe of wiz guild or wiz tower
+		end
+	else
+
+//	if (title == "ballista_tower")
+//		begin
+//			$ListObjects(thisbuilding,"building",#ballista_tower_range, masterlist, #MyPlayer);
+
+//			list1 = $listtitles(masterlist,"ballista_tower");
+//			list2 = $listtitles(masterlist,"dwarven_settlement");
+
+//			if (($listsize(list1) > 0) || ($listsize(list2) > 0))
+//				return 0;
+//			else
+//				return #chat_out_range_ball_dsettle;      //out of range of ballistas and dsettle
+//		end
+//	else
+
+	if ( title == "marketplace" )
+		begin
+			// should vheck for trazding posts too
+
+			$ListObjects ( thisbuilding, "building", #Marketplace_Revenue_Threshold, list1, #MyPlayer );
+			list3 = $ListTitles ( list1, "closed" );
+			list1 = $ListTitles ( list1, "marketplace" );
+
+			list1 = $addlists ( list1, list3 );
+
+			$ListObjects ( thisbuilding, "building", #Min_Dist_to_Market_For_Caravan_Spawn, list2, #MyPlayer );
+			list2 = $ListTitles ( list2, "trading_post" );
+
+			if ( $listsize ( list1 ) == 0 && $listsize ( list2 ) == 0 )
+				return 0;
+			else
+				return #chat_too_close_tpost_market;                      //too close to trading post or market
+		end
+	else
+
+	if (title == "trading_post")
+		begin
+			if ( $HasAttribute ( "Deathmatch_Rules", AIRootAgent ))
+				if ( AIRootAgent's "Deathmatch_Rules" == TRUE )
+					begin // Deathmatch Check Version
+						board_size = $getboardextents ();
+						x_size = $getX ( board_size );
+
+						if ( x_size > 5000 ) // Probably should be > 4096, but I wanted to be safe -
+							distance = #Deathmatch_Large_Trade_Radius;
+						else
+							distance = #Deathmatch_Small_Trade_Radius;
+
+						$ListObjects ( thisbuilding, "building", distance, list1, #MyPlayer );
+						list3 = $ListTitles ( list1, "closed" );
+						list1 = $ListTitles ( list1, "marketplace" );
+
+						list1 = $addlists ( list1, list3 );
+
+						$ListObjects ( thisbuilding, "building", distance, list2, #MyPlayer );
+						list2 = $ListTitles ( list2, "trading_post" );
+
+						if ( $listsize ( list1 ) == 0 && $listsize ( list2 ) == 0 )
+							return 0;
+						else
+							return #chat_too_close_tpost_market; //too close to market
+
+					end
+				else
+					begin // Normal Play Check Version
+						$ListObjects ( thisbuilding, "building", #Min_Dist_to_Market_For_Caravan_Spawn, list1, #MyPlayer );
+						list3 = $ListTitles ( list1, "closed" );
+						list1 = $ListTitles ( list1, "marketplace" );
+
+						list1 = $addlists ( list1, list3 );
+
+						$ListObjects ( thisbuilding, "building", #Min_Dist_to_Market_For_Caravan_Spawn, list2, #MyPlayer );
+						list2 = $ListTitles ( list2, "trading_post" );
+
+						if ( $listsize ( list1 ) == 0 && $listsize ( list2 ) == 0 )
+							return 0;
+						else
+							return #chat_too_close_tpost_market; //too close to market
+					end
+		end
+	else
+
+		return 0;
+	// Debugging code:
+//	$DebugOut( 911, "Trying to build ", theBuilding, " at pos = ", $LocationOf( theBuilding ), ", d = ", dependencies );
+
+	// One possible idea for code structure in this function:
+//	if ( $IsValidFunction( theBuilding's "buildRequirements" ) ) // Not all building need special-case requirements
+//		begin
+//			// Call a building-specific function if it exists:
+//			return theBuilding's "buildRequirements" ( theBuilding, dependencies );
+//		end
+//	else
+//		begin
+//			if ( $ListSize( dependencies ) > 0 )
+//				begin
+//					// Try a more generic rule to determine if we can build...
+//					if ( $DistanceBetweenAgents( theBuilding, $GetClosest( theBuilding, dependencies ) ) > theBuilding's "maxBuildRange" )
+//						return 1; // too far away to build...
+//				end
+//			else
+//				begin
+//					// This is an error condition...
+//					$DebugOut( "Error: $CanIBuildThisBuilding() was passed an empty dependencies list" );
+//					return 1;
+//				end
+// 		end
+	// a 0 return value means OK to build, any non-zero value means don't build.
+//	return 0;
+end

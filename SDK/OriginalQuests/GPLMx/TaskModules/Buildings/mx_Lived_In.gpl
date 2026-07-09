@@ -1,0 +1,113 @@
+///////////////////////////////////////////////////////////////////////////////
+//Copyright (c) 1999 Cyberlore Studios, Inc. All rights Reserved.
+//CONFIDENTIAL MATERIAL
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+Function Lived_In (agent ThisAgent)
+Declare
+	integer	Gold_Given;
+	integer	Gold_Kept;
+	agent	ThisBuilding;
+	integer	Hero_Gold, Current_Intent;
+
+Begin
+	ThisBuilding = ThisAgent's "Target";
+
+	//This is used to figure out which intention to display
+	Current_Intent = $GetAttribute (ThisAgent, #ATTRIB_AIIntentionString);
+
+	$enter_building(thisagent, ThisBuilding);
+
+	Hero_Gold = $GetAttribute (ThisAgent, #ATTRIB_Gold);
+
+	//If the Hero was going home, then they are now resting
+	If (Current_Intent == #Intent_Going_Home)
+		$SpecifyIntent (ThisAgent, #Intent_Resting);
+
+	//Otherwise they are recuperating or seeking refuge
+	Else if (Current_Intent == #Intent_flee_lowHP)
+		$SpecifyIntent (ThisAgent, #Intent_recuperating);
+
+	Else
+		$SpecifyIntent (ThisAgent, #Intent_Seeking_Refuge);
+
+	//Give Taxed Gold to the Guild, put the rest in ThisAgent's stored gold
+	Gold_Given = (Hero_Gold * $GetAttribute (ThisBuilding, #ATTRIB_TaxRate)) / 100;
+
+	//This is Gold that is going to go into Stored_Gold
+	Gold_Kept = Hero_Gold - Gold_Given;
+
+	//This Subtracts Gold_Given from Gold, and gives it to the Building
+	if (gold_given > 0)
+		$Transfer_Gold (ThisAgent, ThisBuilding, Gold_Given);
+
+	//The hero keeps the rest of the gold
+	$AdjustAttribute (ThisAgent, #ATTRIB_StoredGold, Gold_Kept);
+
+	$SetAttribute (ThisAgent, #ATTRIB_Gold, 0);
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", ThisBuilding's "Sleep_For");
+
+	ThisAgent's "ActiveScript" = $Rest_at_guild;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function Rest_at_guild(agent ThisAgent)
+Declare
+	integer	HP;
+	integer	MaxHP;
+	agent		ThisBuilding;
+	agent		temp_agent;
+
+
+Begin
+	ThisBuilding = ThisAgent's "Home";
+	temp_agent = thisagent;
+	$drop_off_goodies (thisagent, thisbuilding);
+
+	HP = $getattribute (ThisAgent, #ATTRIB_HP);
+	MaxHP = $getattribute (ThisAgent, #ATTRIB_MaxHP);
+	$adjustattribute (ThisAgent, #ATTRIB_HP, (MaxHP - HP));
+
+	$SetThreadInterval (ThisAgent's "ActiveScript", #Normal_Cycle);
+	ThisAgent's "ActiveScript" = $Done_resting_guild;
+
+End
+
+///////////////////////////////////////////////////////////////////////////////
+function drop_off_goodies(agent thisagent,agent thisbuilding)
+
+declare
+
+begin
+	if (thisagent's "num_picked_goodies" > 0)
+		begin
+			if (thisagent's "title" == "wizard")
+				begin
+					$adjustplayerdata(thisagent,"crystal",thisagent's "num_picked_goodies");
+				end
+			else
+				begin
+					thisbuilding's "num_resources" += thisagent's "num_picked_goodies";
+				end
+
+			thisagent's "num_picked_goodies" = 0;
+		end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+Function	Done_resting_Guild (agent ThisAgent)
+Declare
+	agent		ThisBuilding;
+
+Begin
+//	$debugout("Hero waking up!");
+	ThisBuilding = ThisAgent's "Target";
+
+	$exit_building(thisagent,thisbuilding);
+
+	$DebugOut (ThisAgent's "type","feels much better!");
+
+	$Reset_Tasks (ThisAgent);
+End

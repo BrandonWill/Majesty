@@ -1,0 +1,551 @@
+<Majesty>
+	<Description type="Unit" subType="General" ID="CG10" Name="scorch_walkover" Description="scorch_walkover">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG10"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG10" Name="plains_walkover" Description="plains_walkover">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG10"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG10" Name="swamp_walkover" Description="swamp_walkover">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG10"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG01" Name="scorch_ponds_big" Description="scorch_ponds_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="FG01" Name="ferns_trees_big" Description="ferns_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="FG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="GG01" Name="savannah_trees_big" Description="savannah_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="GG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="LG01" Name="weepwillow_trees_med" Description="weepwillow_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="LG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG01" Name="plains_ponds_big" Description="plains_ponds_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG01" Name="arid_ponds_big" Description="arid_ponds_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="TG01" Name="cactus_treee_small" Description="cactus_treee_small">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="TG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="UG01" Name="autumn_trees_med" Description="autumn_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="UG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="VG01" Name="scorch_lava_pool" Description="scorch_lava_pool">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="VG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG01" Name="swamp_ponds_big" Description="swamp_ponds_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="YG01" Name="arid_mud_pot" Description="arid_mud_pot">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="YG01"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG11" Name="plains_ponds_anim" Description="plains_ponds_anim">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG11"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="BGD1" Name="goblin_posts" Description="goblin posts">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="9"/>
+			<ImageIDBase value="BGD1"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG02" Name="scorch_ponds_med" Description="scorch_ponds_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="GG02" Name="savannah_trees_med" Description="savannah_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="GG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="IG02" Name="pine_trees_big" Description="pine_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="IG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="LG02" Name="weepwillow_trees_big" Description="weepwillow_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="LG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG02" Name="plains_ponds_med" Description="plains_ponds_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG02" Name="arid_ponds_med" Description="arid_ponds_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="UG02" Name="autumn_trees_big" Description="autumn_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="UG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="VG02" Name="scorch_lava_pit" Description="scorch_lava_pit">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="VG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG02" Name="swamp_ponds_med" Description="swamp_ponds_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="YG02" Name="gas_clouds" Description="gas_clouds">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="YG02"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG12" Name="plains_rock_tiny" Description="plains_rock_tiny">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG12"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG12" Name="arid_rock_tiny" Description="arid_rock_tiny">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG12"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG12" Name="swamp_rocks_tiny" Description="swamp_rocks_tiny">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG12"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="BGD2" Name="goblin_shrine" Description="goblin shrine">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="9"/>
+			<ImageIDBase value="BGD2"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="BGK2" Name="ruined_altar2" Description="ruined_altar2">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="9"/>
+			<ImageIDBase value="BGK2"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="BGL2" Name="ruined_keep2" Description="ruined_keep2">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="9"/>
+			<ImageIDBase value="BGL2"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="BGM2" Name="ruined_shrine2" Description="ruined_shrine2">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<CanUse value="Monster"/>
+			<Menu value="9"/>
+			<ImageIDBase value="BGM2"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG03" Name="black_rocks_big" Description="black_rocks_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG03" Name="grey_rocks_big" Description="grey_rocks_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG03" Name="brown_rocks_big" Description="brown_rocks_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="TG03" Name="cactus_trees_big" Description="cactus_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="TG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="VG03" Name="scorch_lava_vents" Description="scorch_lava_vents">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="VG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="YG03" Name="scorch_geyser" Description="scorch_geyser">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Info value="RevealTerrainIfExposed"/>
+			<Menu value="9"/>
+			<ImageIDBase value="YG03"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG04" Name="black_rocks_med" Description="black_rocks_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG04"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG04" Name="grey_rocks_med" Description="grey_rocks_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG04"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG04" Name="brown_rocks_med" Description="brown_rocks_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG04"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG05" Name="plains_trees_stumps" Description="plains_trees_stumps">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG05"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG06" Name="scorch_shrubs_small" Description="scorch_shrubs_small">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG06"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG06" Name="plains_shrubs_small" Description="plains_shrubs_small">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG06"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG07" Name="scorch_trees_big" Description="scorch_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG07"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG07" Name="plains_trees_big" Description="plains_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG07"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG07" Name="rocky_trees_big" Description="rocky_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG07"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG07" Name="cypress_trees_big" Description="cypress_trees_big">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG07"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="CG08" Name="scorch_trees_med" Description="scorch_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="CG08"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="IG08" Name="pine_trees_med" Description="pine_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="IG08"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="PG08" Name="plains_trees_med" Description="plains_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="PG08"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="RG08" Name="rocky_trees_med" Description="rocky_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="RG08"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+	<Description type="Unit" subType="General" ID="WG08" Name="cypress_trees_med" Description="cypress_trees_med">
+		<Engine version="1">
+			<Info value="Static"/>
+			<Info value="Directionless"/>
+			<Info value="BlockGround"/>
+			<Menu value="9"/>
+			<ImageIDBase value="WG08"/>
+			<DefaultSound value="0"/>
+		</Engine>
+	</Description>
+</Majesty>
