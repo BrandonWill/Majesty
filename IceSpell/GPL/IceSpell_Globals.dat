@@ -1,8 +1,3 @@
-expression #Freeze_Duration 19000
-expression #Freeze_DamagePerTick 5
-expression #Freeze_DamageInterval 2000
-expression #Freeze_ThawDuration 3000
-
 [Ice_Cave]
 	{Lair
 		(type 			Lair)

@@ -3,6 +3,12 @@
 // 
 // Architecture: Clones the Gorgon_Petrify dual-effector pattern with
 // periodic damage via $NewThread (following Ratman_Plague_Active pattern).
+
+// Tunable configuration
+expression #Freeze_Duration 19000
+expression #Freeze_DamagePerTick 5
+expression #Freeze_DamageInterval 2000
+expression #Freeze_ThawDuration 3000
 //
 // Components:
 //   Ice_Freeze_Begin  - Applies freeze effect (called by action script)
