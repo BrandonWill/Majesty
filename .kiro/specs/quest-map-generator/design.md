@@ -148,8 +148,18 @@ row 4:  U       V       W       X       Y
 - Grid position `byte` decodes to: `col = (byte - 65) % 5`, `row = (byte - 65) // 5`
 - Encodes to: `byte = 65 + row * 5 + col`
 - This grid is INDEPENDENT of map tile dimensions (works the same on 256×256 or 32768×32768 maps)
-- Multiple objects can occupy the same grid cell
+- **One building per grid cell — no two buildings may share the same position byte**
+- A single placed entry can define multiple instances of the same type at different cells (e.g., 5 Temples of Krolm at D, I, N, R, S)
 - Verified across all 23 quest files: exactly 25 unique values (65-89) appear
+
+#### Grid Cell Occupancy (Constraint)
+
+The game enforces one building per grid cell — you cannot place a building on top of another building, the same as in the RGSEditor. With 25 cells available (A-Y), a quest map can hold up to 25 placed buildings.
+
+The generator must:
+1. **Enforce unique positions** — raise an error if two buildings are assigned the same cell
+2. Spread lairs across different cells when auto-distributing
+3. Always place Palace at 'M' (center), consuming that cell
 
 ### Spawner Entry Format (24 bytes)
 
@@ -169,9 +179,13 @@ Offset  Size     Field
 0       4        Object_ID (ASCII, e.g., "ABJ1", "BBz1")
 4       4        zero (u32, always 0)
 8       variable Description string (null-terminated)
-n       4        active_flag (u32, always 1)
-n+4     1        grid_position (u8, 'A'-'Y')
+n       4        position_count (u32, number of instances to place)
+n+4     N        position_bytes (N = position_count × 1 byte, each 'A'-'Y')
 ```
+
+Each position byte represents a UNIQUE grid cell. A single entry can place multiple instances of the same building type at different cells (e.g., `ABS1 "Temple to Krolm" count=5 positions=[D,I,N,R,S]`).
+
+**Constraint: No two buildings may occupy the same grid cell.** The game enforces one building per cell. With 25 cells available (A-Y), a quest can have up to 25 placed buildings total.
 
 ### Object ID Conventions
 
@@ -210,15 +224,16 @@ class SpawnerBlock:
 class PlacedEntry:
     object_id: str            # 4-char ID
     description: str          # Human-readable name
-    grid_position: int        # 'A'-'Y' (65-89)
+    positions: list[int]      # List of grid position bytes ('A'-'Y', 65-89)
+                              # Each byte is a unique cell on the 5×5 grid
     
-    @property
-    def grid_col(self) -> int:
-        return (self.grid_position - 65) % 5
+    @staticmethod
+    def grid_col(pos_byte: int) -> int:
+        return (pos_byte - 65) % 5
     
-    @property
-    def grid_row(self) -> int:
-        return (self.grid_position - 65) // 5
+    @staticmethod
+    def grid_row(pos_byte: int) -> int:
+        return (pos_byte - 65) // 5
 
 @dataclass
 class PlacedGroup:

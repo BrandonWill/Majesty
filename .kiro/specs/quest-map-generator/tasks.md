@@ -7,7 +7,8 @@
 - [ ] Parse quest name and pattern name (null-terminated strings after header)
 - [ ] Parse map parameters block (width, height, factions, gold, secondary resource) handling alignment differences between format versions
 - [ ] Parse spawner sections: find "NONEnone\0" markers, read u32 count, then count × 24-byte spawner entries
-- [ ] Parse placed-object groups: find `[4B terrain][u32 5][u32 count]` pattern, then read variable-length placed entries (ID + u32 + cstr + u32 + u8 grid_pos)
+- [ ] Parse placed-object groups: find `[4B terrain][u32 5][u32 count]` pattern, then read variable-length placed entries (ID + u32 + cstr + u32 position_count + position_count × u8 grid_pos)
+- [ ] Validate that position_count is 1-25 and each position byte is in range 65-89 ('A'-'Y')
 - [ ] Parse the metadata block after each placed group (resource limits, faction name)
 - [ ] Parse the player/faction section at end of file
 - [ ] Verify parser against MyQuest/Quest.q (known structure: 4 spawner blocks × 4 entries, placed groups with 8+25+1+1 entries)
@@ -21,6 +22,7 @@
 - [ ] Implement `byte_to_letter(byte_val)` → converts byte 65-89 to 'A'-'Y' character
 - [ ] Add convenience: `CENTER = ord('M')`, position constants for common placements
 - [ ] Add auto-distribute function: given N lairs, return grid positions that spread them around the center avoiding the palace cell
+- [ ] Add uniqueness validation: raise error if any two buildings are assigned the same grid cell
 
 ## Task 3: Implement Q File Writer (Data Model → Binary)
 
@@ -31,6 +33,8 @@
 - [ ] Write map parameters block (aligned u32 values)
 - [ ] Write spawner sections with "NONEnone\0" separators and 24-byte entries
 - [ ] Write placed-object groups with terrain code + entries + metadata blocks
+- [ ] For each placed entry, write [4B ID][u32 0][cstr\0][u32 position_count][position_count × u8] where positions are 'A'-'Y'
+- [ ] Enforce uniqueness: raise a clear error if two placed entries share any grid cell position
 - [ ] Write player/faction section at end of file
 - [ ] Implement round-trip test: parse(MyQuest/Quest.q) → write(temp) → parse(temp) → assert structural equality
 
