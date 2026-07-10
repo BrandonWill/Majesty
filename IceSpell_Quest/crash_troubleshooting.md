@@ -34,10 +34,9 @@ The game couldn't write to gpl.log (something else had the file open — editor 
 - Log cuts off abruptly mid-loop — no error, just stops
 
 **Possible crash causes:**
-1. **Targeting spam overload** — The IceElemental fires Ice_Freeze_Begin every single frame. Even though it returns early, this is hundreds of GPL function calls per second with $DebugOut. The sheer volume of debug output + function dispatches could cause memory/timing issues, especially combined with player spell casts happening simultaneously.
-2. **Player spell interaction** — 7 player spells cast in rapid succession (frames 5108-5271) while the ice freeze loop was running. If any player spell targets the same frozen unit, there could be a state conflict.
-3. **gpl.log sharing violation** — The engine tries to write debug output but fails. If the engine doesn't handle this gracefully, the write failure could corrupt internal state.
-4. **Unrelated engine instability** — The game is old and may have inherent crash bugs unrelated to the mod.
+1. **Targeting spam overload** — The IceElemental fires Ice_Freeze_Begin every single frame. Even though it returns early, this is hundreds of GPL function calls per second with $DebugOut. The sheer volume of debug output + function dispatches could cause memory/timing issues.
+2. **gpl.log sharing violation** — The engine tries to write debug output but fails. If the engine doesn't handle this gracefully, the write failure could corrupt internal state.
+3. **Unrelated engine instability** — The game is old and may have inherent crash bugs unrelated to the mod.
 
 ---
 
