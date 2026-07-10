@@ -5,7 +5,7 @@
 			<Info value="Directionless"/>
 			<Info value="DontBlock"/>
 			<Menu value="11"/>
-			<ImageIDBase value="IR01"/>
+			<ImageIDBase value="MRB1"/>
 			<DefaultSound value="0"/>
 		</Engine>
 		<Game version="1">
