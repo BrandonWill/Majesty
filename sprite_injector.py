@@ -174,7 +174,7 @@ def _encode_row(row):
         # Found start of opaque run (includes magenta indices)
         x_start = x
         run = []
-        while x < width and row[x] != 0 and len(run) < 255:
+        while x < width and row[x] != 0 and len(run) < 80:
             run.append(int(row[x]))
             x += 1
 
