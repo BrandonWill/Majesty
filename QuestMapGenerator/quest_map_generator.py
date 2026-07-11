@@ -646,6 +646,200 @@ def parse_q_file(filepath) -> QuestMap:
 
 DEFAULT_TEMPLATE = Path(__file__).parent.parent / "MyQuest" / "Quest.q"
 
+# =============================================================================
+# Terrain Presets
+# =============================================================================
+# Each preset defines the Region Pattern section bytes for a terrain type.
+# The section structure (from MyQuest reverse-engineering) is:
+#   [u32 1]["pattpattpattern\0"][7B zeros][u32 0][u32 patch_count]
+#   For each patch: [4B terrain_code + settings bytes]
+#   Then: [u32 landscape_count] [terrain_pattern_name\0] [landscape_name\0] [zeros] × per patch
+#
+# We generate the full region section from the "pattpattpattern" marker to the end
+# (just before the faction name that precedes placed groups).
+
+def _build_region_section(patches: list[dict]) -> bytes:
+    """
+    Build a Region Pattern binary section from patch definitions.
+    
+    Each patch dict has:
+      - terrain_code: 4-char code (e.g., "gras")
+      - terrain_value: string value after code (e.g., "3")
+      - fractal_value: int (e.g., 13 for snow)
+      - terrain_pattern: full pattern name (e.g., "grasgrasgrasgrass")
+      - landscape_pattern: landscape ref (e.g., "xBarxGraxfla")
+    """
+    parts = []
+    
+    # Pattern header: [u32 1] "pattpattpattern\0" [7 zeros] [u32 0]
+    parts.append(struct.pack('<I', 1))
+    parts.append(b'pattpattpattern\x00')
+    parts.append(b'\x00' * 7)
+    parts.append(struct.pack('<I', 0))
+    
+    # Patch count
+    parts.append(struct.pack('<I', len(patches)))
+    
+    # Each patch: [4B code][value\0][zeros to pad][u32 fractal][zeros][u32 1][zeros]
+    for patch in patches:
+        code = patch['terrain_code'].encode('ascii')[:4]
+        value_str = patch.get('terrain_value', '3').encode('ascii') + b'\x00'
+        fractal = patch.get('fractal_value', 0)
+        
+        parts.append(code)
+        parts.append(value_str)
+        # Pad to align: terrain code (4) + value_str + zeros to fill 16 bytes total from code start
+        current_patch_len = len(code) + len(value_str)
+        pad_needed = 16 - current_patch_len
+        if pad_needed > 0:
+            parts.append(b'\x00' * pad_needed)
+        # Fractal/flags block
+        if fractal > 0:
+            parts.append(struct.pack('<I', fractal))
+            parts.append(b'\x00' * 4)
+        # Active flag
+        parts.append(struct.pack('<I', 1))
+        parts.append(b'\x00' * 4)
+    
+    # Landscape references: [u32 count] then for each patch: [terrain_pattern\0][landscape\0][zeros]
+    parts.append(struct.pack('<I', len(patches)))
+    for patch in patches:
+        tp = patch['terrain_pattern'].encode('ascii') + b'\x00'
+        lp = patch['landscape_pattern'].encode('ascii') + b'\x00'
+        parts.append(tp)
+        parts.append(lp)
+        parts.append(b'\x00' * 7)  # padding between landscape entries
+    
+    return b''.join(parts)
+
+
+# Terrain presets — each maps to known-good pattern combinations from constants.rgs
+TERRAIN_PRESETS = {
+    "grass": {
+        "patches": [
+            {
+                "terrain_code": "gras",
+                "terrain_value": "3",
+                "fractal_value": 0,
+                "terrain_pattern": "grasgrasgrasgrass",
+                "landscape_pattern": "xBarxGraxfla",
+            },
+        ],
+    },
+    "grass_snow": {
+        "patches": [
+            {
+                "terrain_code": "gras",
+                "terrain_value": "3",
+                "fractal_value": 0,
+                "terrain_pattern": "grasgrasgrasgrass",
+                "landscape_pattern": "xBarxGraxfla",
+            },
+            {
+                "terrain_code": "snow",
+                "terrain_value": "1",
+                "fractal_value": 13,
+                "terrain_pattern": "snowsnowsnow",
+                "landscape_pattern": "xClcxSnoFS01",
+            },
+        ],
+    },
+    "scorched": {
+        "patches": [
+            {
+                "terrain_code": "scor",
+                "terrain_value": "5",
+                "fractal_value": 0,
+                "terrain_pattern": "#Sca#Sca#Scorched_All_Parent",
+                "landscape_pattern": "xScaxSca#Scorched_Ponds_and_Misc",
+            },
+        ],
+    },
+    "swamp": {
+        "patches": [
+            {
+                "terrain_code": "swam",
+                "terrain_value": "7",
+                "fractal_value": 0,
+                "terrain_pattern": "#Swa#Swa#Swamp_Mostly_Parent",
+                "landscape_pattern": "xSwaxSwa#Swamp_Light_Wood",
+            },
+        ],
+    },
+    "arid": {
+        "patches": [
+            {
+                "terrain_code": "arid",
+                "terrain_value": "3",
+                "fractal_value": 0,
+                "terrain_pattern": "#Ara#Ara#Arrid_Mosty_Parent",
+                "landscape_pattern": "xAraxAra#Arid_Tiny_Rocks",
+            },
+        ],
+    },
+    "snow": {
+        "patches": [
+            {
+                "terrain_code": "snow",
+                "terrain_value": "1",
+                "fractal_value": 13,
+                "terrain_pattern": "snowsnowsnow",
+                "landscape_pattern": "xClcxSnoFS01",
+            },
+        ],
+    },
+}
+
+
+def _find_region_section_bounds(data: bytes, first_pattern_offset: int) -> tuple[int, int]:
+    """
+    Find the start and end of the Region Pattern section in template data.
+    Start: the "pattpattpattern" marker.
+    End: just before the faction name + count that precedes placed groups.
+    
+    Returns (region_start, region_end) offsets.
+    """
+    # Find "pattpattpattern" in the data (before first_pattern_offset)
+    marker = b'pattpattpattern'
+    region_start = data.rfind(marker, 0, first_pattern_offset)
+    if region_start == -1:
+        return (-1, -1)
+    
+    # Back up 4 bytes to include the u32 before the pattern name
+    region_start -= 4
+    
+    # End is at the faction name block before the first placed group
+    # The faction name block is: [u32 count] [faction_4+4+full_name\0] [zeros] [u32 unit_count]
+    # It's right before splice_start (first_pattern_offset - 8)
+    # Let's find it by looking for the last faction name before the placed groups
+    # The pattern is: [u32 N] "XxxxXxxxFull Name\0" [zeros] [u32 count] [gras...]
+    
+    # Simple approach: region ends where the faction assignment block begins
+    # That's typically 30-40 bytes before the first placed group
+    # Look for the u32 faction_count + faction name pattern
+    search_end = first_pattern_offset - 4
+    # Scan backwards from first_pattern_offset for the faction entry count
+    for probe in range(search_end, max(region_start, search_end - 60), -1):
+        # Check if this is a plausible count followed by a 4+4+name pattern
+        try:
+            val = struct.unpack_from('<I', data, probe)[0]
+            if 1 <= val <= 20:
+                # Check if 4 bytes later starts a faction name (4+4+full)
+                check_pos = probe + 4
+                if check_pos + 8 < first_pattern_offset:
+                    candidate = data[check_pos:check_pos + 8]
+                    if all(32 <= b < 127 for b in candidate):
+                        # Verify: does it follow 4+4 pattern?
+                        if candidate[:4] == candidate[4:8]:
+                            # This looks like the faction block start
+                            return (region_start, probe)
+        except:
+            pass
+    
+    # Fallback: region ends 40 bytes before first group (the faction block is ~35-45 bytes)
+    return (region_start, first_pattern_offset - 40)
+
+
 # Standard metadata block that appears after each unit pattern's entries
 # [u32 0][u32 3][u32 50][u32 50][u32 50][u32 1][u32 1][12B zeros] = 40 bytes
 METADATA_BLOCK = struct.pack('<10I',
@@ -722,12 +916,14 @@ def write_q_file(
     output_path,
     template_path=None,
     quest_name: Optional[str] = None,
+    terrain: Optional[str] = None,
 ) -> Path:
     """
     Write a .q file using a template-based approach.
 
     Takes Unit Patterns and splices them into a copy of the template file,
     replacing the template's Unit Patterns while preserving header/spawners/player sections.
+    Optionally patches the Region Pattern section with a different terrain preset.
 
     Args:
         unit_patterns: List of UnitPattern objects to write
@@ -788,6 +984,28 @@ def write_q_file(
 
     # Part 1: Everything before the unit patterns section
     pre_section = bytearray(template_data[:splice_start])
+    
+    # Patch terrain if requested
+    if terrain is not None:
+        preset_name = terrain.lower()
+        if preset_name not in TERRAIN_PRESETS:
+            available = ', '.join(sorted(TERRAIN_PRESETS.keys()))
+            raise ValueError(
+                f"Unknown terrain preset '{terrain}'. Available: {available}"
+            )
+        preset = TERRAIN_PRESETS[preset_name]
+        
+        # Find and replace the Region Pattern section within pre_section
+        region_start, region_end = _find_region_section_bounds(
+            bytes(pre_section), splice_start
+        )
+        if region_start >= 0 and region_end > region_start:
+            new_region = _build_region_section(preset['patches'])
+            pre_section = bytearray(
+                bytes(pre_section[:region_start]) + 
+                new_region + 
+                bytes(pre_section[region_end:])
+            )
 
     if quest_name is not None:
         pass
@@ -1013,6 +1231,7 @@ def generate_test_quest(
     palace_position: str = "M",
     starting_gold: int = 50000,
     dataset_base: str = "Majesty",
+    terrain: Optional[str] = None,
     extra_gpl_sources: list[str] = None,
     extra_gpl_target: str = None,
     extra_descriptions: list[str] = None,
@@ -1034,6 +1253,9 @@ def generate_test_quest(
         palace_position: Grid letter for palace (default "M" = center)
         starting_gold: Starting gold for the quest
         dataset_base: "Majesty" or "MajestyExpansion"
+        terrain: Terrain preset name (grass, grass_snow, scorched, swamp, arid, snow)
+                 Default None = use template's terrain unchanged.
+                 Snow requires dataset_base="MajestyExpansion".
         extra_gpl_sources: Additional GPL source files to load
         extra_gpl_target: GPL bytecode target
         extra_descriptions: Additional description XML files
@@ -1080,6 +1302,7 @@ def generate_test_quest(
         [pattern],
         output_dir / "Quest.q",
         template_path=rgs_template if rgs_template else None,
+        terrain=terrain,
     )
 
     # Copy .rgs terrain
