@@ -128,7 +128,8 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 | 32 | `xSwd` | #Swamp_Ponds_Gas | 3 | WG01 |
 | 33 | `xSce` | #Scorched_Geyser | 1 | YG03d |
 | 34 | `xScf` | #Scorched_Walkover_wShrubs | 2 | CG10G |
-| 35 | `xAri` | #Arid_Wooded_Clump | 4 | GG01 |
+| 35 | `xAri` | #Arid_Wooded_Clump | 4 | GG01
+ |
 | 36 | `xrui` | #ruins_altar | 1 | BGK2d |
 | 37 | `xPin` | #Pines_wBrambles | 4 | IG02/ |
 | 38 | `xSco` | #Scorched_Lava | 3 | VG02d |
@@ -182,7 +183,8 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 | 86 | `xMab` | $Mayhew_Swamp | 7 | xSwb |
 | 87 | `xRab` | $Ravenswood_Mountain | 4 | xRod |
 | 88 | `xVab` | $Valmorgen_Mountain | 5 | xRod	 |
-| 89 | `xDeb` | #Deal_Swamp | 6 | xSwa |
+| 89 | `xDeb` | #Deal_Swamp | 6 | xSwa
+ |
 | 90 | `xFeb` | #Fertile_Forest | 6 | xPin |
 | 91 | `xShb` | $Shovrah_Dirt | 6 | xGra7 |
 | 92 | `xThb` | $Tholaria_Mountain | 5 | xRod |
@@ -197,7 +199,8 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 | 101 | `xSDc` | #SDragon_Savannah | 4 | xSav |
 | 102 | `xDac` | #Day_Swamp | 3 | xSwa |
 | 103 | `xMac` | $Mayhew_Scorched | 6 | #sca |
-| 104 | `xVac` | $Valmorgen_Swamp | 6 | xSwb |
+| 104 | `xVac` | $Valmorgen_Swamp | 6 | xSwb
+ |
 | 105 | `xDec` | #Deal_Desert | 3 | xDes |
 | 106 | `xFec` | #Fertile_Mixed | 8 | xGrd8 |
 | 107 | `xThc` | $Tholaria_Forest | 5 | xFor |
@@ -209,7 +212,8 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 | 113 | `xSDd` | #SDragon_Scorched | 5 | xScb5 |
 | 114 | `xMad` | $Mayhew_Grass | 6 | xMix+ |
 | 115 | `xVad` | #Valmorgen_Grass | 7 | xGrd# |
-| 116 | `xThd` | $Tholaria_Grass | 5 | xGrc |
+| 116 | `xThd` | $Tholaria_Grass | 5 | xGrc
+ |
 | 117 | `xEld` | #Elven_Dirt | 5 | xDir	 |
 | 118 | `xSyd` | $Sydrian_Forest | 5 | xFor/ |
 | 119 | `xSDe` | #SDragon_Palace_DIrt | 5 | xGrd |
@@ -225,7 +229,8 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 | 129 | `xTom` | #Tomb_Swamp | 5 | #swa! |
 | 130 | `xDFo` | #DForest_Forest | 6 | xPin= |
 | 131 | `xGHo` | #GHorde_Scorched | 6 | #scaP |
-| 132 | `xSho` | $Shovrah_Forest | 6 | xFor |
+| 132 | `xSho` | $Shovrah_Forest | 6 | xFor
+ |
 | 133 | `xTho` | $Tholaria_Savannah | 4 | #arc |
 | 134 | `xCro` | #Crown_Savannah | 6 | #ard |
 | 135 | `xSDr` | #SDragon_Mountains | 3 | xRocR |
@@ -318,3 +323,54 @@ Referenced by Region Patches. Format: `xShortxShort#Full_Name`
 - `#Swd#Swd#Swamp_Mostly_Child` (type=1)
 
 ### Snow/Ice
+
+### Snow/Ice (EXPANSION ONLY — requires MajestyExpansion dataset)
+
+Snow terrain patterns are NOT in the base `Data/constants.rgs`. They exist only in
+`DataMX/mx_constants.rgs` (magic RGCB, 49833 bytes). Quests using snow must set
+`dataset_base="MajestyExpansion"` in their .mqxml.
+
+**Terrain Patterns (Snow):**
+- `xSna#Snow_All_Child` — Snow, all child texture variant
+- `xSnb#Snow_Mostly_Parent` — Snow, mostly parent texture
+- `xSnc#Snow_Mostly_Child` — Snow, mostly child texture
+- `xSno#Snow_All_Parent` — Snow, all parent texture
+
+**Landscape Patterns (Snow):**
+- `xSna#Snow_Rocks` — Snow terrain with rocks
+- `xSnb#Snow_Lava` — Snow terrain with lava pools
+- `xsno%snow` — Generic snow landscape (quest-specific, % prefix)
+- `xfre%free_snow` — Freestyle mode snow landscape
+- `xfrf%free_deepsnow` — Freestyle deep snow landscape
+
+**Quest-Specific Snow Landscapes (% prefix):**
+- `xdaa%darkness_snow` — Darkness Falls quest snow
+- `xraa%ratmen_snow` — Rise of Ratmen quest snow
+- `xcla%clash_snow` — Clash of Empires quest snow
+- `xspa%spires_snow_02` — Spires of Death quest snow #2
+- `xspi%spires_snow_01` — Spires of Death quest snow #1
+- `xsci%scion_snow` — Scions of Chaos quest snow
+- `xsei%seige_snow` — Siege quest snow
+
+**Ice Patterns (quest-specific):**
+- `xDtb$Dtar_Ice` — Dark Star ice ($ prefix = quest terrain)
+- `xIxb#Ixmil_Ice` — Fortress Ixmil ice
+- `xDad#Darkness_Ice` — Darkness Falls ice
+
+## Pattern Prefix Conventions
+
+| Prefix | Meaning | Example |
+|--------|---------|---------|
+| `#` | Standard terrain/landscape pattern (available in all quests) | `#Plains_Mostly_Child` |
+| `x` | Standard landscape pattern | `xBBC_Grass` |
+| `%` | Quest-specific landscape (only available in specific quest) | `%snow`, `%darkness_snow` |
+| `$` | Quest-specific terrain pattern | `$Dtar_Ice` |
+
+## File Summary
+
+| File | Magic | Size | Contents |
+|------|-------|------|----------|
+| `Data/constants.rgs` | RGCA | 28,012 B | Base game: 72 terrain, 143 landscape, 19 other |
+| `Data/constants_down.rgs` | RGCA | 28,016 B | Base game downgrade variant |
+| `DataMX/mx_constants.rgs` | RGCB | 49,833 B | Expansion: adds Snow/Ice + quest-specific patterns |
+| `DataMX/mx_constants_down.rgs` | RGCB | 49,515 B | Expansion downgrade variant |
