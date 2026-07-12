@@ -2,7 +2,7 @@
 // Ice Elemental Cold Stack → Freeze System
 ///////////////////////////////////////////////////////////////////////////////
 // Each hit adds cold stacks. At threshold, target freezes with DOT.
-// Stacks reset to 0 on unfreeze. Can't add stacks while frozen.
+// Stacks reset on unfreeze. Brief immunity window after unfreeze.
 ///////////////////////////////////////////////////////////////////////////////
 
 expression #Cold_Stacks_To_Freeze 5
@@ -10,11 +10,12 @@ expression #Cold_Damage_Per_Hit 8
 expression #Freeze_Duration 10000
 expression #Freeze_DOT_Damage 5
 expression #Freeze_DOT_Interval 2000
+expression #Freeze_Immunity_Time 5000
 
 
 ///////////////////////////////////////////////////////////////////////////////
 function Ice_Freeze_Begin ( agent ThisAgent, agent target )
-// Called on each Ice Dragon attack hit. Adds cold stacks, triggers freeze at threshold.
+// Called on each Ice Dragon attack hit.
 declare
 	integer stacks;
 begin
@@ -29,11 +30,15 @@ begin
 	if ( $GetAttribute ( target, #ATTRIB_HasEffectPetrify ) == 1 )
 		return;
 
+	// Don't add stacks if immune (stacks == -1)
+	stacks = $GetAttribute ( target, #ATTRIB_IsFrozen );
+	if ( stacks < 0 )
+		return;
+
 	// Deal cold damage on each hit
 	$adjustattribute ( target, #ATTRIB_HP, -#Cold_Damage_Per_Hit );
 
-	// Increment cold stacks (using IsFrozen attribute as stack counter)
-	stacks = $GetAttribute ( target, #ATTRIB_IsFrozen );
+	// Increment cold stacks
 	stacks += 1;
 	$SetAttribute ( target, #ATTRIB_IsFrozen, stacks );
 
@@ -62,11 +67,9 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 function Ice_Freeze_DOT ( agent ThisAgent )
-// Periodic damage while frozen. Kills itself when freeze ends.
+// Periodic damage while frozen.
 declare
-	integer HP;
 begin
-	// Stop if dead or no longer frozen
 	If ( $IsDead ( ThisAgent ))
 		begin
 			$KillThread ( ThisAgent's "FreezeScript" );
@@ -79,7 +82,6 @@ begin
 			return;
 		end
 
-	// Deal DOT damage
 	$adjustattribute ( ThisAgent, #ATTRIB_HP, -#Freeze_DOT_Damage );
 	$DebugOut ( 911, "ICE: DOT tick on ", ThisAgent );
 end
@@ -87,22 +89,37 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 function Ice_Freeze_End ( agent ThisAgent )
-// Called by freeze_icon timer when freeze duration expires.
+// Called by freeze_icon timer. Handles both unfreeze and immunity clear.
 declare
+	integer stacks;
 begin
 	If ( $IsDead ( ThisAgent ))
 		return;
 
-	// Clear freeze state
-	$SetAttribute ( ThisAgent, #ATTRIB_HasEffectPetrify, 0 );
-	$GetProperUnitArt ( ThisAgent );
-	$UnFreeze_Unit ( ThisAgent );
+	stacks = $GetAttribute ( ThisAgent, #ATTRIB_IsFrozen );
 
-	// Reset cold stacks to 0
-	$SetAttribute ( ThisAgent, #ATTRIB_IsFrozen, 0 );
+	// If currently frozen (stacks >= threshold): unfreeze and start immunity
+	if ( $GetAttribute ( ThisAgent, #ATTRIB_HasEffectPetrify ) == 1 )
+		begin
+			// Unfreeze
+			$SetAttribute ( ThisAgent, #ATTRIB_HasEffectPetrify, 0 );
+			$GetProperUnitArt ( ThisAgent );
+			$UnFreeze_Unit ( ThisAgent );
+			$KillThread ( ThisAgent's "FreezeScript" );
 
-	// Kill DOT thread
-	$KillThread ( ThisAgent's "FreezeScript" );
+			// Set immunity (-1) and start immunity timer
+			$SetAttribute ( ThisAgent, #ATTRIB_IsFrozen, -1 );
+			$createeffector ( ThisAgent, "freeze_icon", #Freeze_Immunity_Time );
 
-	$DebugOut ( 911, "ICE: Unfreeze complete on ", ThisAgent );
+			$DebugOut ( 911, "ICE: Unfrozen, immunity started on ", ThisAgent );
+			return;
+		end
+
+	// If immune (stacks == -1): immunity expired, clear it
+	if ( stacks == -1 )
+		begin
+			$SetAttribute ( ThisAgent, #ATTRIB_IsFrozen, 0 );
+			$DebugOut ( 911, "ICE: Immunity cleared on ", ThisAgent );
+			return;
+		end
 end
