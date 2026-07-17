@@ -919,23 +919,33 @@ def write_q_file(
     terrain: Optional[str] = None,
 ) -> Path:
     """
-    Write a .q file using a template-based approach.
+    Write a .q file using a minimal-splice approach.
 
-    Takes Unit Patterns and splices them into a copy of the template file,
-    replacing the template's Unit Patterns while preserving header/spawners/player sections.
-    Optionally patches the Region Pattern section with a different terrain preset.
+    Replaces the entry data within existing template pattern slots while preserving
+    all structural bytes (metadata, faction transitions, Force Pattern, Region Pattern).
+
+    The template has 4 pattern slots. Patterns are assigned by index:
+      - Index 0: "Goblin Kingdom" — enemy monster lairs
+      - Index 1: "AutoExpanding" — neutral expanding faction
+      - Index 2: "Player1" — human player's buildings
+      - Index 3: "player2_ai" — AI opponent's buildings
+
+    If fewer than 4 UnitPatterns are provided, unspecified slots keep their
+    template entries. If a slot should be emptied, pass a UnitPattern with
+    entries=[] (NOT YET SUPPORTED — leaves template entries).
 
     Args:
-        unit_patterns: List of UnitPattern objects to write
+        unit_patterns: List of UnitPattern objects (max 4, mapped by index to template slots)
         output_path: Where to write the output .q file
         template_path: Path to template .q file (default: MyQuest/Quest.q)
-        quest_name: Optional quest name override (replaces template's name)
+        quest_name: Unused (preserved for API compatibility)
+        terrain: Unused (terrain modification not yet validated in-game)
 
     Returns:
         Path to the written file
 
     Raises:
-        QFormatError: If encoding fails
+        QFormatError: If encoding fails or template has unexpected structure
         FileNotFoundError: If template doesn't exist
     """
     if template_path is None:
@@ -946,104 +956,50 @@ def write_q_file(
     if not template_path.exists():
         raise FileNotFoundError(f"Template file not found: {template_path}")
 
-    # Validate placements across all patterns
-    all_entries = [e for p in unit_patterns for e in p.entries]
-
     # Read template
-    template_data = template_path.read_bytes()
+    template_data = bytearray(template_path.read_bytes())
 
-    # Find the unit patterns in the template to know what section to replace
-    template_patterns = _find_unit_patterns(template_data)
+    # Find all unit patterns in the template
+    template_patterns = _find_unit_patterns(bytes(template_data))
     if not template_patterns:
         raise QFormatError(f"Template has no unit patterns: {template_path}")
 
-    # Find splice boundaries
-    first_pattern_offset = template_patterns[0][0]
-    splice_start = first_pattern_offset - 8
-
-    last_pattern = template_patterns[-1]
-    last_extent = _compute_group_extent(template_data, last_pattern[0], last_pattern[2])
-    if last_extent is None:
-        raise QFormatError("Cannot compute template last pattern extent")
-
-
-    # Find the Force Pattern section marker after the last unit pattern
-    player_section_marker = template_data.find(b'\x02\x00\x00\x00NONE', last_extent)
-    if player_section_marker == -1:
-        player_section_marker = template_data.find(b'NONE', last_extent + 40)
-        if player_section_marker != -1:
-            player_section_marker -= 4
-
-    if player_section_marker == -1:
-        splice_end = last_extent + 100
-    else:
-        splice_end = player_section_marker
-
-    # Build the output
-    output_parts = []
-
-    # Part 1: Everything before the unit patterns section
-    pre_section = bytearray(template_data[:splice_start])
-    
-    # Patch terrain if requested
-    if terrain is not None:
-        preset_name = terrain.lower()
-        if preset_name not in TERRAIN_PRESETS:
-            available = ', '.join(sorted(TERRAIN_PRESETS.keys()))
-            raise ValueError(
-                f"Unknown terrain preset '{terrain}'. Available: {available}"
-            )
-        preset = TERRAIN_PRESETS[preset_name]
-        
-        # Find and replace the Region Pattern section within pre_section
-        region_start, region_end = _find_region_section_bounds(
-            bytes(pre_section), splice_start
+    if len(unit_patterns) > len(template_patterns):
+        raise QFormatError(
+            f"Cannot write {len(unit_patterns)} patterns — template only has "
+            f"{len(template_patterns)} slots. Reduce to {len(template_patterns)} or fewer."
         )
-        if region_start >= 0 and region_end > region_start:
-            new_region = _build_region_section(preset['patches'])
-            pre_section = bytearray(
-                bytes(pre_section[:region_start]) + 
-                new_region + 
-                bytes(pre_section[region_end:])
+
+    # Splice each provided pattern into the template, working backwards
+    # (so earlier offsets aren't invalidated by size changes from later splices)
+    for i in reversed(range(len(unit_patterns))):
+        pattern = unit_patterns[i]
+        if not pattern.entries:
+            continue  # Skip empty patterns — leave template entries intact
+
+        tmpl_off, tmpl_terrain, tmpl_count = template_patterns[i]
+        tmpl_extent = _compute_group_extent(bytes(template_data), tmpl_off, tmpl_count)
+        if tmpl_extent is None:
+            raise QFormatError(
+                f"Cannot compute extent of template pattern {i} at offset 0x{tmpl_off:04x}"
             )
 
-    if quest_name is not None:
-        pass
+        # Encode new entries
+        new_entry_bytes = b''.join(_encode_unit_instance(e) for e in pattern.entries)
+        new_count = len(pattern.entries)
 
-    output_parts.append(bytes(pre_section))
+        # The pattern header is: [4B terrain][u32 5][u32 count][entries...]
+        # We replace [u32 count][entries...] (from offset+8 to extent)
+        count_offset = tmpl_off + 8  # After terrain(4) + resolution(4)
+        entries_start = tmpl_off + 12  # After the full 12-byte header
 
-    # Part 2: New unit patterns (each with pre-block + entries + metadata + faction name)
-    faction_names = ["AutoExpanding", "Player1", "player2_ai", "MyAI"]
-    owner_counts = [9, 9, 1, 1]  # From template: counts before each pattern
-
-    for i, pattern in enumerate(unit_patterns):
-        # Pre-block: [u32 0][u32 owner_count]
-        oc = owner_counts[i] if i < len(owner_counts) else 1
-        output_parts.append(struct.pack('<II', 0, oc))
-
-        # Pattern entries
-        output_parts.append(_encode_unit_pattern(pattern))
-
-        # Metadata block (40 bytes)
-        output_parts.append(METADATA_BLOCK)
-
-        # Faction name
-        fname = faction_names[i] if i < len(faction_names) else f"Faction{i}"
-        if i < len(unit_patterns) - 1:
-            output_parts.append(_encode_faction_name_block(fname))
-        else:
-            name_bytes = fname.encode('ascii')
-            short = fname[:4]
-            pattern_12 = (short * 3)[:12].encode('ascii')
-            output_parts.append(pattern_12 + name_bytes + b'\x00')
-
-    # Part 3: Force Pattern section (preserved from template)
-    output_parts.append(template_data[splice_end:])
+        # Splice: replace count + entries
+        new_section = struct.pack('<I', new_count) + new_entry_bytes
+        template_data[count_offset:tmpl_extent] = new_section
 
     # Write output
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_bytes = b''.join(output_parts)
-    output_path.write_bytes(output_bytes)
+    output_path.write_bytes(bytes(template_data))
 
     return output_path
 
@@ -1054,17 +1010,29 @@ def write_q_file_simple(
     template_path=None,
 ) -> Path:
     """
-    Simplified writer: takes a flat list of UnitInstance entries and puts them
-    all in a single UnitPattern. Palace should be included in entries.
+    Simplified writer: places entries in the Player1 slot (index 2).
 
+    Automatically includes a Palace at center if not already in entries.
     This is the easiest way to generate a test quest map.
     """
+    # Ensure Palace is present
+    has_palace = any(e.object_id == "ABJ1" for e in entries)
+    if not has_palace:
+        entries = [UnitInstance("ABJ1", "Palace", [CENTER])] + entries
+
     pattern = UnitPattern(
         terrain_code="gras",
         entries=entries,
         faction_name="Player1",
     )
-    return write_q_file([pattern], output_path, template_path)
+
+    # Place in slot 2 (Player1). Provide empty patterns for slots 0-1 to skip them.
+    patterns = [
+        UnitPattern(entries=[]),  # slot 0: keep template Goblin Kingdom
+        UnitPattern(entries=[]),  # slot 1: keep template AutoExpanding
+        pattern,                  # slot 2: Player1 — our entries
+    ]
+    return write_q_file(patterns, output_path, template_path)
 
 
 # =============================================================================
@@ -1274,10 +1242,11 @@ def generate_test_quest(
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-
-    # Build UnitInstance entries
     palace_byte = letter_to_byte(palace_position)
-    entries = [UnitInstance("ABJ1", "Palace", [palace_byte])]
+
+    # Write .q file — place player entries in slot 2 (Player1), lairs in slot 0 (Goblin Kingdom)
+    player_entries = [UnitInstance("ABJ1", "Palace", [palace_byte])]
+    lair_entries = []
 
     # Distribute lairs
     lairs_needing_positions = []
@@ -1286,7 +1255,7 @@ def generate_test_quest(
     for lair in lairs:
         if "position" in lair and lair["position"]:
             pos_byte = letter_to_byte(lair["position"])
-            entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
+            lair_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
             excluded.append(pos_byte)
         else:
             lairs_needing_positions.append(lair)
@@ -1294,15 +1263,19 @@ def generate_test_quest(
     if lairs_needing_positions:
         positions = auto_distribute(len(lairs_needing_positions), exclude=excluded)
         for lair, pos_byte in zip(lairs_needing_positions, positions):
-            entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
+            lair_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
 
-    # Write .q file
-    pattern = UnitPattern(terrain_code="gras", entries=entries, faction_name="Player1")
+    # Build pattern list: slot 0 = enemy lairs, slot 1 = skip, slot 2 = player
+    patterns = [
+        UnitPattern(terrain_code="gras", entries=lair_entries) if lair_entries else UnitPattern(entries=[]),
+        UnitPattern(entries=[]),  # slot 1: keep template AutoExpanding
+        UnitPattern(terrain_code="gras", entries=player_entries, faction_name="Player1"),
+    ]
+
     q_path = write_q_file(
-        [pattern],
+        patterns,
         output_dir / "Quest.q",
         template_path=rgs_template if rgs_template else None,
-        terrain=terrain,
     )
 
     # Copy .rgs terrain
