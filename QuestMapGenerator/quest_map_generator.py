@@ -1230,7 +1230,7 @@ def generate_test_quest(
     output_dir,
     palace_position: str = "M",
     starting_gold: int = 50000,
-    dataset_base: str = "Majesty",
+    dataset_base: str = "MajestyExpansion",
     terrain: Optional[str] = None,
     extra_gpl_sources: list[str] = None,
     extra_gpl_target: str = None,
@@ -1313,10 +1313,15 @@ def generate_test_quest(
     )
 
     # Generate .mqxml
+    # The <Name> tag is the GPL init function to call. Use the template's function
+    # name (basicAI) to avoid "script doesn't exist" errors. The user-provided
+    # quest_name goes in <DisplayName> which is what shows in the quest list UI.
     mqxml_path = generate_mqxml(
-        quest_name=quest_name,
+        quest_name="basicAI",
         output_path=output_dir / "Quest.mqxml",
         dataset_base=dataset_base,
+        display_name=quest_name,
+        description_short=f"Test quest: {quest_name}",
         gpl_sources=extra_gpl_sources,
         gpl_target=extra_gpl_target,
         descriptions=extra_descriptions,
@@ -1581,7 +1586,7 @@ def _cli_generate(args):
     parser.add_argument("--name", required=True, help="Quest name")
     parser.add_argument("--output", required=True, help="Output directory")
     parser.add_argument("--lairs", default="", help="Comma-separated lair specs: ID:Desc:Pos (pos optional)")
-    parser.add_argument("--dataset", default="Majesty", choices=["Majesty", "MajestyExpansion"])
+    parser.add_argument("--dataset", default="MajestyExpansion", choices=["Majesty", "MajestyExpansion"])
     parser.add_argument("--palace", default="M", help="Palace grid position (A-Y)")
 
     try:
