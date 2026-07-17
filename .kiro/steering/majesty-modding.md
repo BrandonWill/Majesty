@@ -114,6 +114,14 @@ GPL/Quest.gpl — gameplay logic
 - The `utility/` folder is gitignored — use it for throwaway scripts and experiments
 - This workspace is the git repo — commit and push directly (no more copying to a separate folder)
 
+### Compiling GPL
+- Each mod/quest folder has a `MakeGPL.bat` that compiles GPL source and copies the `.bcd` to `Data/`.
+- **Always use `cmd /c MakeGPL.bat`** from the mod/quest folder to compile. Do NOT invoke
+  `Gplbcc.exe` manually — the bat handles paths and the copy step.
+- If a mod/quest folder does NOT have a `MakeGPL.bat`, copy one from an existing mod
+  (e.g., `IceSpell/MakeGPL.bat`) and update the `OUTPUTNAME` and `GPLPROJECTFILE` variables
+  to match the new project. Then commit the new bat file.
+
 ### Testing In-Game
 - Test sprite changes in **original game mode** (not expansion)
 - For expansion mode, modify files in `DataMX/` folder
