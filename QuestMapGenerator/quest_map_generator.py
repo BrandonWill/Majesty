@@ -1248,18 +1248,17 @@ def generate_test_quest(
 
     palace_byte = letter_to_byte(palace_position)
 
-    # Write .q file — place player entries in slot 2 (Player1), lairs in slot 0 (Goblin Kingdom)
+    # Write .q file — place all entries in slot 2 (Player1) so they're near the player
     player_entries = [UnitInstance("ABJ1", "Palace", [palace_byte])]
-    lair_entries = []
 
-    # Distribute lairs
+    # Distribute lairs into the player's pattern (near the Palace)
     lairs_needing_positions = []
     excluded = [palace_byte]
 
     for lair in lairs:
         if "position" in lair and lair["position"]:
             pos_byte = letter_to_byte(lair["position"])
-            lair_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
+            player_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
             excluded.append(pos_byte)
         else:
             lairs_needing_positions.append(lair)
@@ -1267,11 +1266,11 @@ def generate_test_quest(
     if lairs_needing_positions:
         positions = auto_distribute(len(lairs_needing_positions), exclude=excluded)
         for lair, pos_byte in zip(lairs_needing_positions, positions):
-            lair_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
+            player_entries.append(UnitInstance(lair["id"], lair["desc"], [pos_byte]))
 
-    # Build pattern list: slot 0 = enemy lairs, slot 1 = skip, slot 2 = player
+    # Build pattern list: slot 0 = keep template, slot 1 = keep template, slot 2 = player + lairs
     patterns = [
-        UnitPattern(terrain_code="gras", entries=lair_entries) if lair_entries else UnitPattern(entries=[]),
+        UnitPattern(entries=[]),  # slot 0: keep template Goblin Kingdom
         UnitPattern(entries=[]),  # slot 1: keep template AutoExpanding
         UnitPattern(terrain_code="gras", entries=player_entries, faction_name="Player1"),
     ]
