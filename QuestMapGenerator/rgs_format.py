@@ -932,9 +932,18 @@ def create_quest(
               Zone keys from LANDSCAPE_ZONES (e.g., "grass", "snow_ice", "mountain")
             - Fully custom (list of dicts): each with "tag", "name", "fractal",
               "texture", "height", "weight", and optional "field_0c"
-        force_layout: Optional list of placement defs:
-            - "pattern_idx": Index into unit_patterns list
-            - "position": Grid letter "A"-"Y" for map placement
+        force_layout: Optional force pattern configuration. Can be:
+            - None: Auto-layout (distribute patterns across map)
+            - List of dicts (simple): [{"pattern_idx": 0, "position": "W"}, ...]
+            - Dict (full control):
+                - "name": Force pattern name (default: quest name)
+                - "entries": List of {"pattern_idx": int, "position": str or "off_map"}
+                  Position can be: single letter "M", multi-candidate "ABCDE", or "off_map"
+                - "players": List of allowed player counts [1, 2, 3, 4] (default [1, 2])
+                - "difficulty": Difficulty rating 0-100 (default 50)
+                - "money": Money rating 0-100 (default 50)
+                - "time": Time rating 0-100 (default 50)
+                - "resolution": Grid cell spacing (default 3)
         starting_gold: Default starting gold for player factions
 
     Returns:
@@ -1214,36 +1223,94 @@ def create_quest(
     force_pat = UnitPattern()
     force_pat._faction_tag = short
     force_pat.terrain_code = short
-    force_pat.name = short
+    force_pat.name = force_layout.get("name", name) if isinstance(force_layout, dict) else name
     force_pat.has_alternate = False
     force_pat.field_04 = 0
     force_pat.tag_48 = "NONE"
     force_pat.field_44 = 4
     force_pat.resolution = 0
-    force_pat.field_74 = 7
-    force_pat.field_78 = 50
-    force_pat.field_7c = 50
-    force_pat.flag_70 = True
-    force_pat.flag_71 = True
-    force_pat.flag_72 = True
-    force_pat.flag_73 = True
-    force_pat.flag_29 = False
     force_pat._spawner_keys = []
     force_pat.spawners = []
 
-    if force_layout:
-        for fl in force_layout:
+    # Force layout configuration
+    # Can be:
+    #   None — auto-layout all patterns
+    #   List of dicts — explicit placement entries (legacy simple format)
+    #   Dict with "entries", "players", "difficulty", "resolution" — full control
+    if isinstance(force_layout, dict):
+        # Full force layout configuration
+        fl_entries = force_layout.get("entries", [])
+        fl_players = force_layout.get("players", [1, 2])
+        fl_difficulty = force_layout.get("difficulty", 50)
+        fl_money = force_layout.get("money", 50)
+        fl_time = force_layout.get("time", 50)
+        fl_resolution = force_layout.get("resolution", 3)
+
+        force_pat.name = force_layout.get("name", name)
+        force_pat.resolution = fl_resolution
+        force_pat.field_74 = fl_difficulty
+        force_pat.field_78 = fl_money
+        force_pat.field_7c = fl_time
+        force_pat.flag_70 = 1 in fl_players
+        force_pat.flag_71 = 2 in fl_players
+        force_pat.flag_72 = 3 in fl_players
+        force_pat.flag_73 = 4 in fl_players
+
+        for fl in fl_entries:
             idx = fl["pattern_idx"]
-            pos_letter = fl.get("position", "M")
             ref_name = unit_patterns[idx]["name"]
+            # Position: letter, list of letters (multi-candidate), or "off_map"
+            pos = fl.get("position", "M")
+            if pos == "off_map" or pos is None:
+                cells = []
+            elif isinstance(pos, str) and len(pos) == 1:
+                cells = [ord(pos)]
+            elif isinstance(pos, str):
+                cells = [ord(c) for c in pos]  # Multi-candidate positions
+            elif isinstance(pos, list):
+                cells = [ord(c) if isinstance(c, str) else c for c in pos]
+            else:
+                cells = [ord(pos)]
             force_pat.entries.append(UnitInstance(
                 object_id=ref_name[:4],
                 field_08=5,
                 description=ref_name,
-                candidate_cells=[ord(pos_letter)],
+                candidate_cells=cells,
+            ))
+    elif isinstance(force_layout, list):
+        # Legacy simple list format
+        force_pat.field_74 = 50
+        force_pat.field_78 = 50
+        force_pat.field_7c = 50
+        force_pat.flag_70 = True
+        force_pat.flag_71 = True
+        force_pat.flag_72 = True
+        force_pat.flag_73 = True
+        for fl in force_layout:
+            idx = fl["pattern_idx"]
+            pos_letter = fl.get("position", "M")
+            ref_name = unit_patterns[idx]["name"]
+            if pos_letter == "off_map" or pos_letter is None:
+                cells = []
+            elif isinstance(pos_letter, str) and len(pos_letter) > 1:
+                cells = [ord(c) for c in pos_letter]
+            else:
+                cells = [ord(pos_letter)]
+            force_pat.entries.append(UnitInstance(
+                object_id=ref_name[:4],
+                field_08=5,
+                description=ref_name,
+                candidate_cells=cells,
             ))
     else:
         # Auto-layout: first pattern at bottom, rest distributed
+        force_pat.field_74 = 50
+        force_pat.field_78 = 50
+        force_pat.field_7c = 50
+        force_pat.flag_70 = True
+        force_pat.flag_71 = True
+        force_pat.flag_72 = True
+        force_pat.flag_73 = True
         auto_positions = ["W", "C", "R", "Q", "S", "N", "M", "H", "L"]
         for i, pat_def in enumerate(unit_patterns):
             pos = auto_positions[i] if i < len(auto_positions) else "M"
@@ -1255,6 +1322,7 @@ def create_quest(
             ))
 
     qf.unit_patterns_3 = [force_pat]
+    force_pat.flag_29 = False
     qf.rel_string = "Rel@"
 
     return qf

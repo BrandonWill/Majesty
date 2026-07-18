@@ -459,6 +459,145 @@ class TestTerrainPresets:
 
 
 # =============================================================================
+# Force pattern layout (Priority 5)
+# =============================================================================
+
+class TestForcePatternLayout:
+    def test_auto_layout(self):
+        """Default auto-layout distributes patterns across the map."""
+        qf = create_quest("AutoLayout", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Monsters", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ])
+        fp = qf.unit_patterns_3[0]
+        assert len(fp.entries) == 2
+        assert fp.flag_70 is True  # 1P
+        assert fp.flag_71 is True  # 2P
+        assert fp.field_74 == 50   # Default difficulty
+
+    def test_simple_list_layout(self):
+        """Simple list format places patterns at specified positions."""
+        qf = create_quest("ListLayout", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Monsters", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ], force_layout=[
+            {"pattern_idx": 0, "position": "W"},
+            {"pattern_idx": 1, "position": "C"},
+        ])
+        fp = qf.unit_patterns_3[0]
+        assert fp.entries[0].candidate_cells == [ord("W")]
+        assert fp.entries[1].candidate_cells == [ord("C")]
+
+    def test_off_map_placement(self):
+        """'off_map' position creates entry with empty cells."""
+        qf = create_quest("OffMap", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Edge Lairs", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ], force_layout=[
+            {"pattern_idx": 0, "position": "M"},
+            {"pattern_idx": 1, "position": "off_map"},
+        ])
+        fp = qf.unit_patterns_3[0]
+        assert fp.entries[1].candidate_cells == []
+
+    def test_multi_candidate_positions(self):
+        """String of multiple letters creates multi-candidate cells."""
+        qf = create_quest("MultiPos", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Lairs", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ], force_layout=[
+            {"pattern_idx": 0, "position": "M"},
+            {"pattern_idx": 1, "position": "GHILNQRS"},
+        ])
+        fp = qf.unit_patterns_3[0]
+        assert fp.entries[1].candidate_cells == [ord(c) for c in "GHILNQRS"]
+
+    def test_full_dict_layout(self):
+        """Full dict force_layout with all options."""
+        qf = create_quest("FullLayout", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Monsters", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ], force_layout={
+            "name": "Custom Force",
+            "players": [1, 2],
+            "difficulty": 80,
+            "money": 60,
+            "time": 70,
+            "resolution": 2,
+            "entries": [
+                {"pattern_idx": 0, "position": "W"},
+                {"pattern_idx": 1, "position": "off_map"},
+            ],
+        })
+        fp = qf.unit_patterns_3[0]
+        assert fp.name == "Custom Force"
+        assert fp.flag_70 is True   # 1P allowed
+        assert fp.flag_71 is True   # 2P allowed
+        assert fp.flag_72 is False  # 3P not allowed
+        assert fp.flag_73 is False  # 4P not allowed
+        assert fp.field_74 == 80
+        assert fp.field_78 == 60
+        assert fp.field_7c == 70
+        assert fp.resolution == 2
+
+    def test_monster_only_force(self):
+        """Force pattern with no player, just monster lairs (3P/4P slot)."""
+        qf = create_quest("MonsterOnly", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "MonstersA", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+            {"name": "MonstersB", "entries": [{"id": "BBw1", "desc": "Cave", "cells": [85]}]},
+        ], force_layout={
+            "players": [1],
+            "difficulty": 85,
+            "entries": [
+                {"pattern_idx": 0, "position": "M"},
+                {"pattern_idx": 1, "position": "off_map"},
+                {"pattern_idx": 2, "position": "off_map"},
+            ],
+        })
+        fp = qf.unit_patterns_3[0]
+        assert fp.flag_70 is True
+        assert fp.flag_71 is False
+        # Two off-map entries
+        assert fp.entries[1].candidate_cells == []
+        assert fp.entries[2].candidate_cells == []
+
+    def test_force_layout_roundtrip(self):
+        """Force layout survives write → read → write."""
+        qf = create_quest("ForceRT", [
+            {"name": "Player1", "entries": [{"id": "ABJ1", "desc": "Palace", "cells": [77]}]},
+            {"name": "Monsters", "entries": [{"id": "BBH1", "desc": "Camp", "cells": [65]}]},
+        ], force_layout={
+            "name": "RT Test",
+            "players": [1, 2, 3],
+            "difficulty": 75,
+            "entries": [
+                {"pattern_idx": 0, "position": "W"},
+                {"pattern_idx": 1, "position": "ABCDE"},
+                {"pattern_idx": 1, "position": "off_map"},
+            ],
+        })
+        with tempfile.NamedTemporaryFile(suffix=".q", delete=False) as f:
+            out1 = Path(f.name)
+        with tempfile.NamedTemporaryFile(suffix=".q", delete=False) as f:
+            out2 = Path(f.name)
+        try:
+            write_quest_file(qf, out1)
+            qf2 = read_quest_file(out1)
+            write_quest_file(qf2, out2)
+            assert out1.read_bytes() == out2.read_bytes()
+            fp = qf2.unit_patterns_3[0]
+            assert fp.name == "RT Test"
+            assert fp.field_74 == 75
+            assert fp.flag_72 is True   # 3P
+            assert fp.flag_73 is False  # 4P not set
+            assert fp.entries[2].candidate_cells == []  # Off-map preserved
+        finally:
+            out1.unlink()
+            out2.unlink()
+
+
+# =============================================================================
 # Integration tests — real quest files
 # =============================================================================
 
@@ -523,6 +662,7 @@ if __name__ == "__main__":
     test_classes = [
         TestBinaryReader, TestBinaryWriter, TestSpawnerBlock,
         TestCreateQuest, TestLairOverrides, TestTerrainPresets,
+        TestForcePatternLayout,
     ]
 
     passed = 0

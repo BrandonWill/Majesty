@@ -94,13 +94,29 @@ create_quest("Test", [...], terrain=[
 
 ## Remaining Work
 
-### Priority 5: Force Pattern Layout API
+### ~~Priority 5: Force Pattern Layout API~~ ✅ DONE
 
-Expose the force layout as a first-class API:
-- Control where each faction's cluster appears on the map
-- Support "Off Map" placement (monsters spawning from edges)
-- Multi-player configurations (2P, 3P, 4P)
-- Monster-only force patterns (no palaces)
+Full control over force pattern placement:
+
+```python
+create_quest("MyQuest", [...], force_layout={
+    "name": "Dragon Quest",
+    "players": [1, 2],           # Allowed player counts
+    "difficulty": 80,            # Difficulty rating (0-100)
+    "money": 60,                 # Money rating
+    "time": 70,                  # Time rating
+    "resolution": 2,             # Grid spacing
+    "entries": [
+        {"pattern_idx": 0, "position": "W"},         # Single position
+        {"pattern_idx": 1, "position": "GHILNQRS"},  # Multi-candidate
+        {"pattern_idx": 2, "position": "off_map"},   # Off-map (edge spawning)
+    ],
+})
+```
+
+Supports: off-map placement, multi-candidate positions, player mode control (1P-4P),
+difficulty/money/time ratings. Also accepts simple list format for basic use.
+7 unit tests added (41 total).
 
 ### Priority 6: Full CLI Replacement
 
