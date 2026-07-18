@@ -118,23 +118,29 @@ Supports: off-map placement, multi-candidate positions, player mode control (1P-
 difficulty/money/time ratings. Also accepts simple list format for basic use.
 7 unit tests added (41 total).
 
-### Priority 6: Full CLI Replacement
+### ~~Priority 6: Full CLI Replacement~~ ✅ DONE
 
-Build a comprehensive CLI that covers all RGSEditor functionality:
+`rgs_format.py` now has a comprehensive CLI:
+
 ```bash
-# Create quest from JSON definition
-rgs_format.py create --config quest.json --output MyQuest/
+# Inspect any quest file (all sections or filtered)
+rgs_format.py inspect Quests/Krolm.q
+rgs_format.py inspect Quests/Krolm.q --section spawners
+rgs_format.py inspect Quests/Krolm.q --section force
 
-# Modify existing quest
-rgs_format.py modify Quests/Krolm.q --add-pattern "Ice Lairs" --entries "BBw1:Ice Cave:N"
+# Create quest from JSON config
+rgs_format.py create --config quest.json --output MyQuest/Quest.q
 
-# Inspect any section
-rgs_format.py inspect Quests/fertile_plain.q --section spawners
-rgs_format.py inspect Quests/fertile_plain.q --section force-layout
+# List terrain presets and landscape zones
+rgs_format.py presets
 
-# Convert between versions (always outputs RGMa)
-rgs_format.py convert Quests/old_quest.q --output updated.q
+# Roundtrip test
+rgs_format.py roundtrip MyQuest/Quest.q
+rgs_format.py test Quests/
 ```
+
+Sections: `header`, `spawners`, `terrain`, `patterns`, `force`.
+JSON config accepts all `create_quest()` parameters including lair_override and force_layout.
 
 ### Other Items (from quest_map_generator.py)
 

@@ -1189,7 +1189,7 @@ def create_quest(
                 monsters = ovr.get("monsters", [])
                 items = []
                 for m in monsters:
-                    if isinstance(m, tuple):
+                    if isinstance(m, (tuple, list)) and len(m) >= 2:
                         items.append(SpawnerItem(name=m[0], spawn_level=m[1]))
                     elif isinstance(m, dict):
                         items.append(SpawnerItem(
@@ -1373,6 +1373,89 @@ def roundtrip_test(filepath) -> tuple[bool, str]:
 # CLI
 # =============================================================================
 
+def _cli_inspect(filepath, section=None):
+    """Inspect a .q file, optionally filtering to a specific section."""
+    qf = read_quest_file(filepath)
+
+    if section is None or section == "header":
+        print(f"=== Header ===")
+        print(f"  Magic: {qf.magic}")
+        print(f"  Quest name: {qf.quest_name}")
+        print(f"  Map size: {qf.map_params[0]}x{qf.map_params[1]}")
+        print(f"  Tags: {qf._tag1} / {qf._tag2} / seed={qf._tag3}")
+        if section == "header":
+            return
+
+    if section is None or section == "spawners":
+        print(f"\n=== Spawner Blocks ({len(qf.spawner_blocks)}) ===")
+        for i, (idx, b) in enumerate(zip(qf._spawner_indices, qf.spawner_blocks)):
+            monsters = [it for it in b.team.spawner_items if it.name != "NONE"]
+            m_str = ', '.join(f"{m.name}({m.spawn_level}%)" for m in monsters)
+            print(f"  [{idx}] hp={b.max_hp} rate={b.spawn_rate_ms}ms "
+                  f"disp={b.dispersion} hit_sub={b.hit_rate_sub} | {m_str}")
+        if section == "spawners":
+            return
+
+    if section is None or section == "terrain":
+        print(f"\n=== Terrain ===")
+        for entry in qf.region_entries:
+            team = getattr(entry, '_team', None)
+            if team:
+                items = ', '.join(f"{it.name}(w={it.spawn_level})" for it in team.spawner_items)
+                print(f"  Region '{entry.tag}': {items}")
+        print(f"  Landscape refs ({len(qf.force_entries)}):")
+        for fe in qf.force_entries:
+            r1 = getattr(fe, '_ref1', '?')
+            r2 = getattr(fe, '_ref2', '?')
+            r3 = getattr(fe, '_ref3', '?')
+            print(f"    {fe.faction_code} '{fe.faction_name}' fractal={r1} tex={r2} height={r3}")
+        if section == "terrain":
+            return
+
+    if section is None or section == "patterns":
+        print(f"\n=== Unit Patterns (set 2: {len(qf.unit_patterns_2)}) ===")
+        for i, p in enumerate(qf.unit_patterns_2):
+            print(f"  [{i}] '{p.name}' (faction={p.terrain_code}) "
+                  f"entries={len(p.entries)} spawners={len(p.spawners)} res={p.resolution}")
+            for e in p.entries:
+                cells = ''.join(chr(c) for c in e.candidate_cells) if e.candidate_cells else "(off-map)"
+                print(f"      {e.object_id} '{e.description}' @ [{cells}]")
+        if section == "patterns":
+            return
+
+    if section is None or section == "force":
+        print(f"\n=== Force Pattern (set 3: {len(qf.unit_patterns_3)}) ===")
+        for fp in qf.unit_patterns_3:
+            flags = []
+            if getattr(fp, 'flag_70', False): flags.append("1P")
+            if getattr(fp, 'flag_71', False): flags.append("2P")
+            if getattr(fp, 'flag_72', False): flags.append("3P")
+            if getattr(fp, 'flag_73', False): flags.append("4P")
+            print(f"  '{fp.name}' players=[{','.join(flags)}] "
+                  f"diff={fp.field_74} money={fp.field_78} time={fp.field_7c} res={fp.resolution}")
+            for e in fp.entries:
+                cells = ''.join(chr(c) for c in e.candidate_cells) if e.candidate_cells else "(off-map)"
+                print(f"    {e.object_id} '{e.description}' @ [{cells}]")
+
+
+def _cli_create(config_path, output_path):
+    """Create a quest from a JSON configuration file."""
+    import json
+    config = json.loads(Path(config_path).read_text())
+
+    qf = create_quest(
+        name=config["name"],
+        unit_patterns=config["unit_patterns"],
+        map_size=tuple(config.get("map_size", [256, 256])),
+        terrain=config.get("terrain", "grass"),
+        force_layout=config.get("force_layout"),
+        starting_gold=config.get("starting_gold", 30000),
+        spawners=config.get("spawners"),
+    )
+    out = write_quest_file(qf, Path(output_path))
+    print(f"Created: {out} ({out.stat().st_size} bytes)")
+
+
 if __name__ == "__main__":
     import sys
 
@@ -1380,35 +1463,47 @@ if __name__ == "__main__":
         print("RGS Format Tool — Sequential .q file parser/writer")
         print()
         print("Usage:")
-        print("  rgs_format.py parse <file.q>     — Parse and display")
-        print("  rgs_format.py roundtrip <file.q>  — Parse, rewrite, compare")
-        print("  rgs_format.py test <directory>    — Roundtrip all .q files")
+        print("  rgs_format.py inspect <file.q> [--section <name>]")
+        print("  rgs_format.py create --config <quest.json> --output <file.q>")
+        print("  rgs_format.py roundtrip <file.q>")
+        print("  rgs_format.py test <directory>")
+        print("  rgs_format.py presets")
+        print()
+        print("Inspect sections: header, spawners, terrain, patterns, force")
+        print()
+        print("JSON config format for 'create':")
+        print('  {"name": "...", "unit_patterns": [...], "terrain": "...", ...}')
+        print("  See create_quest() docstring for full schema.")
         sys.exit(1)
 
     cmd = sys.argv[1]
 
-    if cmd == "parse":
-        qf = read_quest_file(sys.argv[2])
-        print(f"Magic: {qf.magic}")
-        print(f"Quest: {qf.quest_name}")
-        print(f"Map params: {qf.map_params}")
-        print(f"Spawner blocks: {len(qf.spawner_blocks)}")
-        print(f"Unit patterns (set 1): {len(qf.unit_patterns_1)}")
-        for i, p in enumerate(qf.unit_patterns_1):
-            print(f"  [{i}] {p.terrain_code!r} name={p.name!r} "
-                  f"entries={len(p.entries)} spawners={len(p.spawners)} "
-                  f"res={p.resolution}")
-            for e in p.entries:
-                cells = ''.join(chr(c) for c in e.candidate_cells)
-                print(f"      {e.object_id} {e.description!r} @ [{cells}]")
-        print(f"Force entries: {len(qf.force_entries)}")
-        for fe in qf.force_entries:
-            print(f"  {fe.faction_code} {fe.faction_name!r} "
-                  f"ref={fe.pattern_ref} active={fe.active} "
-                  f"pos={fe.grid_position}")
-        print(f"Unit patterns (set 2): {len(qf.unit_patterns_2)}")
-        print(f"Unit patterns (set 3): {len(qf.unit_patterns_3)}")
-        print(f"Rel string: {qf.rel_string!r}")
+    if cmd == "inspect":
+        filepath = sys.argv[2]
+        section = None
+        if "--section" in sys.argv:
+            idx = sys.argv.index("--section")
+            section = sys.argv[idx + 1]
+        _cli_inspect(filepath, section)
+
+    elif cmd == "create":
+        config_path = None
+        output_path = None
+        args = sys.argv[2:]
+        i = 0
+        while i < len(args):
+            if args[i] == "--config":
+                config_path = args[i + 1]
+                i += 2
+            elif args[i] == "--output":
+                output_path = args[i + 1]
+                i += 2
+            else:
+                i += 1
+        if not config_path or not output_path:
+            print("Error: --config and --output are required")
+            sys.exit(1)
+        _cli_create(config_path, output_path)
 
     elif cmd == "roundtrip":
         ok, msg = roundtrip_test(sys.argv[2])
@@ -1433,6 +1528,16 @@ if __name__ == "__main__":
         print(f"\n{passed} passed, {failed} failed, {errors} errors "
               f"out of {len(q_files)} files")
 
+    elif cmd == "presets":
+        print("Available terrain presets:")
+        for name, zones in sorted(TERRAIN_PRESETS.items()):
+            zone_list = ', '.join(f"{k}({v})" for k, v in zones.items())
+            print(f"  {name:15s} : {zone_list}")
+        print(f"\nAvailable landscape zones ({len(LANDSCAPE_ZONES)}):")
+        for name, (tag, desc, frac, tex, height) in sorted(LANDSCAPE_ZONES.items()):
+            print(f"  {name:18s} : {desc} (tex={tex}, height={height})")
+
     else:
         print(f"Unknown command: {cmd}")
+        print("Available: inspect, create, roundtrip, test, presets")
         sys.exit(1)
