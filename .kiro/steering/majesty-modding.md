@@ -1,5 +1,11 @@
 # Majesty Gold HD Modding - Project Context
 
+## Detailed Steering Files (manual inclusion)
+
+When working on specific subsystems, include the relevant detailed steering file for full context:
+- **Quest/mod creation** → `#quest-and-mod-creation` (MQXML format, RGS workflow, file structure)
+- **CAM/sprite work** → `#cam-and-sprites` (TILE format, palettes, sprite encoding/decoding)
+
 ## Workspace Layout
 
 This workspace IS the git repo (https://github.com/BrandonWill/temp_majesty). Push directly from here.
