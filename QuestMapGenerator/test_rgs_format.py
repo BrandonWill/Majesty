@@ -260,6 +260,39 @@ class TestCreateQuest:
             finally:
                 out.unlink()
 
+    def test_no_enemy_buildings_warns(self):
+        """Creating a quest with no BB** lairs emits a warning."""
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            create_quest(
+                "NoLairs",
+                [{"name": "Player1", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                ]}],
+            )
+            assert len(w) == 1
+            assert "No enemy buildings" in str(w[0].message)
+            assert "instant victory" in str(w[0].message)
+
+    def test_with_enemy_buildings_no_warning(self):
+        """Creating a quest with BB** lairs does NOT warn."""
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            create_quest(
+                "WithLairs",
+                [
+                    {"name": "Player1", "entries": [
+                        {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                    ]},
+                    {"name": "Monsters", "entries": [
+                        {"id": "BBH1", "desc": "Goblin Camp", "cells": [65]}
+                    ]},
+                ],
+            )
+            assert len(w) == 0
+
 
 # =============================================================================
 # Per-lair spawner overrides (Priority 2)

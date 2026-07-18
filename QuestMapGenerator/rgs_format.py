@@ -1221,6 +1221,19 @@ def create_quest(
 
         qf.unit_patterns_2.append(pat)
 
+    # Validation: warn if no enemy buildings/lairs exist (causes instant win)
+    import warnings
+    all_entry_ids = [e.object_id for pat in qf.unit_patterns_2 for e in pat.entries]
+    has_enemy_buildings = any(eid.startswith("BB") for eid in all_entry_ids)
+    if not has_enemy_buildings:
+        warnings.warn(
+            "No enemy buildings (BB** lairs) found in unit patterns. "
+            "The default GPL win condition ($setvictorycondition) triggers an "
+            "instant victory if there are no enemy structures to destroy. "
+            "Add at least one lair (e.g., BBH1, BBw1, BBz1) or provide custom GPL.",
+            stacklevel=2,
+        )
+
     # Unit patterns set 3 (Force Pattern — map-level placement)
     force_pat = UnitPattern()
     force_pat._faction_tag = short
