@@ -289,22 +289,26 @@ Quests/ has 22 base .q files, QuestsMX/ has 14 expansion .q files, MyQuest/ has 
 - Swap unit appearance via unittype.cam: change ImageIDBase field in DUNT entry
 
 ### Quest Map Generator (QuestMapGenerator/)
-Automated test quest generation tool. Located at `QuestMapGenerator/quest_map_generator.py`.
-- **Parser**: Reads all .q format versions (RGMa, RGM6, RGM9) — 37/37 files pass
-- **Writer**: Template-based writer splices custom UnitPattern entries into a known-good .q file
-- **CLI**: `parse`, `validate`, `generate` subcommands
-- **Convenience API**: `generate_test_quest(name, lairs, output_dir)` for one-call quest generation
-- **Data Model**: Uses correct RGS terminology — `UnitPattern` (5×5 grid with resolution),
-  `UnitInstance` (single unit with `candidate_cells` for random position selection),
-  `ForceEntry` (faction's map quadrant position), `TeamDefinition`, `RegionPatternInfo`
-- **Note**: The writer uses a template approach (based on MyQuest/Quest.q). It replaces the
-  UnitPattern section while preserving the rest of the file structure (header, spawners,
-  teams, Region Pattern, Force Pattern). This works for test quests but does NOT generate
-  Force Patterns, Region Patterns, or team definitions from scratch.
-- **Limitation**: Generated quests always use the template's terrain, map size, and random seed.
-  For full control over map generation parameters, use RGSEditor directly.
+Complete RGSEditor replacement. Full .q file parser/writer with from-scratch quest creation.
 
-### Quest Map Generator — Testing Status
-The parser works (37/37 files pass) and the writer generates structurally valid .q files.
-**No generated quest has been loaded in-game yet.** See `QuestMapGenerator/TODO.md` for
-testing plan and remaining work.
+**Key files:**
+- `rgs_format.py` — Sequential parser/writer + `create_quest()` API + CLI (inspect, create, modify, presets)
+- `quest_map_generator.py` — Higher-level CLI with --deploy, --terrain, --seed flags
+- `test_rgs_format.py` — Unit tests (43 tests, all passing)
+- `constants_rgs_reference.md` — Base game terrain/landscape pattern catalog (234 entries from Data/constants.rgs)
+- `expansion_constants_reference.md` — Expansion terrain/landscape patterns (176 entries from DataMX/mx_constants.rgs)
+- `buildings_reference.md` — Building/unit Object IDs (BB**, AB**, BV**, etc.)
+- `FINDINGS.md` — Decompilation results, binary format details, confirmed field mappings
+- `TODO.md` — Priority tracking and architecture notes
+
+**Capabilities (all in-game validated):**
+- Parse all 37 .q files (100%), byte-perfect roundtrip on MyQuest
+- Create quests from scratch: unit patterns, spawners, per-lair overrides, terrain, force layout
+- 14 terrain presets + 25 landscape zones + fully custom blend support
+- Force pattern: player modes (1P-4P), difficulty ratings, off-map placement
+- JSON config input, --deploy to game folder, fixed seed support
+- Spawner field mapping confirmed via Ghidra decompilation
+
+**IMPORTANT:** When working on quest generation, always check the reference .md files
+in this folder FIRST — they contain the complete catalogs of terrain patterns, landscape
+objects, building IDs, and sprite groups available in the game.
