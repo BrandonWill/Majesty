@@ -1,5 +1,11 @@
 # Task: Decompile the SMNU Panel Parser
 
+## Setup
+
+- **Binary:** `MajestyHD.exe` (already loaded in Ghidra project `MajestyRE`)
+- **Tool:** Use the Ghidra MCP to decompile functions, search for addresses, read disassembly
+- **Project location:** `C:\Users\Brandon\Tools\GhidraProjects\MajestyRE`
+
 ## Context
 
 We attempted to build a custom SMNU panel from scratch. The game crashed with:
@@ -16,22 +22,19 @@ We need to know what every field means, in what order, with what sizes.
 
 ## Primary Target: 0x0063A232
 
-This is where the crash occurred. Decompile the function containing this address.
-It's likely the SMNU widget parser or a widget renderer that's reading our malformed data.
-
-Steps:
-1. Find the function containing address 0x0063A232
-2. Decompile it fully
+This is where the crash occurred. Use Ghidra MCP to:
+1. `get_function_at` or `get_function_containing` address 0x0063A232
+2. `decompile_function` at that address — get the full C decompilation
 3. Look at what it was trying to read (offset 2 from a null pointer = struct->field_02)
 4. Trace back to see what struct it expected and how it's populated from SMNU data
 
 ## Secondary Target: SMNU Section Loader
 
 The SMNU section is read from the CAM file and parsed into widget objects.
-Find this parser by:
-1. Search for string "SMNU" — find where the engine identifies this section type
-2. Trace to the function that reads the SMNU binary blob
-3. Decompile that function — it creates the panel's widget tree from the raw bytes
+Find this parser using Ghidra MCP:
+1. `search_strings` for "SMNU" — find where the engine identifies this section type
+2. `get_xrefs_to` that string address — find all code that reads it
+3. `decompile_function` on the caller — it creates the panel's widget tree from the raw bytes
 
 ## What We Need to Know
 
