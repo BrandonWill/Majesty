@@ -1899,3 +1899,18 @@
 		(title Siege_Marker)
 	}
 [end]
+
+[TestShop1]
+	{Building
+		(type 			building)
+		(subtype		xx)
+		(title 			TestShop1)
+		(cost 500)
+		(costMultiplier 1.0)
+		(Level			1)
+		(birthscript		basic_birth)
+		(birthScript2		Building_Birth)
+		(IGdeathscript		building_death)
+		(Sleep_For		10000)
+	}
+[end]
