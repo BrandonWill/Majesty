@@ -268,74 +268,101 @@ PANEL_INDEX_PT02 = 36            # Second new panel added by quest CAM
 
 
 # --------------------------------------------------------------------------
-# STRT String Table Builder
+# STRT String Table Builder — uses str_tool.py's proven format
 # --------------------------------------------------------------------------
 
 def build_strt(strings):
     """
-    Build a STRT (string table) binary blob.
-
-    Actual STRT format (decoded from mx_textdata.cam):
-      [u16 count] [u16 format=0x0200]
-      [count * u32 absolute_offsets]  (point to each string entry)
-      [string entries: u32_index + null-terminated ASCII]
-
-    Each string entry is: [u32 sequential_index][ASCII string bytes][0x00]
-    The offsets point to the u32 index prefix of each entry.
+    Build a STRT binary blob from a list of strings.
+    Uses the CORRECT format matching str_tool.py / the Polish Majesty-Tools:
+    
+    Header (4 bytes):
+      u16 line_count
+      u8  unicode_flag (0x00 = ASCII/cp1250)
+      u8  version_flag (0x02 = HD format with u32 offsets)
+    
+    Offset table (line_count × u32):
+      Absolute byte offsets to each null-terminated string
+    
+    Content:
+      Null-terminated strings in sequence (NO index prefix before each string)
     """
-    count = len(strings)
-    format_id = 0x0200
-
+    line_count = len(strings)
+    
+    # Encode strings to bytes
+    encoded = [s.encode('latin-1', errors='replace') for s in strings]
+    
     # Calculate sizes
-    header_size = 4  # u16 count + u16 format
-    offset_table_size = count * 4
-    data_start = header_size + offset_table_size
-
-    # Build string entries and calculate offsets
-    entries = []
+    header_size = 4  # u16 + u8 + u8
+    offset_table_size = line_count * 4  # u32 per line
+    content_start = header_size + offset_table_size
+    
+    # Calculate offsets
     offsets = []
-    current_offset = data_start
-    for i, s in enumerate(strings):
-        entry = struct.pack("<I", i) + s.encode('ascii', errors='replace') + b'\x00'
-        offsets.append(current_offset)
-        entries.append(entry)
-        current_offset += len(entry)
-
-    # Assemble
+    current = content_start
+    for line in encoded:
+        offsets.append(current)
+        current += len(line) + 1  # +1 for null terminator
+    
+    # Build output
     out = bytearray()
-    out += struct.pack("<HH", count, format_id)
+    
+    # Header: u16 count, u8 unicode=0x00, u8 version=0x02
+    out += struct.pack("<H", line_count)
+    out += struct.pack("B", 0x00)  # ASCII mode
+    out += struct.pack("B", 0x02)  # HD format (u32 offsets)
+    
+    # Offset table
     for off in offsets:
         out += struct.pack("<I", off)
-    for entry in entries:
-        out += entry
-
+    
+    # Content: null-terminated strings
+    for line in encoded:
+        out += line
+        out += b"\x00"
+    
     return bytes(out)
 
 
 def parse_strt(data):
     """
     Parse a STRT binary blob and return list of strings.
-    Format: [u16 count][u16 format][count * u32 offsets][entries: u32 idx + ASCII\0]
+    Matches str_tool.py's read_strt() logic.
     """
-    count = struct.unpack_from("<H", data, 0)[0]
-    # format_id = struct.unpack_from("<H", data, 2)[0]
-
+    if len(data) < 4:
+        return []
+    
+    line_count = struct.unpack_from("<H", data, 0)[0]
+    version_flag = data[3]
+    
+    pos = 4
     offsets = []
-    for i in range(count):
-        off = struct.unpack_from("<I", data, 4 + i * 4)[0]
+    for _ in range(line_count):
+        if version_flag == 0x00:
+            off = struct.unpack_from("<H", data, pos)[0]
+            pos += 2
+        else:
+            off = struct.unpack_from("<I", data, pos)[0]
+            pos += 4
         offsets.append(off)
-
+    
     strings = []
-    for i, off in enumerate(offsets):
-        # Skip the u32 index prefix
-        str_start = off + 4
-        # Find null terminator
-        end = str_start
-        while end < len(data) and data[end] != 0:
-            end += 1
-        s = data[str_start:end].decode('ascii', errors='replace')
-        strings.append(s)
-
+    for i in range(line_count):
+        start = offsets[i]
+        if i + 1 < line_count:
+            end = offsets[i + 1] - 1  # minus null terminator
+        else:
+            end = len(data) - 1
+        
+        if start >= len(data):
+            strings.append("")
+            continue
+        if end > len(data):
+            end = len(data)
+        
+        line = data[start:end].decode('latin-1', errors='replace')
+        strings.append(line)
+    
     return strings
 
 
