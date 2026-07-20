@@ -147,6 +147,7 @@ JSON config accepts all `create_quest()` parameters including lair_override and 
 - ~~**`--deploy` flag**: Auto-copy generated quest to game's Quests folder~~ ✅ DONE
 - ~~**`--seed` parameter**: Fixed random seed for reproducible maps~~ ✅ DONE
 - ~~**`modify` command**: Read existing .q, patch fields, write back~~ ✅ DONE
+- ~~**`slot_configs` parameter**: Multi-kingdom quests (up to 7 kingdoms)~~ ✅ DONE
 - **In-game terrain validation**: Confirm new terrain presets render correctly (manual test)
 
 ---

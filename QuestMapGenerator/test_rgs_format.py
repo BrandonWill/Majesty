@@ -631,8 +631,149 @@ class TestForcePatternLayout:
 
 
 # =============================================================================
-# Integration tests — real quest files
+# Multi-kingdom slot config tests
 # =============================================================================
+
+class TestMultiKingdomSlots:
+    """Tests for the slot_configs parameter — multi-kingdom quests."""
+
+    def test_default_slots_unchanged(self):
+        """Without slot_configs param, default 2-slot behavior is preserved."""
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "Test", [{"name": "Player1", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                ]}],
+            )
+        assert len(qf._slot_configs) == 8
+        assert qf._slot_configs[0].name == "Human Player"
+        assert qf._slot_configs[0].active is True
+        assert qf._slot_configs[1].name == "player2_ai"
+        assert qf._slot_configs[1].active is True
+        for i in range(2, 7):
+            assert qf._slot_configs[i].active is False
+        assert qf._slot_configs[7].name == "Monsters"
+        assert qf._slot_configs[7].active is True
+
+    def test_7_kingdom_ffa(self):
+        """7-slot FFA config like 7Kings."""
+        slots = [
+            {"name": "Human Player", "starting_gold": 30000, "sub_items": [0]},
+            {"name": "AI Kingdom 1", "starting_gold": 30000, "sub_items": [1]},
+            {"name": "AI Kingdom 2", "starting_gold": 30000, "sub_items": [2]},
+            {"name": "AI Kingdom 3", "starting_gold": 30000, "sub_items": [3]},
+            {"name": "AI Kingdom 4", "starting_gold": 30000, "sub_items": [4]},
+            {"name": "AI Kingdom 5", "starting_gold": 30000, "sub_items": [5]},
+            {"name": "AI Kingdom 6", "starting_gold": 30000, "sub_items": [6]},
+        ]
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "7Kings", [{"name": f"Kingdom{i}", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [65 + i]}
+                ]} for i in range(7)],
+                slot_configs=slots,
+            )
+        # 7 kingdom slots + auto-added Monsters = 8
+        assert len(qf._slot_configs) == 8
+        assert qf._slot_configs[0].name == "Human Player"
+        assert qf._slot_configs[6].name == "AI Kingdom 6"
+        assert qf._slot_configs[7].name == "Monsters"
+        # All kingdoms active
+        for i in range(7):
+            assert qf._slot_configs[i].active is True
+
+    def test_custom_gold_per_slot(self):
+        """Each slot can have different starting gold."""
+        slots = [
+            {"name": "Rich King", "starting_gold": 100000, "sub_items": [0]},
+            {"name": "Poor King", "starting_gold": 5000, "sub_items": [1]},
+        ]
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "Test", [{"name": "P1", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                ]}],
+                slot_configs=slots,
+            )
+        assert qf._slot_configs[0].starting_gold == 100000
+        assert qf._slot_configs[1].starting_gold == 5000
+
+    def test_explicit_monster_slot(self):
+        """When Monsters slot is explicitly provided, it's not auto-added."""
+        slots = [
+            {"name": "Human Player", "sub_items": [0]},
+            {"name": "Monsters", "index": 7, "starting_gold": 0, "sub_items": [0, 1, 2]},
+        ]
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "Test", [{"name": "P1", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                ]}],
+                slot_configs=slots,
+            )
+        # Should be exactly 2 — no auto-added Monsters
+        assert len(qf._slot_configs) == 2
+        monster_slots = [s for s in qf._slot_configs if s.name == "Monsters"]
+        assert len(monster_slots) == 1
+        assert monster_slots[0].sub_items == [0, 1, 2]
+
+    def test_slot_configs_roundtrip(self):
+        """Multi-kingdom quest roundtrips through write/read."""
+        slots = [
+            {"name": "Human Player", "starting_gold": 30000, "sub_items": [0]},
+            {"name": "p2", "starting_gold": 30000, "sub_items": [1]},
+            {"name": "p3", "starting_gold": 25000, "sub_items": [2]},
+            {"name": "p4", "starting_gold": 20000, "sub_items": [3]},
+        ]
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "MultiK", [{"name": f"K{i}", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [65 + i]}
+                ]} for i in range(4)],
+                slot_configs=slots,
+            )
+        with tempfile.NamedTemporaryFile(suffix=".q", delete=False) as f:
+            out = Path(f.name)
+        try:
+            write_quest_file(qf, out)
+            qf2 = read_quest_file(out)
+            # Verify slot data survived roundtrip
+            assert len(qf2._slot_configs) == len(qf._slot_configs)
+            for orig, loaded in zip(qf._slot_configs, qf2._slot_configs):
+                assert orig.name == loaded.name
+                assert orig.active == loaded.active
+                assert orig.starting_gold == loaded.starting_gold
+                assert orig.sub_items == loaded.sub_items
+        finally:
+            out.unlink()
+
+    def test_inactive_slots(self):
+        """Slots can be explicitly marked inactive."""
+        slots = [
+            {"name": "Human Player", "active": True, "sub_items": [0]},
+            {"name": "Disabled AI", "active": False, "sub_items": []},
+        ]
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            qf = create_quest(
+                "Test", [{"name": "P1", "entries": [
+                    {"id": "ABJ1", "desc": "Palace", "cells": [77]}
+                ]}],
+                slot_configs=slots,
+            )
+        assert qf._slot_configs[0].active is True
+        assert qf._slot_configs[1].active is False
 
 class TestRealQuestFiles:
     """Tests that use the actual game quest files (requires Quests/ directory)."""
@@ -695,7 +836,7 @@ if __name__ == "__main__":
     test_classes = [
         TestBinaryReader, TestBinaryWriter, TestSpawnerBlock,
         TestCreateQuest, TestLairOverrides, TestTerrainPresets,
-        TestForcePatternLayout,
+        TestForcePatternLayout, TestMultiKingdomSlots,
     ]
 
     passed = 0

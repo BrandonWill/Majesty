@@ -3,8 +3,9 @@
 ## Detailed Steering Files (manual inclusion)
 
 When working on specific subsystems, include the relevant detailed steering file for full context:
-- **Quest/mod creation** → `#quest-and-mod-creation` (MQXML format, RGS workflow, file structure)
+- **Quest/mod creation** → `#quest-and-mod-creation` (MQXML format, RGS workflow, file structure, XML schema)
 - **CAM/sprite work** → `#cam-and-sprites` (TILE format, palettes, sprite encoding/decoding)
+- **GPL scripting** → `#gpl-reference` (undocumented primitives, engine gotchas, patterns, debugging)
 
 ## Workspace Layout
 
@@ -310,6 +311,7 @@ Complete RGSEditor replacement. Full .q file parser/writer with from-scratch que
 **Capabilities (all in-game validated):**
 - Parse all 37 .q files (100%), byte-perfect roundtrip on MyQuest
 - Create quests from scratch: unit patterns, spawners, per-lair overrides, terrain, force layout
+- Multi-kingdom slot configs (up to 7 player kingdoms + monsters, like 7Kings)
 - 14 terrain presets + 25 landscape zones + fully custom blend support
 - Force pattern: player modes (1P-4P), difficulty ratings, off-map placement
 - JSON config input, --deploy to game folder, fixed seed support

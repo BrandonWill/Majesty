@@ -45,14 +45,16 @@ WRITE_MAGIC = b"RGMa"  # Always write latest format
 # These reference resources in the game's constants.rgs terrain database.
 LANDSCAPE_ZONES = {
     # --- Grasslands ---
-    "grass": ("Gras", "Grassy", "xBBC", "#Pla", "Bump"),
+    "grass": ("Gras", "Grassy", "xFer", "#Ple", "Bump"),
+    "grass_bare": ("Gras", "Bare Grass", "xBBC", "#Pla", "Bump"),
     "grass_lush": ("Gras", "Grass", "xBBC", "#Plc", "Bump"),
     "grass_rolling": ("Fert", "Fertile #1", "xFer", "#Ple", "Roll"),
     "grass_forest": ("Fera", "Fertile #2", "xFeb", "#Pld", "Rola"),
     "grass_flat": ("Ferb", "Fertile #3", "xFec", "xGra", "Roll"),
     "grass_sparse": ("Spar", "Sparse Grass", "xBBC", "#Plc", "Bump"),
     # --- Snow ---
-    "snow": ("Snow", "Snowy", "Clea", "xSno", "FS01"),
+    "snow": ("Snow", "Snowy", "xCla", "xSno", "FS01"),
+    "snow_bare": ("Snow", "Bare Snow", "Clea", "xSno", "FS01"),
     "snow_ice": ("Icea", "Ice #2", "xDta", "xSnb", "Bump"),
     "snow_rolling": ("Ice ", "Ice #1", "xCla", "xSnc", "Rola"),
     # --- Swamp ---
@@ -901,6 +903,7 @@ def create_quest(
     starting_gold: int = 30000,
     spawners: list[dict] = None,
     seed: int = 0,
+    slot_configs: list[dict] = None,
 ) -> QuestFile:
     """
     Create a complete QuestFile from scratch — no template dependency.
@@ -947,6 +950,15 @@ def create_quest(
                 - "resolution": Grid cell spacing (default 3)
         starting_gold: Default starting gold for player factions
         seed: Random seed for map generation (0 = different each play, non-zero = fixed layout)
+        slot_configs: Optional list of player/kingdom slot definitions for multi-kingdom quests.
+            Each slot is a dict with:
+                - "name": Display name (e.g., "Human Player", "AI Kingdom 1")
+                - "active": Whether the slot is enabled (default True)
+                - "starting_gold": Starting gold for this slot (default: `starting_gold` param)
+                - "sub_items": List of spawner block indices assigned to this slot (default [])
+            Slot index 7 is conventionally reserved for "Monsters" (auto-added if not specified).
+            If omitted, defaults to 2-slot config (Human + AI + 5 empty + Monsters).
+            For 7-kingdom FFA, provide 7 active slots (indices 0-6) + Monsters at index 7.
 
     Returns:
         QuestFile ready to write with write_quest_file()
@@ -1035,18 +1047,39 @@ def create_quest(
             qf.spawner_blocks.append(block)
 
     # Slot configs (8 slots: Human, AI, 5× empty, Monsters)
-    qf._slot_configs = [
-        SlotConfig(index=0, name="Human Player", active=True,
-                   starting_gold=starting_gold, sub_items=[0]),
-        SlotConfig(index=1, name="player2_ai", active=True,
-                   starting_gold=starting_gold, sub_items=[1]),
-    ]
-    for i in range(2, 7):
+    # Can be fully customized for multi-kingdom quests (e.g., 7Kings-style FFA)
+    if slot_configs is not None:
+        qf._slot_configs = []
+        has_monster_slot = any(sc.get("name", "").lower() == "monsters" or sc.get("index", -1) == 7
+                              for sc in slot_configs)
+        for i, sc_def in enumerate(slot_configs):
+            idx = sc_def.get("index", i)
+            qf._slot_configs.append(SlotConfig(
+                index=idx,
+                name=sc_def.get("name", f"player{idx + 1}"),
+                active=sc_def.get("active", True),
+                starting_gold=sc_def.get("starting_gold", starting_gold),
+                sub_items=sc_def.get("sub_items", [i] if idx < 7 else []),
+            ))
+        # Auto-add Monsters slot at index 7 if not explicitly provided
+        if not has_monster_slot:
+            qf._slot_configs.append(SlotConfig(
+                index=7, name="Monsters", active=True,
+                starting_gold=0,
+                sub_items=list(range(len(qf.spawner_blocks)))))
+    else:
+        qf._slot_configs = [
+            SlotConfig(index=0, name="Human Player", active=True,
+                       starting_gold=starting_gold, sub_items=[0]),
+            SlotConfig(index=1, name="player2_ai", active=True,
+                       starting_gold=starting_gold, sub_items=[1]),
+        ]
+        for i in range(2, 7):
+            qf._slot_configs.append(
+                SlotConfig(index=i, name="No Name", active=False))
         qf._slot_configs.append(
-            SlotConfig(index=i, name="No Name", active=False))
-    qf._slot_configs.append(
-        SlotConfig(index=7, name="Monsters", active=True,
-                   sub_items=list(range(len(qf.spawner_blocks)))))
+            SlotConfig(index=7, name="Monsters", active=True,
+                       sub_items=list(range(len(qf.spawner_blocks)))))
 
     # Three u32 values
     qf.field_46 = 0

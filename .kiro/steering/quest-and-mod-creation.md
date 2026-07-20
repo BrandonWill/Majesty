@@ -584,3 +584,291 @@ raw `{"tag", "name", "fractal", "texture", "height", "weight"}` definitions.
 6. Save `.mmxml`
 7. Copy to `My Games/MajestyHD/Mods/YourMod/` folder
 8. Launch game → Mod appears in Mod list → activate it
+
+
+---
+
+# XML Schema Reference
+
+Complete reference for data description XML files. All features confirmed working via Workshop mods.
+
+## Action/Spell Definitions
+
+```xml
+<Description type="Action" subType="Standard" ID="mySpell" Name="my_spell" Description="My Spell">
+  <Engine version="1">
+    <ImageSet value="Cast"/>             <!-- animation played during cast -->
+    <CompletionImageSet value="Stand"/>  <!-- animation after cast -->
+    <Sound value="Sound_Name"/>          <!-- optional cast sound -->
+    <SoundPhase begin="Begin"/>
+    <!-- EITHER a projectile OR a GPL callback (not both): -->
+    <Projectile value="missile_name"/>
+    <!-- OR: -->
+    <Script type="0" cProc="0" GPLFunction="MySpell_Begin"/>
+  </Engine>
+  <Game version="1">
+    <Flags value="IsSpell"/>
+    <TimeoutDuration value="10000"/>     <!-- cooldown in ms -->
+    <EffectorDuration value="21000"/>    <!-- effector lifetime (separate from timeout) -->
+    <SpellType value="Attack"/>          <!-- Attack, CombatUtility, 4 (self-buff) -->
+    <SpellRank value="6"/>              <!-- REQUIRED for AI to cast; higher = preferred -->
+    <CharacterLevel value="5"/>          <!-- level required to learn/cast -->
+    <ValidationScript value="check_fn"/> <!-- optional GPL gate function -->
+    <Rate min="0" max="800"/>            <!-- action timing/animation rate -->
+  </Game>
+</Description>
+```
+
+### Key Action Attributes
+
+| Attribute | Purpose | Notes |
+|-----------|---------|-------|
+| `SpellRank` | AI casting priority | **REQUIRED** — AI never casts without it |
+| `SpellType` | Spell classification | Attack, CombatUtility, 4 (numeric self-buff) |
+| `CharacterLevel` | Level-gate | Hero must reach this level to learn/cast |
+| `ValidationScript` | Cast gating | GPL function returns true/false to allow cast |
+| `EffectorDuration` | Buff duration | How long attached effector lasts (ms) |
+| `TimeoutDuration` | Cooldown | Time before spell can be cast again (ms) |
+| Multiple `<SpellType>` | Stack flags | Can combine Attack + CombatUtility |
+
+## Overlay Definitions
+
+### Visible Effector (Rendered Over Unit)
+
+```xml
+<Description type="Unit" subType="Overlay" ID="xxx" Name="spell_effector" Description="...">
+  <Engine version="1">
+    <Info value="Directionless"/>
+    <Info value="DontBlock"/>
+    <Menu value="11"/>                   <!-- 11 = effector overlay category -->
+    <ImageIDBase value="WRc1"/>          <!-- actual sprite animation reference -->
+    <AttachmentPointID value="2"/>       <!-- bone attachment point -->
+    <DefaultSound value="0"/>
+  </Engine>
+  <Game version="1">
+    <Flags value="TransparentToMouse"/>  <!-- click-through -->
+    <StackPriority value="0"/>           <!-- lower = drawn first -->
+  </Game>
+</Description>
+```
+
+### Invisible Timer (Fires Callback on Expiry)
+
+```xml
+<Description type="Unit" subType="Overlay" ID="xxx" Name="spell_icon" Description="...">
+  <Engine version="1">
+    <Info value="Directionless"/>
+    <Info value="DontBlock"/>
+    <Menu value="11"/>
+    <ImageIDBase value="HRb1"/>          <!-- minimal/invisible sprite -->
+    <Script type="0" cProc="0" GPLFunction="MySpell_End"/>  <!-- EXPIRY CALLBACK -->
+    <DefaultSound value="0"/>
+  </Engine>
+  <Game version="1">
+    <StackPriority value="1"/>           <!-- higher = processed after visual -->
+  </Game>
+</Description>
+```
+
+### Key Overlay Attributes
+
+| Attribute | Values | Purpose |
+|-----------|--------|---------|
+| `Menu` | 0 (standard), 11 (effector/icon) | Display category |
+| `Info value="Static"` | — | Non-animated (single frame) |
+| `AttachmentPointID` | 2 (body) | Which bone point to attach to |
+| `Script GPLFunction` | function name | Called when effector timer expires |
+| `Flags value="TransparentToMouse"` | — | Click-through overlay |
+| `StackPriority` | 0+ | Layering order (higher = on top / processed later) |
+
+## Building Definitions
+
+```xml
+<Description type="Unit" subType="Building" ID="ABE1" Name="Guardhouse1" Description="Guardhouse">
+  <Engine version="1">
+    <Info value="BlockGround"/>
+    <Info value="BlockFlying"/>
+    <Info value="ModifyTerrainTextureOnPlacement"/>
+    <CanUse value="HumanPlayer"/>        <!-- who can build it -->
+    <Menu value="2"/>                    <!-- 1=guilds, 2=defenses, 3=economy... -->
+    <ImageIDBase value="ABE1"/>          <!-- sprite reference -->
+    <DefaultSound value="Guard_House"/>
+  </Engine>
+  <Game version="1">
+    <DialogID value="AP17"/>
+    <Cost value="600"/>
+    <UpgradeTo value="Guardhouse2"/>     <!-- upgrade chain target -->
+    <Multiplier value="1.25"/>           <!-- cost escalation for multiple -->
+    <IncomeType value="3"/>              <!-- 2=revenue, 3=maintenance -->
+    <MaxHP value="100"/>
+    <SightRange value="400"/>
+    <Flags value="HasHPBar"/>
+    <Flags value="NumberedName"/>        <!-- auto "#1", "#2" suffix -->
+    <HelpID value="h073"/>
+    <Produces><Unit ID="City_Guard"/></Produces>  <!-- recruitable units -->
+  </Game>
+</Description>
+```
+
+### Key Building Attributes
+
+| Attribute | Purpose | Notes |
+|-----------|---------|-------|
+| `UpgradeTo` | Upgrade chain | Points to next building ID |
+| `Multiplier` | Cost escalation | Each additional copy costs more |
+| `IncomeType` | Economic type | 2=revenue, 3=maintenance |
+| `Produces` | Recruitable units | `<Unit ID="..."/>` children |
+| `Flags value="NumberedName"` | Auto-numbering | Adds "#1", "#2" suffix |
+| `Menu` | Build menu category | Which menu tab building appears in |
+
+## Research/Services/Items Pattern
+
+The engine's "recruit a character" UI can be repurposed for ANY purchasable action:
+
+```xml
+<!-- Research slot (invisible character = purchasable research) -->
+<Description type="Unit" subType="Character" ID="ResearchHealing" Name="ResearchHealing" ...>
+  <Engine version="1">
+    <Info value="Static"/>
+    <Info value="Directionless"/>
+    <Info value="DontBlock"/>
+    <CanUse value="HumanPlayer"/>
+    <Menu value="8"/>                    <!-- Menu 8 = research/service slot in building UI -->
+    <ImageIDBase value="AVk4"/>          <!-- icon sprite -->
+  </Engine>
+  <Game version="1">
+    <MaxHP value="1"/>
+    <RecruitDelay value="10000"/>        <!-- research time (ms) -->
+    <Flags value="NotFlaggable"/>
+    <Flags value="NotSpellTarget"/>
+  </Game>
+</Description>
+```
+
+Key insight: `subType="Character"` + `Menu value="8"` = research/service slot.
+`RecruitDelay` = research time. `birthScript` = on-purchase callback in GPL.
+
+---
+
+# MQXML/MMXML Advanced Features
+
+Discoveries from Workshop mod analysis (not in SDK documentation).
+
+## Undocumented Tags
+
+| Tag | Purpose | Example | Source |
+|-----|---------|---------|--------|
+| `<GPLSource>` | Tells engine where GPL source lives (for debugger) | `<GPLSource>GPL</GPLSource>` | WorldWarMajesty |
+| `<CAM>` | Loads raw CAM archives (sound data confirmed, sprites theoretically possible) | `<CAM>Data/sounds.cam</CAM>` | MK Sound-Set Extensions |
+| `<Constants>` in `<Unload>` | Implies constants.rgs is loadable/unloadable | — | SDK MQXML template |
+
+## Multiple Mods in One MMXML
+
+A single `.mmxml` can contain multiple `<Mod>` entries (each with unique GUID):
+
+```xml
+<Majesty>
+  <Mod id="{GUID-1}">
+    <Name>VariantA</Name>
+    <!-- ... -->
+  </Mod>
+  <Mod id="{GUID-2}">
+    <Name>VariantB</Name>
+    <!-- ... -->
+  </Mod>
+</Majesty>
+```
+
+Player picks which variant to enable. StandAloneAI ships 15 variants this way.
+
+## Dual-Dataset Mods
+
+Ship one `<Mod>` for base game and one for expansion in the same mmxml:
+
+```xml
+<Majesty>
+  <Mod id="{GUID-BASE}">
+    <Name>MyMod_Base</Name>
+    <DataConfiguration>
+      <Dataset base="Majesty">
+        <Load><GPL>Data/mod_base.bcd</GPL></Load>
+      </Dataset>
+    </DataConfiguration>
+  </Mod>
+  <Mod id="{GUID-EXPANSION}">
+    <Name>MyMod_Expansion</Name>
+    <DataConfiguration>
+      <Dataset base="MajestyExpansion">
+        <Load><GPL>Data/mod_expansion.bcd</GPL></Load>
+      </Dataset>
+    </DataConfiguration>
+  </Mod>
+</Majesty>
+```
+
+Engine auto-loads the right one based on active quest's dataset.
+
+## Dataset Base Risks
+
+- `base="Any"` → mod loads with ANY quest but can misbind attribute names against wrong ruleset
+- Best practice: use `base="Any"` only for mods that add entirely new data or override only by function name
+- Attribute writes via derived handles may silently fail in mod BCDs
+
+## Nested Description Paths
+
+Subdirectories work in `<Descriptions>` tags:
+
+```xml
+<Descriptions>Data/Items/Equipment_Items.xml</Descriptions>
+<Descriptions>Data/Research/Research.xml</Descriptions>
+```
+
+## Mod Architecture Patterns
+
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| Palace prototype as entry point | Palace `birthScript` IS the mod's entry function | StandAloneAI |
+| Expression-only BCD | Pure tuning mod (just constants) | GPL Scripting Reference |
+| Same-name function override | Redefine stock functions | Uncapped Cheats |
+| Mod load order exploitation | Later mods override earlier ones' expressions | All |
+
+---
+
+# Multi-Kingdom Quests (Programmatic)
+
+The `create_quest()` API now supports multi-kingdom configurations via `slot_configs`:
+
+```python
+# 7-Kingdom FFA (like 7Kings Workshop quest)
+qf = create_quest(
+    "SevenKings",
+    unit_patterns=[{"name": f"Kingdom{i}", "entries": [
+        {"id": "ABJ1", "desc": "Palace", "cells": [65 + i]}
+    ]} for i in range(7)],
+    slot_configs=[
+        {"name": "Human Player", "starting_gold": 30000, "sub_items": [0]},
+        {"name": "AI Kingdom 1", "starting_gold": 30000, "sub_items": [1]},
+        {"name": "AI Kingdom 2", "starting_gold": 30000, "sub_items": [2]},
+        {"name": "AI Kingdom 3", "starting_gold": 30000, "sub_items": [3]},
+        {"name": "AI Kingdom 4", "starting_gold": 30000, "sub_items": [4]},
+        {"name": "AI Kingdom 5", "starting_gold": 30000, "sub_items": [5]},
+        {"name": "AI Kingdom 6", "starting_gold": 30000, "sub_items": [6]},
+    ],
+    force_layout={
+        "players": [1],  # Single-player mode only
+        "entries": [{"pattern_idx": i, "position": chr(65 + i)} for i in range(7)],
+    },
+)
+```
+
+### Slot Config Fields
+
+| Field | Default | Purpose |
+|-------|---------|---------|
+| `name` | `"playerN"` | Display name for the kingdom |
+| `active` | `True` | Whether slot is enabled |
+| `starting_gold` | `starting_gold` param | Starting resources |
+| `sub_items` | `[index]` | Spawner block indices assigned to this kingdom |
+| `index` | position in list | Slot index (0-7, with 7 = Monsters by convention) |
+
+Monsters slot (index 7) is auto-added if not explicitly included.
