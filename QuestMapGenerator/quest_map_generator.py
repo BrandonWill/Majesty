@@ -1052,12 +1052,15 @@ def generate_mqxml(
     description_short: str = None,
     description_long: str = None,
     difficulty: str = "Normal",
+    quest_id: str = None,
 ) -> Path:
     """
     Generate a .mqxml quest definition file.
 
     Args:
-        quest_name: Internal quest name (used in Name element)
+        quest_name: Internal quest name (used in Name element).
+            IMPORTANT: This must match the GPL init function name referenced
+            by the .q file's pattern name field (e.g., "basicAI").
         output_path: Where to write the .mqxml
         dataset_base: "Majesty" or "MajestyExpansion"
         q_filename: Name of the .q file (default: Quest.q)
@@ -1069,6 +1072,8 @@ def generate_mqxml(
         description_short: Short description text
         description_long: Long description text
         difficulty: "Easy", "Normal", "Hard"
+        quest_id: Optional GUID string (with or without braces). If None,
+            a random UUID4 is generated. Must be valid hex characters only.
 
     Returns:
         Path to the written .mqxml file
@@ -1089,8 +1094,20 @@ def generate_mqxml(
     if description_long is None:
         description_long = description_short
 
-    # Generate a GUID
-    quest_guid = f"{{{str(uuid.uuid4()).upper()}}}"
+    # Generate or validate a GUID
+    if quest_id is not None:
+        # Strip braces if present, validate, and reformat
+        clean = quest_id.strip().strip('{}')
+        try:
+            parsed = uuid.UUID(clean)
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid quest_id '{quest_id}': {e}. "
+                f"Must be a valid UUID (hex characters 0-9, A-F only)."
+            )
+        quest_guid = f"{{{str(parsed).upper()}}}"
+    else:
+        quest_guid = f"{{{str(uuid.uuid4()).upper()}}}"
 
     # Build Load section
     load_lines = []

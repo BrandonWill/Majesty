@@ -139,8 +139,32 @@ Using `base="Majesty"` with this template causes the game to freeze on quest sca
 
 ### GUID
 
-Random UUIDs work fine. The game accepts them. RGSEditor shows them as a numeric ID.
-No special validation beyond uniqueness.
+Random UUIDs work fine. The game accepts any valid UUID4 (or even non-standard GUIDs
+like the official `{31305551-0000-0000-0000-000000000000}` ASCII-tag format).
+
+**Root cause of "broken GUID" reports (resolved July 2026):**
+1. PanelTest_Quest had `{C8F4B32D-6A90-4E23-AB4F-8D7**G**3E9F2C15}` — invalid hex char `G`.
+   This was hand-typed, not from `uuid.uuid4()`.
+2. IceSpell_Quest had valid GUID but `<Name>IceSpellTest</Name>` which didn't match
+   the `.q` file's pattern reference `basicAI`. The game couldn't find the GPL init function.
+
+**Key rules for valid mqxml:**
+- GUID must contain only hex chars (0-9, A-F) in standard `{8-4-4-4-12}` format
+- `<Name>` must match the GPL init function name referenced in the `.q` file
+- `<Dataset base="...">` must match the .q format (Majesty vs MajestyExpansion)
+- The GUID is NOT stored in the .q file — no cross-validation between them
+
+**⚠️ NEVER hand-type or invent a UUID.** LLMs will hallucinate invalid hex characters
+(e.g., `G` instead of constraining to 0-9/A-F). Always generate via code:
+```bash
+python -c "import uuid; print(f'{{{str(uuid.uuid4()).upper()}}}')"
+```
+Or use the `generate_mqxml()` function which calls `uuid.uuid4()` internally.
+
+**Official game ID scheme (FYI):**
+- Base game quests: `{xxUQ-0000-0000-0000-000000000000}` (xx = 2-digit counter as ASCII hex)
+- Expansion quests: `{xxQX-0000-0000-0000-000000000000}`
+- Special: VAMP, FRE0, FRE1, MD01 (4-char ASCII tags encoded as LE u32 hex)
 
 ---
 
