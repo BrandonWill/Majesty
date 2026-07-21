@@ -165,6 +165,43 @@ New custom buildings (new DialogID) can't have Research panels without exe patch
 
 ---
 
+## Priority 3.5: Investigate Scrollable List Widget (Type 6) for Research Panels
+
+### Findings (July 2026 session)
+- **Widget type 6** = scrollable list container (object size 368 bytes, constructor FUN_006d0dd0)
+- **Widget type 9** = scrollbar/slider (object size 340 bytes, constructor FUN_006cc5d0)
+- Both read geometry directly after sub_id: `[type, sub_id, x, y, w, h, <tag-value pairs>]`
+- Linked by action codes: list uses **5000**, paired scrollbar uses **5001** or **5010**
+- Scrollbar is always 25px wide, positioned to the right of the list area
+- Image set "INDj" for scrollbar, "INTI" for list in scroll contexts
+
+### Geometry Examples
+- MX01 (Hall of Champions): list=164×160, scrollbar at x=174 w=25 h=167
+- AP40 (Palace hero roster): list=173×356, scrollbar at x=176 w=25 h=362
+
+### Open Question
+- List CONTENTS are populated by C++ building class code at runtime
+- The SMNU only defines the container (size, position, styling)
+- Adding type 6 to a research panel would render an empty list unless the
+  building's C++ populator knows to fill it with research items
+- Need Ghidra to check: what does the research panel populator (`FUN_00495790`) actually do?
+  Does it look for a type 6 list and fill it, or only set text on fixed button widgets?
+
+### Warriors Guild (AP52) Dynamic Panel Pattern
+- ALL possible recruit buttons are pre-defined in SMNU (Warrior, Discord, Paladin)
+- C++ code shows/hides buttons at runtime based on what temples are built
+- This means the engine supports **runtime widget visibility control**
+- Recruit buttons use action 8009 with 258/266 alternates (conditional navigation)
+- This is a viable pattern: define max slots in SMNU, let C++ hide unused ones
+
+### Possible Approach (alternative to multi-page navigation)
+If we could make the research panel C++ code populate a type 6 list widget with
+research items (instead of fixed button slots), scrolling would work natively.
+BUT this likely requires an exe patch to the research panel populator function.
+Compare difficulty: one exe patch for scroll support vs one exe patch for sub-panel nav.
+
+---
+
 ## Priority 4: Modder Tooling — XML Panel Definition Language
 
 ### Goal
