@@ -1,3 +1,52 @@
+# ⚠️ ACCURACY REVIEW
+
+Cross-referenced against proven findings in:
+- `SMNUResearch/FUTURE_TODO.md` (confirmed test results)
+- `SMNUResearch/findings/exe_disassembly_results.md` (Ghidra findings)
+- `SMNUResearch/findings/smnu_parser_decompilation.md` (SMNU format)
+
+## CORRECT ✅
+
+1. **SMNU format is tag-value int32 stream** — Confirmed by smnu_parser_decompilation.md and FUTURE_TODO.md ("SMNU format is a tag-value int32 stream (fully decoded)")
+2. **Quest CAMs ARE loaded but STRT entries are NOT used to override** — Confirmed by FUTURE_TODO.md ("Quest CAMs loaded via `<CAM>` ARE loaded... Quest SMNU/STRT entries with same name as base/expansion do NOT override (first-loaded wins)")
+3. **It's a search priority issue, not a loading issue** — Confirmed by FUTURE_TODO.md ("This is a search priority issue in FUN_00679a80, not a loading issue")
+4. **Quest CAMs DO work for IMAG/TILE/sound (sprites)** — Confirmed by FUTURE_TODO.md ("Quest CAMs DO work for: IMAG, TILE, SPLT (sprites), WAVE (audio) — these DO override")
+5. **Building-to-panel mapping is hardcoded in vtable methods** — Confirmed by exe_disassembly_results.md ("The mapping is HARDCODED in per-building-class virtual functions (vtable methods)")
+6. **Panel open function is FUN_004b0ce0(panelName4CC, context)** — Confirmed by exe_disassembly_results.md (exact match)
+7. **Inserting widgets into existing SMNU panels WORKS (via direct file replacement)** — Confirmed by FUTURE_TODO.md ("Inserting widgets into existing SMNU panels WORKS (via direct file replacement)")
+8. **Each building panel has its own STRT entry (same entry name as SMNU)** — Confirmed by smnu_parser_decompilation.md ("STRT is found by SAME entry name as SMNU in the CAM")
+9. **Tag 7 = string from STRT by index** — Confirmed by smnu_parser_decompilation.md
+10. **Distribution requires modified mx_textdata.cam (direct file replacement)** — Confirmed by FUTURE_TODO.md
+
+## INCORRECT ❌
+
+1. **"there must be internal size/count fields" (Priority 1 in Next Steps)** — WRONG. The SMNU format has NO size/count fields. It's a pure tag-value int32 stream terminated by -1 markers. The earlier insertion failures were due to not understanding the stream format, not missing size fields. The decompilation proves there are no embedded counts for the widget list.
+2. **"tree structure with nested widgets" (Priority 1)** — PARTIALLY WRONG. It's a flat sequential int32 stream, not a tree structure. Panels DO nest (type 1000 creates a sub-panel block), but the format is a sequential stream with -1 terminators, not a hierarchical tree with size prefixes.
+3. **"120-byte INBb block pattern" (Priority 2)** — INCORRECT framing. There is no fixed "120-byte block" in SMNU. Widgets are variable-length sequences of tag-value int32 pairs terminated by -1. The 120-byte observation was likely a coincidence of specific widgets having similar property counts.
+4. **Sub-panel navigation — session notes imply it might work with correct SMNU insertion** — INCORRECT. FUTURE_TODO.md proves "Only action code 8013 (return to parent) works from inside a sub-panel. Codes 4004, 8851, System B format — all silently ignored. Multi-page navigation is impossible without an exe patch."
+5. **"The 4-byte prefix is the string's own index within the entry" (Layer 3)** — INCORRECT. FUTURE_TODO.md confirms STRT format is "u16 count + u8 unicode_flag + u8 version + u32 offsets + null-terminated strings (NO index prefix)". The version 0x02 STRT has NO per-string index prefix — the "4-byte prefix" described in this file contradicts the proven format.
+
+## UNVERIFIED ⚠️ (not confirmed or contradicted by our findings)
+
+1. **EXE Patch: exe_patcher.py research button cost/time test** — The session notes claim in-game confirmation of the 500g cost appearing. Not referenced in the three comparison documents, so this is self-reported from the earlier session but not cross-validated.
+2. **FUN_004a8510 registers ALL 26 research buttons** — Specific registration function address and "26 buttons" count not confirmed in the comparison documents.
+3. **FUN_004a83e0(cost_expr, time_expr, level, buttonID, iconIdx, controlID)** — Registration function signature not in the comparison documents.
+4. **Prerequisite table at VA 0x7D3D10** — Not referenced in comparison documents.
+5. **Click handler FUN_004a94c0 routes by control_id range 5040-5043** — Not in comparison docs.
+6. **AP31 SMNU entry = 3204 bytes** — Specific byte count not validated in comparison docs.
+7. **"The Blacksmith has 6 research slots"** — Not confirmed in comparison documents.
+8. **Polish translation STRT version 0x00 uses u16 offsets** — FUTURE_TODO.md confirms version 0x02 uses u32 offsets, but the version 0x00 format details are not explicitly validated.
+
+## SUMMARY
+
+The session notes are **mostly correct** on the high-level architecture and what works/doesn't work. The main errors are:
+- Mischaracterizing the SMNU format as having "size/count fields" and being a "tree structure" (it's a flat int32 tag-value stream with -1 terminators)
+- Describing widgets as "120-byte fixed blocks" (they're variable-length)
+- Claiming STRT strings have a "4-byte prefix" (version 0x02 STRT has NO per-string prefix — just u32 offset table + null-terminated strings)
+- Missing the critical finding that sub-panel navigation is IMPOSSIBLE without an exe patch (only code 8013/return works)
+
+---
+
 # Research Button Investigation — Session Notes
 
 ## Goal
