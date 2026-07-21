@@ -22,7 +22,7 @@ This repo contains:
 ├── str_tool.py                # STRT string table ↔ TXT converter (translations)
 ├── sprite_extractor.py        # Extract sprites as PNGs with correct colors
 ├── sprite_injector.py         # Encode PNGs back into TILE RLE format
-├── RESEARCH_NOTES.md          # Detailed binary format reverse-engineering notes
+├── CAM_MODDING_GUIDE.md          # Data file modding guide (includes binary format appendix)
 ├── README.md                  # This file
 ├── tests/                     # Unit tests for CAM/STRT tools
 │

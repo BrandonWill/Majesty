@@ -12,11 +12,10 @@ description: CAM archive format, TILE sprite encoding, palette system, and sprit
 - `sprite_injector.py` — Encode PNGs back into TILE RLE format
 - `cam_writer.py` — Repack CAM archives with modified/replaced entries
 - `str_tool.py` — STRT string table converter (binary ↔ editable TXT)
-- `RESEARCH_NOTES.md` — Full binary format documentation
 
 ## Reference Documentation
 
-- #[[file:CAM_MODDING_GUIDE.md]] — Task-oriented guide: "what do I modify to achieve X?"
+- #[[file:CAM_MODDING_GUIDE.md]] — Task-oriented guide: "what do I modify to achieve X?" (includes low-level binary format appendix)
 
 ## CAM File Format
 

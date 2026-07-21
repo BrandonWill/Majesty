@@ -2,8 +2,8 @@
 cam_reader.py - CAM archive parser
 ====================================================================
 Parses the CAM container format used by Majesty Gold HD. Validated
-byte-for-byte against real game data files. Trust this over any
-hand-decoded byte-offset guesses in RESEARCH_NOTES.md.
+byte-for-byte against real game data files. See CAM_MODDING_GUIDE.md
+appendix for the full binary format specification.
 """
 
 import struct

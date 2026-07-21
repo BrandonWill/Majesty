@@ -18,6 +18,32 @@ The game uses a **layered dataset system**:
 Mods load XML `<Descriptions>` files DIRECTLY at runtime — you don't need to compile them into CAM.
 Only sprites/audio need to go into a CAM file.
 
+### Quest CAM Loading Limitations (Important!)
+
+Quest CAMs loaded via `<CAM>` in `.mqxml`/`.mmxml` files ARE loaded into the resource system —
+there is no loading error. However, **not all resource types can be overridden from quest CAMs**:
+
+| Resource Type | Quest CAM Override? | Notes |
+|---------------|:-------------------:|-------|
+| IMAG (animation sets) | ✅ YES | Last-loaded wins |
+| TILE (sprite frames) | ✅ YES | Last-loaded wins |
+| SPLT (palettes) | ✅ YES | Last-loaded wins |
+| WAVE (audio) | ✅ YES | Last-loaded wins |
+| SMNU (panel layouts) | ❌ NO | First-loaded wins (base/expansion shadows quest) |
+| STRT (string tables) | ❌ NO | First-loaded wins (base/expansion shadows quest) |
+
+**Why this happens:** The resource manager's lookup function (`FUN_00679a80`) uses a
+"first match" search for SMNU/STRT — it finds the base/expansion version first and stops.
+Sprite resources (IMAG/TILE) use a different lookup path that prefers last-loaded entries.
+This is a **search priority issue** in the engine, not a loading failure.
+
+**Practical consequence:** To modify building UI panels (textdata SMNU/STRT), you must
+directly replace `DataMX/mx_textdata.cam` (file replacement mod). Quest-only distribution
+of panel modifications is not possible without an exe patch to reverse the search order.
+
+Custom sprites, animations, and audio work perfectly from quest CAMs — only the text/UI
+panel system has this limitation.
+
 ---
 
 ## Quick Reference: What's In Each File
@@ -318,9 +344,10 @@ a random guild spell sound each time).
 **Sections:** SMNU (134 menu defs) + STRT (139 string tables)
 
 **What it contains:**
-UI **dialog panel layouts** and their associated **label text** — the structural definition
-of info windows you see when clicking buildings, heroes, monsters. NOT the long-form
-descriptive help text (that's in `gpltext.cam`).
+UI **dialog panel LAYOUTS** (SMNU section — widget positions, button structure, panel hierarchy)
+and their associated **button LABELS** (STRT section — short text strings for buttons, tabs,
+and panel titles). This defines the structural layout of info windows you see when clicking
+buildings, heroes, monsters. NOT the long-form descriptive help text (that's in `gpltext.cam`).
 
 Each entry (e.g., `AP02`) has both:
 - An SMNU entry: defines button positions, panel layout, widget structure
@@ -366,11 +393,11 @@ descriptive/help content that's referenced by GPL scripts and the UI engine:
 
 | Entry | Size | Purpose |
 |-------|------|---------|
-| `HPTX` | 43 KB | **ALL building/unit help descriptions** — the text shown in info panels (building purposes, hero class descriptions, upgrade info, research descriptions, "Heroes may purchase Healing Potions once researched", etc.) |
-| `AITX` | 14 KB | **AI state descriptions** — what heroes are doing ("Purchasing healing potions", "Enchanting weapon at the Wizards Guild", "Purchasing armor at the Blacksmith", "Learning new Wizard spell at the Library", etc.) |
+| `HPTX` | 43 KB | **ALL building/unit help descriptions** — every info panel description in the game (building purposes, hero class overviews, upgrade/research descriptions, item effects like "Heroes may purchase Healing Potions once researched", spell descriptions, etc.) This is NOT just "quest text" — it's the primary game help content. |
+| `AITX` | 14 KB | **AI status messages** — what heroes report they're doing ("Purchasing healing potions", "Enchanting weapon at the Wizards Guild", "Purchasing armor at the Blacksmith", "Learning new Wizard spell at the Library", etc.) |
 | `FDTX` | 8 KB | Quest/freestyle map descriptions ("Settlement starts with...", "Many strong monsters present") |
 | `FNTX` | 3 KB | Quest/freestyle names |
-| `DPTX` | 2.6 KB | Building dependency text ("requires a Dwarven settlement", "requires Palace Level 3") |
+| `DPTX` | 2.6 KB | **Building dependency text** — the prerequisite messages shown to the player ("requires a Dwarven settlement", "requires Palace Level 3", etc.) |
 | `QEND` | 5.6 KB | Quest end narration text |
 | `QITM` | 816 B | Quest items (Magic Sword, Shard of Combustion, Ring of Protection, Holy Chalice, etc.) |
 | `LNTX` | 666 B | Quest/location names (The Forsaken Land, Wizard's Curse, etc.) |
@@ -776,6 +803,48 @@ Your <GPL> bytecode
 
 ---
 
+## SMNU Panel Format (Reverse-Engineered)
+
+The SMNU format has been fully decoded via Ghidra decompilation. Key findings:
+
+### Format Overview
+- SMNU is a **tag-value int32 stream** (every value is a little-endian 32-bit integer)
+- Panel starts with `1000`, then tag-value property pairs, terminated by `-1`
+- Child widgets follow: `[type_code] [sub_id] [tags...] [-1]` repeated
+- Entire stream terminated by a final `-1`
+
+### Widget Property Tags (Most Common)
+| Tag | Values Consumed | Purpose |
+|-----|----------------|---------|
+| 2 | 4 (x, y, w, h) | Widget geometry/position |
+| 6 | 1 | Action identifier (stored at widget offset 0x14) |
+| 7 | 1 | String from STRT table (by index) — display text |
+| 12 | 1 | Image set (4-char name packed as int32, e.g. "INTG") |
+| 13 | 1 | TILE index — background/button graphic |
+| 18 | 1 | Font (4-char name packed as int32, e.g. "fnt4") |
+| 33 | 1 | Tooltip text from STRT (by index) |
+
+### Critical: STRT Connection
+- STRT is loaded by **matching entry name** — the STRT entry must have the SAME name
+  as the SMNU entry in the CAM file (e.g., if SMNU entry is "MX03", engine looks for
+  STRT entry also named "MX03")
+- If STRT is missing or not found: engine crashes (null dereference when tag 7 is processed)
+
+### Building-to-Panel Mapping
+- The mapping from building type → panel name is **hardcoded in the exe** (vtable per building class)
+- New custom buildings cannot have new panels without an exe patch
+- Existing panels CAN be modified by replacing their SMNU/STRT data
+
+### Sub-Panel Navigation
+- Panel navigation from sub-panels only supports action code **8013** (return to parent)
+- Other navigation codes (4004, 8851, System B format) are silently ignored in sub-panel context
+- Multi-page navigation is impossible without an exe patch
+
+### Further Details
+See `SMNUResearch/` folder for full decompilation results, test findings, and format documentation.
+
+---
+
 ## XML Definition Types Reference
 
 All game objects use the same XML schema with `type` and `subType`:
@@ -895,5 +964,127 @@ The 4-character ID system used across IMAG, DUNT, DACT sections:
 | `cam_writer.py` | Repack a CAM with modified entries, or build from extracted dir |
 | `sprite_extractor.py` | Get PNGs of any game sprite |
 | `sprite_injector.py` | Convert PNGs back to TILE format |
-| `str_tool.py` | Edit text/string tables |
+| `str_tool.py` | Convert STRT string tables: extract to editable TXT and repack back to binary |
 | `QuestMapGenerator/` | Generate .q quest maps programmatically |
+
+
+---
+
+## Appendix: Low-Level Binary Format Reference
+
+> This section documents the byte-level binary formats for CAM containers, IMAG animation
+> descriptors, and TILE sprite data. This is the raw format reference for tool authors and
+> anyone building custom CAM files programmatically. For normal modding tasks, use the
+> Python tools which handle these details automatically.
+
+### CAM Container Format (use `cam_reader.py`)
+
+#### File Header
+```
++0    12   Fixed magic: "CYLBPC  " + 01 00 01 00
++12   4    u32: sectionCount (4 in maindata.cam)
++16   4    u32: contentHeaderLength (not used when reading)
++20   8xN  Per section: char[4] extension + u32 sectionHeaderOffset
+```
+
+#### Content Header (sequential, one block per section, right after file header)
+```
+For each section:
+  +0   4     u32: filesCount
+  +4   4     zeros (padding)
+  +8   28xM  per file: byte[20] name (null-padded) + u32 fileOffset + u32 fileSize
+```
+
+#### Content
+Raw file bytes, one blob per file. Use each file's `fileOffset`/`fileSize` to slice directly.
+
+#### Section Breakdown (maindata.cam)
+
+| # | Extension | File count | Typical size | What it is |
+|---|-----------|-----------:|--------------|------------|
+| 0 | `IMAG`    | 380        | ~5-19 KB     | Animation-set descriptors (per-unit/building). Contains image-set table + frame descriptors + per-direction geometry. |
+| 1 | `TILE`    | 17,224     | ~1-8 KB      | Per-frame sprite pixel data. 8-bit paletted, per-row RLE compressed. |
+| 2 | `SPLT`    | 854        | 1032 bytes   | 256-color RGBA palettes (fixed-size). **Read-only — do not modify.** |
+| 3 | `CUT `    | 20         | 886 bytes    | Small fixed-size resource (unexplored, likely UI elements). |
+
+---
+
+### IMAG Blob Internal Format (animation set, per-unit/building)
+
+```
++0x00   4     u32 n_directions header value
++0x04   16    padding/reserved, zeros
++0x14   4     u32 entryCount - number of image-set entries
++0x18   8xN   entries: u32 setID + u32 relOffset
+```
+
+setID values (from `ImageSetIDXRef.xml`):
+Walk=1, Stand=8, Attack=16, Special=64, Build=80, Die=96, Cast=128, Carry=144,
+Recoil=160, Active=192, Inactive=208, Dead=224, Crumble=240, Minimap=300,
+Damage=316, Hotspot=400, Sel-Underlay=500, Sel-Overlay=550, Interface=1000,
+UnitTexture=4000.
+
+#### Frame Descriptor Block (directional units)
+```
++0x00   4     u32 = 8 (type flag)
++0x38   32    8x u32: relative offsets to 8 per-direction blocks
+              (signed i32 — treat values <= 0 as unused)
+```
+
+Per-direction block (variable stride: `48 + frameCount * 8`):
+```
++0x14   4     i16,i16: x_offset, y_offset (sprite hotspot)
++0x18   4     u16,u16: width, height
++0x30   8xF   F pairs of (u32 flag, u32 tile_index) — index into TILE section
+```
+
+**Note:** The per-direction block stride varies by frame count. Use distance to next
+populated direction offset to determine frame count reliably.
+
+---
+
+### TILE Sprite Format (Version 3) — RLE Encoding
+
+8-bit paletted sprites with per-row RLE compression.
+
+#### Header
+```
++0x00   2     u16: version (always 3)
++0x02   2     u16: width
++0x04   2     u16: height
++0x06   6     zeros
++0x0C   4     u32: palette_id (index into SPLT section)
++0x10   H×4   height × u32: per-row offset table (offsets from start of pixel data)
+```
+
+#### Row RLE (after offset table)
+Each row is a sequence of segments:
+```
+[u16 x_position] [u8 count] [u8 flags] [count × u8 pixel_bytes]
+```
+- `x_position` — absolute column position (not relative skip)
+- `count` — number of pixel bytes following
+- `flags` — 0x80 = last segment in row
+- Pixel bytes — palette indices (0 = transparent, 248-255 = shadow/blend)
+
+#### Key Facts
+- Pixel indices reference the palette at `palette_id` in the SPLT section
+- Palette index 0 is always transparent
+- Indices 248-255 map to shadow/blend colors (rendered as magic pink in extraction)
+- `sprite_extractor.py` decodes this format; `sprite_injector.py` encodes it
+- Round-trip verified: encode → decode produces identical pixel data
+
+---
+
+### IMAG Writing Notes for Mod CAMs
+
+Mod-loaded CAM files (quests/mods via DataConfiguration) use the same IMAG format.
+The WrathOfKrolm example (`SDK/Example/Data/WrathOfKrolm_maindata.cam`) has 5 working
+IMAG records that serve as known-good templates:
+- `XR47DustofDeth` — 292 bytes, directionless overlay (simplest template)
+- `KR0TKrolm-appear` — 364 bytes, another overlay
+
+TILE indices in mod CAMs reference the mod's own TILE section (0-based local indices,
+not the base game's global pool). When building a Quest_maindata.cam, your IMAG frame
+descriptors should use indices 0, 1, 2... referencing the TILE entries within that
+same CAM file.

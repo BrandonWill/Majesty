@@ -16,7 +16,7 @@ This workspace IS the git repo (https://github.com/BrandonWill/temp_majesty). Pu
 - `sprite_extractor.py` — Extracts sprites as PNGs from maindata.cam with correct colors
 - `sprite_injector.py` — Encodes PNGs back into the game's TILE RLE format
 - `cam_writer.py` — Repacks CAM archives with modified/replaced entries
-- `RESEARCH_NOTES.md` — Detailed reverse-engineering notes on the binary formats
+- `CAM_MODDING_GUIDE.md` — Task-oriented modding guide (includes binary format appendix)
 - `README.md` — High-level documentation of the modding toolkit
 - `utility/` — Scratch/investigation scripts (gitignored)
 
