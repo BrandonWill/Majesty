@@ -1,6 +1,16 @@
 # RGSEditor Decompilation (Ghidra MCP — July 2026)
 
-Binary analyzed: `SDK/RGSeditor.exe` (2.5 MB, x86 PE, MFC90-based C++ app)
+Results from decompiling `SDK/RGSeditor.exe` using Ghidra. RGSEditor is the map/quest
+editor tool that creates `.q` (quest template) and `.rgs` (terrain) files. This
+decompilation documents the internal file reading/writing functions, which informed
+the creation of `rgs_format.py` (our Python quest file parser/writer).
+
+**Purpose of this document:** Reference for understanding the `.q` binary format at the
+code level. Use this when debugging parsing issues or implementing new format features
+in `quest_map_generator.py` / `rgs_format.py`.
+
+**Binary analyzed:** `SDK/RGSeditor.exe` (2.5 MB, x86 PE, MFC90-based C++ app)
+**Ghidra project:** `MajestyRE` at `C:\Users\Brandon\Tools\GhidraProjects`
 
 ## Key Functions Identified
 
