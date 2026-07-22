@@ -7,109 +7,69 @@
 - Codes 4004, 8851, System B format — all silently ignored in sub-panel context
 - Multi-page navigation is impossible without an exe patch
 
-### Quest CAM Capabilities
-- Quest CAMs loaded via `<CAM>` ARE loaded into the resource system (confirmed — no error)
-- Quest SMNU/STRT entries with same name as base/expansion do NOT override (first-loaded wins)
-- Quest CAMs DO work for: IMAG, TILE, SPLT (sprites), WAVE (audio) — these DO override
-- The difference: sprites use "last loaded wins" while SMNU/STRT use "first loaded wins"
-- This is a **search priority issue** in `FUN_00679a80`, not a loading issue
+### Quest CAM Override Capability (CORRECTED July 2026)
+- Quest CAMs loaded via `<CAM>` **DO override** all resource types (last-loaded wins)
+- SMNU and STRT overrides WORK — confirmed by another modder replacing "Market Day" text
+- **Previous incorrect finding:** We thought SMNU/STRT used "first-loaded wins." This was
+  a misdiagnosis — our PanelTest crash was caused by a malformed custom SMNU binary
+  (bad tag-value stream), not by a failed override
+- Practical impact: panel mods CAN be distributed as quest-only packages via `<CAM>` tags
+- The SMNU compiler (Priority 4) becomes critical — must produce perfectly valid binary
 
 ### Panel Modifications (Working)
-- Inserting widgets into existing SMNU panels WORKS (via direct file replacement)
+- Inserting widgets into existing SMNU panels WORKS (via quest CAM override)
 - The SMNU format is a tag-value int32 stream (fully decoded)
 - Widget type 0 buttons can be cloned and repositioned successfully
 - The CAM builder (`build_cam()`) produces byte-perfect output
 
-### Distribution Model Required (Current State)
-- **Modified mx_textdata.cam** = required for panel mods (direct file replacement)
-- Cannot be quest-only WITHOUT an exe patch to fix search priority
-- With exe patch (reverse search order for SMNU/STRT): quest-only distribution would work
-- **Patched exe** + **modified mx_textdata.cam** = full solution
-- Cannot be quest-only
-- Users must install both files (game directory replacement)
+### Distribution Model (REVISED)
+- **Quest CAM with SMNU+STRT override** = the correct approach (no file replacement needed)
+- **Patched exe** = still needed for sub-panel NAVIGATION (new action code)
+- A quest/mod can override existing panels, but cannot navigate between sub-panels
+  without the exe patch to the building sub-panel click dispatcher
 
 ---
 
-## Priority 1: EXE Patch — Fix Resource Search Priority for SMNU/STRT
-
-### Problem (CORRECTED)
-Quest CAMs ARE loaded into the resource system. The data IS there. But
-`FUN_00679a80` finds the base/expansion version FIRST and stops looking.
-Quest-loaded entries with the same name are shadowed (never found).
-
-Sprites (IMAG/TILE) DO override because they use a different lookup path
-that prefers last-loaded. SMNU/STRT use a "first match" lookup.
-
-### Potential Fix
-In `FUN_00679a80`, reverse the search order: look through resources
-starting from MOST RECENTLY LOADED (quest CAMs) instead of oldest first.
-This might be a single comparison direction change, or a linked list
-traversal direction flip.
-
-### What This Would Enable
-- Quest CAMs can override ANY panel (SMNU + STRT) by entry name
-- Panel mods become distributable as self-contained quest files
-- No need to replace base game files
-- Combined with the sub-panel navigation patch (Priority 2), enables
-  full multi-page custom building panels from quest-only mods
-
-### Ghidra Task
-1. Find `FUN_00679a80` and decompile
-2. Identify the loop/search that iterates over registered resources
-3. Determine search direction (oldest-first vs newest-first)
-4. Find the comparison/iteration that could be reversed
-5. Test patched exe with quest-loaded SMNU override
-
----
-
-## Priority 2: EXE Patch — Sub-Panel Navigation Action Code
+## Priority 1: EXE Patch — Sub-Panel Navigation Action Code
 
 ### Problem
-Quest CAMs loaded via `<CAM>` in mqxml/mmxml do NOT register their STRT entries
-in the resource scope that `FUN_006d34d0` searches. The SMNU override loads (engine
-finds "MX03" in our CAM), but the matching STRT lookup fails → null handle → crash
-when tag 7 (string reference) is encountered.
+Only action code 8013 (return to parent) works from inside a building sub-panel.
+All other codes (4004, 8851, System B format) are silently ignored.
+This prevents multi-page panel navigation (Page 1 → Page 2 → Page 3).
 
-### Root Cause (from Ghidra)
-In `FUN_006d34d0`, the STRT is found via:
-```c
-handle = FUN_00679a80(entry_name, strt_name);
-// internally: resource_mgr->find(entry_name, "STRT", strt_name, 0, 0x80000001, 0, 0)
-```
+### What We Need
+A new action code (e.g., 8852) recognized by the sub-panel click dispatcher that calls
+`OpenPanelByName(name4CC, context)` with the action ID interpreted as a 4-char panel name.
 
-The `0x80000001` is a **search scope flag**. Quest-loaded CAMs likely register under
-a different scope, so this lookup misses them.
+### Ghidra Task
+1. Find the building sub-panel click handler (the function that checks for code 8013)
+2. Identify where it rejects/ignores unknown codes
+3. Add a new code path: `if (code == 8852) { OpenPanelByName(actionID_as_4CC, 0); }`
+4. This likely requires a code cave (jump to new code in an unused section of the exe)
 
-### Potential Fix
-1. Find the instruction that pushes `0x80000001` at the call site in `FUN_006d34d0`
-2. Change it to `0xFFFFFFFF` (search all scopes) or the quest scope ID
-3. This would be a 4-byte patch in MajestyHD.exe
-
-### Alternative Fix
-Add a null-check fallback: if the first lookup returns 0, try again with broader scope.
-This would require a code cave (more complex patch) but safer.
-
-### What's Needed
-- Ghidra MCP session to find exact byte offset of the `0x80000001` push
-- Test patched exe to confirm STRT resolves from quest CAM
-- If successful: quest-loaded panels would fully work (SMNU + STRT override)
+### What This Would Enable
+- Navigation buttons in SMNU data: `[1024, 5, "PT01", 6, 8852]`
+- Multi-page building research panels (6 items per page, unlimited pages)
+- Quest-distributable via `<CAM>` (SMNU override works, confirmed)
 
 ---
 
-## Priority 2: Multi-Page Panel (File Replacement Approach)
+## Priority 2: Multi-Page Panel (Quest CAM Approach)
 
-### Current Viable Path (no exe patch needed)
-1. Modify `DataMX/mx_textdata.cam` directly (file replacement)
-2. Add router panel as MX03 override + new panels PT01/PT02
-3. Use `cam_writer.py` to repack the expansion textdata
-4. Distribute as a direct file replacement mod
+### Now Viable (no file replacement needed!)
+Since SMNU/STRT overrides via quest CAM work (last-loaded wins), the approach is:
+1. Build a modified MX03 SMNU with a "More →" navigation button
+2. Build matching STRT with button labels
+3. Build new panels (PT01, PT02) with their own SMNU + STRT
+4. Pack all into a quest CAM, load via `<CAM>` tag
+5. The "More →" button needs the exe nav code patch (Priority 1) to function
 
 ### Steps
-- [ ] Build a modified mx_textdata.cam with router MX03 + sub-pages
-- [ ] Use correct SMNU format (tag-value int32 stream, from Ghidra decompilation)
-- [ ] Use correct STRT format (from str_tool.py: u16 count + u8 + u8 + u32 offsets + strings)
-- [ ] Test in-game with direct file replacement
-- [ ] If panels render: test nav buttons between pages
+- [ ] Build a VALID MX03 SMNU override (correctly formatted tag-value stream)
+- [ ] Verify it loads without crash (just override, keep original layout)
+- [ ] Add navigation button widget to the overridden MX03
+- [ ] Build PT01/PT02 panel SMNU + STRT entries
+- [ ] Test with exe patch (Priority 1) for navigation
 
 ---
 

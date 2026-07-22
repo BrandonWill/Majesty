@@ -18,10 +18,10 @@ The game uses a **layered dataset system**:
 Mods load XML `<Descriptions>` files DIRECTLY at runtime — you don't need to compile them into CAM.
 Only sprites/audio need to go into a CAM file.
 
-### Quest CAM Loading Limitations (Important!)
+### Quest CAM Loading
 
-Quest CAMs loaded via `<CAM>` in `.mqxml`/`.mmxml` files ARE loaded into the resource system —
-there is no loading error. However, **not all resource types can be overridden from quest CAMs**:
+Quest CAMs loaded via `<CAM>` in `.mqxml`/`.mmxml` files ARE loaded into the resource system
+and **override** base/expansion entries with the same name (last-loaded wins):
 
 | Resource Type | Quest CAM Override? | Notes |
 |---------------|:-------------------:|-------|
@@ -29,20 +29,18 @@ there is no loading error. However, **not all resource types can be overridden f
 | TILE (sprite frames) | ✅ YES | Last-loaded wins |
 | SPLT (palettes) | ✅ YES | Last-loaded wins |
 | WAVE (audio) | ✅ YES | Last-loaded wins |
-| SMNU (panel layouts) | ❌ NO | First-loaded wins (base/expansion shadows quest) |
-| STRT (string tables) | ❌ NO | First-loaded wins (base/expansion shadows quest) |
+| SMNU (panel layouts) | ✅ YES | Last-loaded wins (confirmed by other modder) |
+| STRT (string tables) | ✅ YES | Last-loaded wins (confirmed by other modder) |
 
-**Why this happens:** The resource manager's lookup function (`FUN_00679a80`) uses a
-"first match" search for SMNU/STRT — it finds the base/expansion version first and stops.
-Sprite resources (IMAG/TILE) use a different lookup path that prefers last-loaded entries.
-This is a **search priority issue** in the engine, not a loading failure.
+**Important:** The SMNU binary must be correctly formatted (valid tag-value int32 stream
+with proper terminators and matching STRT string counts). A malformed SMNU will crash the
+panel parser at runtime. See `SMNUResearch/findings/smnu_parser_decompilation.md` for the
+exact format specification.
 
-**Practical consequence:** To modify building UI panels (textdata SMNU/STRT), you must
-directly replace `DataMX/mx_textdata.cam` (file replacement mod). Quest-only distribution
-of panel modifications is not possible without an exe patch to reverse the search order.
-
-Custom sprites, animations, and audio work perfectly from quest CAMs — only the text/UI
-panel system has this limitation.
+**Previous incorrect finding (corrected July 2026):** Earlier testing concluded SMNU/STRT
+used "first-loaded wins" and could not be overridden. This was a misdiagnosis — the actual
+failure was a malformed custom SMNU binary that crashed the engine. The override mechanism
+works correctly for all resource types.
 
 ---
 
