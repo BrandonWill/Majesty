@@ -724,39 +724,111 @@ python str_tool.py --cam Data/textdata.cam --inject --input text_dump/ --output 
 
 ### "I want to add a particle effect"
 
-Define in XML with `type="Unit" subType="ParticleSystem"`:
+Define in XML with `type="Unit" subType="ParticleSystem"`. Particle systems are
+engine-managed emitters that spawn, move, and fade individual particle sprites automatically.
+
+**Source files:** `M_ParticleSystems.xml` (12 base game systems) + `MX_ParticleSystems.xml` (10 expansion systems). All use IDs starting with `XL`.
+
+#### Full XML Schema (from game source)
+
 ```xml
-<Description type="Unit" subType="ParticleSystem" ID="XL40" Name="my_effect">
+<Description type="Unit" subType="ParticleSystem" ID="XL40" Name="my_effect" Description="My Effect">
     <Engine version="1">
+        <!-- Standard unit flags -->
         <Info value="Static"/>
         <Info value="Directionless"/>
         <Info value="DontBlock"/>
-        <Info value="NoGPLAgent"/>
-        <Menu value="13"/>
-        <ImageIDBase value="XL40"/>
-        <AttachmentPointID value="2"/>
-        <DefaultSound value="0"/>
-        <InitialParticles value="2"/>
-        <MaxParticles value="24"/>
+        <Info value="NoGPLAgent"/>         <!-- Omit to give it a GPL agent (allows birth script) -->
+        <Menu value="13"/>                 <!-- 13 = spell effect, 12 = smoke/ambient -->
+        <ImageIDBase value="XL40"/>        <!-- IMAG entry in maindata.cam (particle sprite) -->
+        <AttachmentPointID value="2"/>     <!-- Where on parent unit to attach (see below) -->
+        <DefaultSound value="0"/>          <!-- Sound name or "0" for none -->
+        <!-- Optional: birth script callback -->
+        <!-- <Script type="0" cProc="0" GPLFunction="my_birth_func"/> -->
+
+        <!-- Emitter configuration -->
+        <InitialParticles value="2"/>      <!-- Particles spawned immediately on creation -->
+        <MaxParticles value="24"/>         <!-- Max concurrent particles -->
         <Bounds min="-1000, -1000, -1000" max="2000, 2000, 2000"/>
         <Emitter>
-            <Type value="Area"/>
-            <Radius value="0.07"/>
-            <Rate value="8.0"/>
-            <Lifespan value="2200"/>
+            <Type value="Area"/>           <!-- Area or Point -->
+            <Type value="Column"/>         <!-- Column or Disk (second Type tag = shape) -->
+            <Velocity value="0.0, 0.0, 0.0"/>
+            <Acceleration value="0.0, 0.0, 0.0"/>
+            <Offset value="0.2, 0.2, 0.0"/>
+            <SurfaceNormal value="0.0, 0.0, 1.0"/>
+            <Radius value="0.07"/>         <!-- Spawn area radius -->
+            <RadiusVariance value="3.0"/>  <!-- Randomness in spawn position -->
+            <DirectionVariance value="34.0"/> <!-- Randomness in launch direction -->
+            <Rate value="8.0"/>            <!-- Particles spawned per second -->
+            <Lifespan value="2200"/>       <!-- Emitter duration (ms). 4294967295 = infinite -->
+            <Recycle value="0"/>
+            <!-- Optional flags -->
+            <!-- <Flags value="IsPausable"/> -->
+            <!-- <Flags value="IsPerformanceHog"/> -->
         </Emitter>
+
+        <!-- Per-particle behavior -->
         <Particle>
-            <Lifespan value="10000"/>
+            <Lifespan value="10000"/>      <!-- Individual particle life (ms) -->
+            <LifespanVariance value="0.0"/>
             <InitialSpeed value="3.0"/>
-            <BirthColor value="0.0, 0.0, 1.0, 0.0"/>
-            <MidlifeColor value="0.0, 0.5, 1.0, 1.0"/>
-            <DeathColor value="0.0, 0.0, 0.5, 0.0"/>
+            <InitialSpeedVariance value="4.0"/>
+            <Gravity value="0.0, 0.0, -1.0"/>  <!-- XYZ gravity per particle -->
+            <BirthColor value="0.0, 0.0, 0.0, 0.0"/>   <!-- RGBA at spawn -->
+            <MidlifeColor value="0.0, 0.0, 0.0, 1.0"/>  <!-- RGBA at midlife -->
+            <DeathColor value="0.0, 0.0, 0.0, 0.0"/>    <!-- RGBA at death -->
             <BirthSize value="1.0"/>
-            <MaxSize value="20.0"/>
+            <MaxSize value="34.0"/>
+            <DeathSize value="1.0"/>
+            <SizeTime in="0.3" out="0.3"/>   <!-- Size ramp fractions -->
+            <FadeTime in="0.3" out="0.1"/>   <!-- Opacity ramp fractions -->
+            <JitterOrientation value="0.0, 0.0, 0.0"/>
+            <JitterDisplacement value="0.0, 0.0, 0.0"/>
+            <BirthSpinRate value="0.0"/>
+            <MidlifeSpinRate value="0.0"/>
+            <DeathSpinRate value="0.0"/>
         </Particle>
     </Engine>
 </Description>
 ```
+
+#### AttachmentPointID Values (from game data)
+
+| Value | Used by | Likely meaning (UNVERIFIED) |
+|-------|---------|---------------------------|
+| 0 | Smoke_Large, Smoke_Large_Heavy | Ground level |
+| 1 | Ratasmoke, pest_part, FlammingArrowSmoke, horrify, Icebreath | Head/top |
+| 2 | Most spell effects (fireball, meteor, dragon breath, etc.) | Center/body |
+| 3 | adept_teleport | Feet |
+| 13001 | energy_blast_particle | Unknown (projectile-specific?) |
+
+#### Triggering Particle Systems (from GPL source)
+
+```gpl
+// Method 1: Create as a standalone spell unit (lives at a location)
+$CreateSpellUnit(caster, "fire_ball", target);
+
+// Method 2: Attach as effector to a target unit (follows target)
+$createeffector(target, "fireball_effector2", 500);
+```
+
+Both methods reference the particle system by its `Name` field from the XML.
+
+#### Sprite Requirements
+
+- `ImageIDBase` must reference a valid IMAG entry in a loaded CAM (maindata.cam or quest CAM)
+- All existing particle systems use `Info value="Directionless"` (no 8-way facing)
+
+#### UNVERIFIED (needs in-game testing)
+
+- Whether the 4th value in BirthColor/MidlifeColor/DeathColor is alpha or something else
+  (the pattern `0,0,0,0` → `0,0,0,1` → `0,0,0,0` across all systems suggests alpha fade)
+- Whether `ImageIDBase` maps to a single sprite frame or can use multi-frame animation
+- Exact visual behavior of Radius, RadiusVariance, DirectionVariance at various values
+- Whether custom particle systems load correctly from quest CAMs (never tested — overlays
+  work from quest CAMs, particle systems likely do too but unconfirmed)
+- What happens with `AllocateLocalID` info flag (only on XL00 placeholder_spell)
 
 ---
 

@@ -1,18 +1,19 @@
 # Majesty Modding Toolkit — Master TODO
 
-Based on findings from Workshop mod analysis (10 mods/quests) + existing work.
-Focus: comprehensive knowledge of engine capabilities for quest/mod creation.
-
 ---
 
-## Quest Map Generator Enhancements
+## Active Work
 
-### ~~Multi-Kingdom Support~~ ✅ DONE
-- [x] Add `slot_configs` parameter to `create_quest()` for >2 player kingdoms
-- [x] Support 7Kings-style FFA (up to 7 active player slots + 1 monster slot)
-- [x] Each slot gets: name, starting_gold, active flag, sub_items (spawner indices)
-- [x] 6 unit tests added (50 total passing)
-- [x] Auto-adds Monsters slot at index 7 if not explicitly provided
+### SMNU Panel Override via Quest CAM
+- [ ] **TEST:** Deploy PanelTest_Quest with passthrough CAM (byte-identical MX03)
+  - If works: confirms override mechanism is fine, our SMNU generation is the bug
+  - If crashes: still a CAM-level or scope issue
+- [ ] Build SMNU compiler (`smnu_compiler.py`) that produces valid panel binary
+  - Must handle the custom constructor formats for widget types 0, 1, 2, 5, 6, 9
+  - Validate against real game panels by roundtrip comparison
+- [ ] EXE patch: sub-panel navigation code (Ghidra machine)
+  - Add new action code to building sub-panel click dispatcher
+  - Allows buttons in SMNU data to open arbitrary panels by name
 
 ### Landscape Objects (Trees/Rocks)
 - [ ] Document which fractal refs (`xFel`, `xFer`, `xBBC`, etc.) produce which vegetation
@@ -21,117 +22,64 @@ Focus: comprehensive knowledge of engine capabilities for quest/mod creation.
 
 ---
 
-## ~~GPL Knowledge Base~~ ✅ DONE
+## Needs In-Game Verification
 
-Created `.kiro/steering/gpl-reference.md` (manual inclusion) containing:
+### Particle Systems
+- [ ] Does the 4th value in BirthColor/MidlifeColor/DeathColor = alpha?
+  (All game systems use pattern `0,0,0,0` → `0,0,0,1` → `0,0,0,0` suggesting alpha fade)
+- [x] Does `ImageIDBase` map to single sprite frame or can it use multi-frame animation?
+  **ANSWERED:** Both. IMAG entries range from 132B (single frame, e.g., XL25/XL28/XL30) to
+  444B (multi-frame, e.g., XL31 icebreath_hit). The engine likely animates through frames.
+- [ ] Do custom particle systems load from quest CAMs via `<Descriptions>`?
+  (Overlays work, particle systems likely do too — never explicitly tested)
+- [ ] What does `AllocateLocalID` info flag do? (Only on XL00 placeholder_spell)
+- [ ] What do AttachmentPointID values actually correspond to visually?
+  (Guesses: 0=ground, 1=head, 2=center, 3=feet — based on which effects use which)
 
-### ~~Undocumented Engine Primitives~~ ✅
-- [x] All 20+ discovered primitives documented with signatures, purpose, and source mod
-- [x] Categorized: Unit/Agent, Stat/Attribute, Building/Kingdom, Spawning, Thread, Effects, Queries
+### Scrollable List Widgets (from AP52/MX01 research)
+- [ ] Can type 6 (scrollable list) be placed in a research panel?
+  (Likely requires C++ populator code to fill it — may need exe patch)
+- [ ] What action code range links a type 6 list to its type 9 scrollbar?
+  (Observed: list=5000, scrollbar=5001 or 5010)
 
-### ~~GPL Gotchas Document~~ ✅
-- [x] 22 critical engine behaviors documented with workarounds
-- [x] Thread behavior (4 gotchas), Silent failures (5), Crashes (4), Data/binding (4), Timing (2), Compiler (2)
-
-### ~~GPL Patterns Reference~~ ✅
-- [x] EventAgent pattern (recurring events)
-- [x] Spell/buff Begin/End pattern with effectors
-- [x] AI kingdom thread architecture (StandAloneAI 10-thread model)
-- [x] Debugging patterns (gold channel, floating numbers, minimap beacons, visual tints)
-- [x] Defensive function entry pattern
-
----
-
-## ~~XML Schema Knowledge~~ ✅ DONE
-
-Added to `quest-and-mod-creation.md` steering file:
-
-### ~~Action/Spell Definitions~~ ✅
-- [x] SpellRank (REQUIRED for AI), SpellType (Attack/CombatUtility/4), CharacterLevel
-- [x] ValidationScript, EffectorDuration, multiple SpellType stacking, Rate
-
-### ~~Overlay Definitions~~ ✅
-- [x] Visible effector pattern (Menu 11, ImageIDBase, AttachmentPointID, TransparentToMouse)
-- [x] Invisible timer pattern (Script GPLFunction for expiry callback, StackPriority)
-- [x] Static overlays (Info value="Static")
-
-### ~~Building Definitions~~ ✅
-- [x] UpgradeTo chain, Multiplier cost escalation, IncomeType (revenue/maintenance)
-- [x] Produces (recruitable units), NumberedName flag
-
-### ~~Research/Items/Services System~~ ✅
-- [x] "Invisible character as UI slot" pattern (subType="Character" + Menu 8)
-- [x] RecruitDelay = research time, birthScript = on-purchase callback
-
----
-
-## ~~MQXML/MMXML Capabilities~~ ✅ DONE
-
-Added to `quest-and-mod-creation.md` steering file:
-
-### ~~Newly Discovered Tags~~ ✅
-- [x] `<GPLSource>GPL</GPLSource>` — source directory for debugger
-- [x] `<CAM>` tag — loads raw CAM archives (sound confirmed, sprites theoretically possible)
-- [x] Multiple `<Mod>` entries in one .mmxml (15 variants in StandAloneAI)
-- [x] Dual-dataset mods (one entry for Majesty, one for MajestyExpansion)
-- [x] `base="Any"` risks (misbinding attributes against wrong ruleset)
-- [x] Nested description paths (subdirectories work)
-
-### ~~Mod Architecture Patterns~~ ✅
-- [x] Palace-prototype-as-entry-point (StandAloneAI pattern)
-- [x] Expression-only BCD as tuning mod
-- [x] Same-name function override
-- [x] Mod load order and override behavior
-
----
-
-## ~~Debugging & Testing~~ ✅ DONE
-
-### ~~Engine Debugging~~ ✅
-- [x] GPL debugging cheat-sheet (gold channel, floating numbers, minimap beacons, visual tints)
-- [x] Debug master switch pattern
-- [x] Crash dump analysis notes (same EIP = deterministic, scattered = heap corruption)
-- [x] Engine primitives searchable as plaintext in MajestyHD.exe
-
-### ~~Compiler Gotchas~~ ✅
-- [x] Gplbcc.exe returns exit code 0 even on failure (check file timestamp)
-- [x] Stale build trap (old .bcd loads fine but doesn't have your changes)
-
----
-
-## ~~Steering File Updates~~ ✅ DONE
-
-- [x] Created `gpl-reference.md` steering file (manual inclusion) — primitives, gotchas, patterns, debugging
-- [x] Added XML schema quick-reference to `quest-and-mod-creation.md`
-- [x] Added MQXML/MMXML advanced features to `quest-and-mod-creation.md`
-- [x] Added multi-kingdom API docs to `quest-and-mod-creation.md`
-- [x] Updated `majesty-modding.md` to point to new GPL reference steering
-
----
-
-## Lower Priority / Future Work
-
-### constants.rgs — Unknown Modifiability
-- [ ] **UNVERIFIED:** Can quests/mods load custom constants.rgs files?
+### constants.rgs Modifiability
+- [ ] Can quests/mods load custom constants.rgs files?
   - SDK docs mention "changing RGS Constants is optional" but no Workshop mod does it
-  - MQXML has `<Constants>` in the Unload section — implies load/unload is possible?
-  - No Workshop mod ships a custom constants.rgs (0 out of 10 analyzed)
-  - Need to test: create a minimal modified constants.rgs, reference it in MQXML, see if game loads it
-- [ ] If modifiable: implement RGCB format writer for custom landscape patterns
-- [ ] If NOT modifiable: document this limitation, focus on selecting from existing 410 patterns
+  - MQXML has `<Constants>` in the Unload section — implies load/unload is possible
+  - Need to test: reference a modified constants.rgs in MQXML, see if game loads it
 
-### Landscape Objects (Trees/Rocks)
-- [ ] Document which fractal refs produce which vegetation
-- [ ] Test terrain presets with different fractal refs to get trees
-- [ ] Consider adding "density" parameter to presets (bare, sparse, forested)
+### Engine Timing (low priority — test via GPL $DebugOut logging when relevant)
+- [ ] Game tick → real time ratio. Method: `$NewThread` at known ms interval,
+  count iterations until dawn/dusk transition, derive ratio.
+- [ ] `$RandomCoord(anchor, -1)` radius: does -1 mean entire map? Log returned
+  coords and measure spread vs map bounds.
+
+---
+
+## Lower Priority / Future
 
 ### Workshop Integration
 - [ ] `--workshop` flag for quest_map_generator to create Workshop-ready packages
 - [ ] Generate .mswproj files programmatically
-- [ ] Support multiple mods in one .mmxml generation
 
-### Engine Exploration
-- [ ] Scan MajestyHD.exe for additional undocumented GPL primitives
-- [ ] Verify `$RandomCoord(anchor, -1)` radius behavior (entire map?)
-- [ ] Test if `<CAM>` tag works for sprite data (only proven for audio so far)
-- [ ] Determine exact game tick → real time relationship (72,000ms = 1 in-game day)
+### EXE Patch Ideas (Ghidra machine)
+- [ ] Sub-panel navigation: new action code for building panel click dispatcher
+- [ ] Expose cheat functionality to GPL (e.g., `$RevealMap()`, `$AddGold(amount)`)
+  - Cheats are hardcoded in the exe (string matching → engine action)
+  - Some already call GPL (`cheat_wave_undead`, `cheat_wave_raiders`, etc.)
+  - Could add new GPL primitives that call the same internal functions
+  - Would enable quest scripts to reveal map, grant resources, etc. programmatically
+- [ ] Scroll list widget support for research panels (populate type 6 from C++ code)
+
+---
+
+## Completed (reference only)
+
+- ✅ Quest Map Generator: parse 37/37, roundtrip, create API, spawners, terrain, force layout, multi-kingdom, CLI
+- ✅ GPL Knowledge Base: primitives, gotchas, patterns, debugging (in steering files)
+- ✅ XML Schema: actions, overlays, buildings, research, particle systems (in CAM_MODDING_GUIDE + steering)
+- ✅ MQXML/MMXML capabilities documented (steering file)
+- ✅ TILE v3 RLE fix: exclusive-end X encoding (sprite_extractor + sprite_injector)
+- ✅ CAM override mechanism: all resource types override via quest CAM (last-loaded wins)
+- ✅ UUID generation: was misdiagnosis, uuid.uuid4() is correct
+- ✅ `<CAM>` tag works for sprites (IceSpell_Quest confirmed)
