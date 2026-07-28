@@ -35,6 +35,7 @@ import argparse
 from pathlib import Path
 
 from cam_reader import read_cam, u32 as read_u32
+from game_paths import resolve_game_path
 
 
 def repack_cam(cam_data, sections, replacements=None):
@@ -341,8 +342,9 @@ def main():
     if not args.cam:
         parser.error("--cam is required for replace/identity modes")
 
-    print(f"Loading {args.cam}...")
-    with open(args.cam, "rb") as fh:
+    cam_path = resolve_game_path(args.cam)
+    print(f"Loading {cam_path}...")
+    with open(cam_path, "rb") as fh:
         cam_data = fh.read()
     print(f"  Original size: {len(cam_data):,} bytes")
 

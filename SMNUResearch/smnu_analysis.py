@@ -15,6 +15,7 @@ from pathlib import Path
 workspace_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(workspace_root))
 from cam_reader import read_cam
+from game_paths import resolve_game_path
 
 
 def load_panels():
@@ -22,7 +23,7 @@ def load_panels():
     panels = {}  # name -> {smnu: bytes, strt: bytes, source: str, index: int}
     
     # Base game
-    data = open(workspace_root / 'Data/textdata.cam', 'rb').read()
+    data = open(resolve_game_path('Data/textdata.cam'), 'rb').read()
     secs = read_cam(data)
     for i, f in enumerate(secs[0].files):  # SMNU
         name = f.display_name
@@ -38,7 +39,7 @@ def load_panels():
             panels[name]['strt'] = data[f.data_off:f.data_off + f.data_size]
     
     # Expansion
-    data2 = open(workspace_root / 'DataMX/mx_textdata.cam', 'rb').read()
+    data2 = open(resolve_game_path('DataMX/mx_textdata.cam'), 'rb').read()
     secs2 = read_cam(data2)
     base_count = len(secs[0].files)
     for i, f in enumerate(secs2[0].files):  # SMNU

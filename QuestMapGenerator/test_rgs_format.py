@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from rgs_format import (
     BinaryReader, BinaryWriter,
     SpawnerBlock, SpawnerItem, TeamDefinition, UnitInstance, UnitPattern,
@@ -21,10 +22,13 @@ from rgs_format import (
     read_unit_instance,
     TERRAIN_PRESETS, LANDSCAPE_ZONES,
 )
+from game_paths import game_dir
 
-# Path to real quest files for integration tests
-QUEST_DIR = Path(__file__).parent.parent / "Quests"
-QUESTMX_DIR = Path(__file__).parent.parent / "QuestsMX"
+# Path to real quest files for integration tests. Quests/ and QuestsMX/ are
+# game data (now in the Majesty_Files repo); MyQuest/ is our own test quest
+# and stays in this repo.
+QUEST_DIR = game_dir("Quests")
+QUESTMX_DIR = game_dir("QuestsMX")
 MYQUEST_Q = Path(__file__).parent.parent / "MyQuest" / "Quest.q"
 
 

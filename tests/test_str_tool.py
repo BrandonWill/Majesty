@@ -329,9 +329,10 @@ class TestRealStrtFiles:
 
     @pytest.fixture
     def gpltext_cam(self):
-        path = Path(__file__).parent.parent / "Data" / "gpltext.cam"
+        from game_paths import game_dir
+        path = game_dir("Data") / "gpltext.cam"
         if not path.exists():
-            pytest.skip("Data/gpltext.cam not available")
+            pytest.skip("Data/gpltext.cam not available (set MAJESTY_GAME_PATH)")
         return path
 
     def test_all_gpltext_entries_roundtrip(self, gpltext_cam):

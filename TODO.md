@@ -36,6 +36,21 @@ See also:
 - [ ] Document which fractal refs (`xFel`, `xFer`, `xBBC`, etc.) produce which vegetation
 - [ ] Consider adding "density" parameter to presets (bare, sparse, forested)
 
+### tests/test_sprites.py — 12 Failing Tests (Stale After TILE v3 RLE Fix)
+- [ ] Update `TestDecodeTile`/`TestEncodeRow` fixtures to match exclusive-end X encoding
+- Root cause confirmed: PR merge `d9cb5e7` ("Fix TILE v3 RLE X as exclusive end",
+  see `TILE_V3_RLE_ROOT_CAUSE.md`) changed `sprite_extractor.py`/`sprite_injector.py`'s
+  RLE X-position semantics (now exclusive-end, not relative/inclusive), but the
+  merge did NOT update `tests/test_sprites.py`. Those tests were last touched in
+  `04f0740` (before the fix) and still assert the OLD encoding — that's why
+  `TestDecodeTile` and `TestEncodeRow` (12 tests) fail while everything else
+  (real-CAM roundtrip tests, `TestRealSprites`) passes.
+- Not a regression in the actual encoder/decoder — `sprite_extractor.py`/
+  `sprite_injector.py` are correct per the real-game-data tests. This is purely
+  test fixtures being out of date.
+- Fix: rebuild the hand-crafted byte fixtures in `TestDecodeTile`/`TestEncodeRow`
+  to use exclusive-end X values, matching the current encoder/decoder behavior.
+
 ---
 
 ## Lower Priority / Future

@@ -22,28 +22,64 @@ Work is tracked across multiple TODO files:
 - When editing any subfolder TODO, keep the root TODO.md summary in sync (a hook reminds you).
 - Subfolder TODOs contain detailed implementation steps; root TODO has one-liner summaries.
 
-## Workspace Layout
+## Workspace Layout — TWO REPOS
 
-This workspace IS the git repo (https://github.com/BrandonWill/temp_majesty). Push directly from here.
+This project is split across two git repositories (migrated from a single repo
+in July 2026, so modders don't need to download our tooling AND redistribute
+~600MB of game data they already own):
+
+- **Majesty_Mod** (https://github.com/BrandonWill/Majesty.git) — this repo.
+  Our own tooling and mod source only. Push directly from here.
+- **Majesty_Files** (https://github.com/BrandonWill/Majesty_Files.git) — the
+  actual game data. A separate repo, not a submodule. We (the primary devs)
+  don't have the game installed on all our machines, so we keep this as an
+  actual git repo rather than assuming a local Steam install — that's the
+  outlier case, not the norm. Other modders typically DO have the game
+  installed and can point `MAJESTY_GAME_PATH` at their Steam folder instead.
+
+**Game data path resolution:** every script that needs `Data/`, `DataMX/`,
+`Music/`, `Quests/`, `QuestsMX/`, or `SDK/` goes through `game_paths.py`
+(`resolve_game_path()` for a specific file, `game_dir()` for a directory a
+caller will `.exists()`/`.glob()` check). Never hardcode `"Data/maindata.cam"`
+directly in new scripts — import from `game_paths` instead. Resolution order:
+1. `MAJESTY_GAME_PATH` from a `.env` file (gitignored, per-machine) or a real
+   env var
+2. `../Majesty_Files` (sibling folder — our own dev machine layout)
+3. The default Steam install path
+4. A clear `GamePathError` telling the user to set `MAJESTY_GAME_PATH`
 
 ### Modding Tools (workspace root)
+- `game_paths.py` — Resolves game data file/folder locations (see above)
 - `cam_reader.py` — Parses CAM archive files (the game's binary container format)
 - `sprite_extractor.py` — Extracts sprites as PNGs from maindata.cam with correct colors
 - `sprite_injector.py` — Encodes PNGs back into the game's TILE RLE format
-- `cam_writer.py` — Repacks CAM archives with modified/replaced entries
+- `cam_writer.py` — Repacks CAM archives with modified/replaced entries, or builds a
+  brand-new CAM from scratch (`build_cam_from_sections()`, used by quest-only CAMs
+  that have no "original" file to repack against)
 - `CAM_MODDING_GUIDE.md` — Task-oriented modding guide (includes binary format appendix)
 - `README.md` — High-level documentation of the modding toolkit
-- `utility/` — Scratch/investigation scripts (gitignored)
+- `utility/` — Scratch/investigation scripts (gitignored, NOT migrated to use
+  game_paths.py — they're throwaway and expected to be overwritten/rewritten
+  per-investigation anyway)
 
-### Game Data (tracked in git)
+### Game Data (Majesty_Files repo — NOT in this repo)
 - `Data/` — Original game mode data files (maindata.cam, unittype.cam, action.cam, etc.)
-- `Data/maindata.cam` — The main game sprite archive (91.6 MB, tracked in git via LFS-like history)
 - `DataMX/` — Expansion mode data files (overlays on top of base Data/)
 - `SDK/` — Quest SDK with GPL source, examples, documentation, and Gplbcc.exe compiler
-- `MyQuest/` — The user's custom quest project
+  (includes `RGSeditor.7z`)
 - `Quests/` — Original game quest files
 - `QuestsMX/` — Expansion quest files
 - `Music/` — Game music tracks
+
+### Our Own Mod/Quest Content (stays in THIS repo, not Majesty_Files)
+- `MyQuest/` — The user's custom quest project (despite the generic
+  RGSEditor-default name, this is OUR authored test quest, not stock game data)
+- `IceSpell/`, `IceSpell_Quest/`, `PanelTest_Quest/` — our mods/quests
+- Custom mods should reference the REAL game install path directly for things
+  like the GPL compiler, the same way `MakeGPL.bat` does (env var `MAJESTYSDK`
+  → local override → default Steam path) — that's a distinct concern from our
+  Python tooling reading bundled game data for research/extraction, which goes
+  through `game_paths.py` instead.
 
 ## Key Technical Facts
 

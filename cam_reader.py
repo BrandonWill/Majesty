@@ -9,6 +9,8 @@ appendix for the full binary format specification.
 import struct
 from pathlib import Path
 
+from game_paths import resolve_game_path
+
 
 def u32(data, off):
     return struct.unpack_from("<I", data, off)[0]
@@ -81,7 +83,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Majesty HD CAM archive reader/extractor")
     parser.add_argument("cam", nargs="?", default="Data/maindata.cam",
-                        help="CAM file to read (default: Data/maindata.cam)")
+                        help="CAM file to read (default: Data/maindata.cam, "
+                             "resolved via game_paths.py / MAJESTY_GAME_PATH)")
     parser.add_argument("--extract", metavar="DIR",
                         help="Extract all entries to DIR (creates section subdirs)")
     parser.add_argument("--section", type=int, metavar="IDX",
@@ -94,7 +97,7 @@ if __name__ == "__main__":
 
     import base64
 
-    path = args.cam
+    path = resolve_game_path(args.cam)
     with open(path, "rb") as fh:
         cam_data = fh.read()
     sections = read_cam(cam_data)

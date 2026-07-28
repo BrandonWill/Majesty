@@ -3,7 +3,41 @@
 A complete toolset for modding Majesty Gold HD — sprite extraction/injection, quest generation,
 custom spells, and AI overhaul. Fully reverse-engineered binary formats with in-game verified results.
 
-**Repo:** https://github.com/BrandonWill/temp_majesty
+**Repo:** https://github.com/BrandonWill/Majesty.git (Majesty_Mod — this repo)
+
+## Two-Repo Setup
+
+This project is split across two repositories:
+
+- **Majesty_Mod** (this repo) — our own tooling and mod source: Python scripts,
+  IceSpell/IceSpell_Quest/PanelTest_Quest mods, QuestMapGenerator, SMNUResearch,
+  docs, tests. No game data is committed here.
+- **[Majesty_Files](https://github.com/BrandonWill/Majesty_Files)** — the actual
+  Majesty HD game data (`Data/`, `DataMX/`, `Music/`, `Quests/`, `QuestsMX/`, `SDK/`).
+  Every modder already owns the game, so there's no reason to distribute ~600MB of
+  it alongside our tooling.
+
+**Setup:** clone both repos, then point this repo at your game data via a `.env`
+file (see `.env.example`):
+
+```
+MAJESTY_GAME_PATH=C:\path\to\Majesty_Files
+```
+
+If you already have Majesty HD installed via Steam and don't set
+`MAJESTY_GAME_PATH`, `game_paths.py` falls back to the default Steam install
+location automatically. If you keep `Majesty_Files` as a sibling folder next to
+this repo, that's also detected automatically with no `.env` needed:
+
+```
+Majesty/
+├── Majesty_Mod/       (this repo)
+└── Majesty_Files/     (game data repo)
+```
+
+All scripts in this repo resolve game-data paths through `game_paths.py` rather
+than hardcoding `Data/...` relative to the repo root — see that file's docstring
+for the full resolution order.
 
 ## Project Overview
 
@@ -12,16 +46,19 @@ This repo contains:
 2. **Quest Map Generator** — Programmatic .q file generation without RGSEditor
 3. **IceSpell mod** — Custom freeze spell (standalone mod format, `.mmxml`)
 4. **IceSpell_Quest** — Test quest with Ice Spell + AI opponent (self-contained `.mqxml`)
-5. **Game data files** — Original Data/, DataMX/, Quests/, SDK/ for reference and modding
+5. **`game_paths.py`** — resolves game data file locations from the separate
+   Majesty_Files repo or a local Steam install (see "Two-Repo Setup" above)
 
 ## Repository Structure
 
 ```
-├── cam_reader.py              # Parse and extract CAM archive files
-├── cam_writer.py              # Repack CAM archives with modifications
-├── str_tool.py                # STRT string table ↔ TXT converter (translations)
-├── sprite_extractor.py        # Extract sprites as PNGs with correct colors
-├── sprite_injector.py         # Encode PNGs back into TILE RLE format
+├── game_paths.py              # Resolves Data/DataMX/Quests/etc. from Majesty_Files or Steam
+├── .env.example                # Template for MAJESTY_GAME_PATH config
+├── cam_reader.py               # Parse and extract CAM archive files
+├── cam_writer.py               # Repack CAM archives with modifications
+├── str_tool.py                 # STRT string table ↔ TXT converter (translations)
+├── sprite_extractor.py         # Extract sprites as PNGs with correct colors
+├── sprite_injector.py          # Encode PNGs back into TILE RLE format
 ├── CAM_MODDING_GUIDE.md          # Data file modding guide (includes binary format appendix)
 ├── README.md                  # This file
 ├── tests/                     # Unit tests for CAM/STRT tools
@@ -51,15 +88,14 @@ This repo contains:
 │   ├── test_all_quests.py     # Validation suite (37/37 pass)
 │   └── *.md                   # Reference docs for terrain/buildings
 │
-├── Data/                      # Original game data files
-├── DataMX/                    # Expansion data files
-├── Quests/                    # Original quest .q files (22)
-├── QuestsMX/                  # Expansion quest .q files (14)
-├── MyQuest/                   # Minimal test quest (RGSEditor template)
-├── SDK/                       # Game SDK (gplbcc.exe, docs, examples)
-├── Music/                     # Game music tracks
-└── utility/                   # Scratch scripts (gitignored)
+├── SMNUResearch/               # SMNU panel format research + compiler
+├── MyQuest/                    # Minimal test quest (RGSEditor template) — ours, stays here
+└── utility/                    # Scratch scripts (gitignored)
 ```
+
+Game data (`Data/`, `DataMX/`, `Music/`, `Quests/`, `QuestsMX/`, `SDK/`) lives in
+the separate [Majesty_Files](https://github.com/BrandonWill/Majesty_Files) repo —
+see "Two-Repo Setup" above.
 
 ## Tools
 
@@ -218,9 +254,21 @@ Mods and quests use XML `<DataConfiguration>` to declare what to load:
 
 ## Requirements
 
+Dependencies are declared in `pyproject.toml`. Install with:
+
+```bash
+pip install -e .
+# or, for running tests too:
+pip install -e ".[dev]"
 ```
-pip install Pillow numpy
-```
+
+This repo is a flat collection of standalone scripts (not an installable
+package), so `pyproject.toml` exists to centralize dependency versions and
+pytest config rather than for packaging/distribution.
+
+`python-dotenv` is one of the dependencies — without it, `game_paths.py` still
+works via a real `MAJESTY_GAME_PATH` environment variable, just without `.env`
+file support.
 
 ## Architecture
 

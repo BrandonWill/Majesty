@@ -25,6 +25,7 @@ from pathlib import Path
 workspace_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(workspace_root))
 from cam_reader import read_cam
+from game_paths import resolve_game_path
 
 # --------------------------------------------------------------------------
 # CAM builder (same as before, proven working)
@@ -628,7 +629,7 @@ def main():
     print("=" * 70)
 
     # Load original MX03 from expansion textdata as template
-    mx_cam_path = workspace_root / 'DataMX' / 'mx_textdata.cam'
+    mx_cam_path = resolve_game_path('DataMX/mx_textdata.cam')
     mx_data = open(mx_cam_path, 'rb').read()
     mx_secs = read_cam(mx_data)
 

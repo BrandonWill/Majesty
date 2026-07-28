@@ -27,6 +27,7 @@ import argparse
 from pathlib import Path
 
 from cam_reader import read_cam
+from game_paths import resolve_game_path
 from sprite_extractor import (
     u16, u32, decode_tile, load_splt_palette, is_transparent_color
 )
@@ -297,8 +298,9 @@ def main():
                         help="TILE index for round-trip test (default: 3547)")
     args = parser.parse_args()
 
-    print(f"Loading {args.cam}...")
-    with open(args.cam, "rb") as fh:
+    cam_path = resolve_game_path(args.cam)
+    print(f"Loading {cam_path}...")
+    with open(cam_path, "rb") as fh:
         cam_data = fh.read()
 
     sections = read_cam(cam_data)

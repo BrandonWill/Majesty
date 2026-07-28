@@ -1,0 +1,47 @@
+[project]
+name = "majesty-mod-toolkit"
+version = "0.1.0"
+description = "Modding toolkit for Majesty Gold HD — CAM/sprite/quest/panel tooling (Majesty_Mod repo)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    "Pillow>=10.0",
+    "numpy>=1.24",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+# This is a flat collection of standalone scripts (each run directly with
+# `python script.py`, using sys.path.insert(0, ...) to locate sibling
+# modules like game_paths.py/cam_reader.py) rather than an importable
+# Python package. `py-modules = []` below tells setuptools there's nothing
+# to package -- this file exists purely to centralize dependency versions
+# (previously just prose in README.md) and shared tool config (pytest),
+# while still letting `pip install -e .` resolve them in one command.
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+# Lets pytest resolve top-level modules (game_paths, cam_reader, etc.)
+# without every test file needing its own sys.path.insert() for the repo
+# root. Existing sys.path.insert() calls in test files are left as-is for
+# backward compatibility (e.g. running a test file directly with
+# `python tests/test_foo.py`) -- this just makes `pytest` itself more
+# robust to being invoked from any directory.
+pythonpath = ["."]
+testpaths = [
+    "tests",
+    "QuestMapGenerator",
+    "SMNUResearch",
+]

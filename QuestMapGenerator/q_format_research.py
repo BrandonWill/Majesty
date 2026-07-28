@@ -10,6 +10,9 @@ Strategy:
 import struct, os, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from game_paths import game_dir
+
 def u8(d, o): return d[o]
 def u16(d, o): return struct.unpack_from("<H", d, o)[0]
 def u32(d, o): return struct.unpack_from("<I", d, o)[0]
@@ -216,12 +219,13 @@ def full_structure_parse(filepath):
 
 def compare_wrathofkrolm_and_myquest():
     """Compare WrathOfKrolm (known complex) with MyQuest (known simple) to understand structure."""
+    quests_dir = game_dir("Quests")
     files = [
-        "MyQuest/Quest.q",
-        "Quests/Krolm.q",
-        "Quests/Brashnard.q",
-        "Quests/fertile_plain.q",
-        "Quests/barren_waste.q",
+        Path("MyQuest/Quest.q"),
+        quests_dir / "Krolm.q",
+        quests_dir / "Brashnard.q",
+        quests_dir / "fertile_plain.q",
+        quests_dir / "barren_waste.q",
     ]
     
     parsed_files = []
@@ -255,7 +259,8 @@ if __name__ == "__main__":
     parsed_files = compare_wrathofkrolm_and_myquest()
     
     # Phase 2: Full sequential parse of key files
-    for f in ["MyQuest/Quest.q", "Quests/Krolm.q", "Quests/fertile_plain.q"]:
+    quests_dir = game_dir("Quests")
+    for f in [Path("MyQuest/Quest.q"), quests_dir / "Krolm.q", quests_dir / "fertile_plain.q"]:
         if Path(f).exists():
             full_structure_parse(f)
     

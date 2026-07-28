@@ -9,9 +9,13 @@ Usage:
 """
 
 import argparse
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cam_reader import read_cam
 from sprite_extractor import load_splt_palette, is_transparent_color
+from game_paths import resolve_game_path
 
 
 def classify_ice_color(r, g, b, white_threshold=200, sat_threshold=60):
@@ -81,8 +85,9 @@ def main():
                         help="Show full detail for a specific palette index")
     args = parser.parse_args()
 
-    print(f"Loading {args.cam}...")
-    with open(args.cam, "rb") as f:
+    cam_path = resolve_game_path(args.cam)
+    print(f"Loading {cam_path}...")
+    with open(cam_path, "rb") as f:
         cam_data = f.read()
 
     sections = read_cam(cam_data)

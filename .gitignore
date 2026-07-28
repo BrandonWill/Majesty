@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.pyc
+*.egg-info/
+.pytest_cache/
 
 # Output artifacts
 *.png
@@ -19,3 +21,17 @@ __pycache__/
 
 # Kiro settings (machine-specific)
 .kiro/settings/
+
+# Local game data path config (see .env.example)
+.env
+
+# Game data files (now in the separate Majesty_Files repo -- see README.md
+# and game_paths.py). Ignored here in case a modder keeps a local copy of
+# Majesty_Files nested inside this repo instead of as a sibling folder.
+/Data/
+/DataMX/
+/Music/
+/Quests/
+/QuestsMX/
+/SDK/
+/RGSeditor.7z

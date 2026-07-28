@@ -380,9 +380,10 @@ class TestRealSprites:
 
     @pytest.fixture
     def maindata(self):
-        path = Path(__file__).parent.parent / "Data" / "maindata.cam"
+        from game_paths import game_dir
+        path = game_dir("Data") / "maindata.cam"
         if not path.exists():
-            pytest.skip("Data/maindata.cam not available")
+            pytest.skip("Data/maindata.cam not available (set MAJESTY_GAME_PATH)")
         from cam_reader import read_cam
         cam_data = path.read_bytes()
         sections = read_cam(cam_data)

@@ -21,6 +21,7 @@ from quest_map_generator import (
     auto_distribute, validate_placements,
     CENTER, UnitInstance
 )
+from game_paths import game_dir
 
 
 def main():
@@ -114,8 +115,8 @@ def main():
     print("-" * 40)
 
     quest_dirs = [
-        ("Quests", Path("Quests")),
-        ("QuestsMX", Path("QuestsMX")),
+        ("Quests", game_dir("Quests")),
+        ("QuestsMX", game_dir("QuestsMX")),
         ("MyQuest", Path("MyQuest")),
     ]
 

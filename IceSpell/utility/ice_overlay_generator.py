@@ -18,12 +18,15 @@ Requirements:
 import argparse
 import math
 import struct
+import sys
 import numpy as np
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cam_reader import read_cam
 from sprite_extractor import load_splt_palette, is_transparent_color
 from sprite_injector import encode_tile
+from game_paths import resolve_game_path
 
 
 # Frame dimensions for the overlay (covers a standard unit sprite area)
@@ -281,8 +284,9 @@ def main():
                         help="Verify round-trip (default: on)")
     args = parser.parse_args()
 
-    print(f"Loading {args.cam}...")
-    with open(args.cam, "rb") as f:
+    cam_path = resolve_game_path(args.cam)
+    print(f"Loading {cam_path}...")
+    with open(cam_path, "rb") as f:
         cam_data = f.read()
 
     sections = read_cam(cam_data)

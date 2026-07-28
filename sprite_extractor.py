@@ -32,6 +32,7 @@ import argparse
 from pathlib import Path
 
 from cam_reader import read_cam
+from game_paths import resolve_game_path
 
 CAM_FILE = r"Data/maindata.cam"
 
@@ -512,8 +513,9 @@ def main():
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    print(f"Loading {args.cam}...")
-    with open(args.cam, "rb") as fh:
+    cam_path = resolve_game_path(args.cam)
+    print(f"Loading {cam_path}...")
+    with open(cam_path, "rb") as fh:
         cam_data = fh.read()
     print(f"  Loaded {len(cam_data):,} bytes")
 

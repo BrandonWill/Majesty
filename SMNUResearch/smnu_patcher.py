@@ -24,6 +24,7 @@ from pathlib import Path
 workspace_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(workspace_root))
 from cam_reader import read_cam
+from game_paths import resolve_game_path
 
 
 def find_nav_buttons_in_smnu(smnu_blob):
@@ -82,7 +83,7 @@ def find_nav_buttons_in_smnu(smnu_blob):
 
 def load_cam_panels(cam_path):
     """Load all SMNU panels from a CAM file. Returns (raw_data, sections)."""
-    with open(cam_path, 'rb') as f:
+    with open(resolve_game_path(cam_path), 'rb') as f:
         raw = f.read()
     sections = read_cam(raw)
     return raw, sections
