@@ -154,3 +154,47 @@ rather than in a separate sub-panel.
 | AP31 | 0x31335041 | FUN_004a56d0 | Marketplace |
 | MX00 | 0x3030584d | FUN_004bb700 | Hall of Champions |
 | MX06 | 0x3630584d | FUN_004bd870 | Sorcerer's Abode |
+
+---
+
+## Research Item Click Dispatch (UNCONFIRMED — not yet Ghidra-decompiled)
+
+Distinct from the panel-OPEN mechanism above (which IS Ghidra-confirmed via
+disassembly): clicking an individual research/purchase item WITHIN an
+already-open panel (action codes 5061-5066 etc., see
+`findings/action_codes_decoded.md`) is reported — from an earlier
+`exe_patcher.py` binary-patching experiment, not from Ghidra decompilation
+with disassembly shown — to work like this:
+
+- `FUN_004a8510` registers ALL research buttons at startup (reported count:
+  26), each via `FUN_004a83e0(cost_expr, time_expr, level, buttonID,
+  iconIdx, controlID)`
+- Registrations are stored in a map keyed by `control_id`
+- A click handler (reported: `FUN_004a94c0`) routes clicks by `control_id`
+  RANGE per building (reported example: Marketplace = 5040-5043)
+- `cost_expr`/`time_expr` are GPL expression references (e.g.
+  `#ResearchCostX`), NOT hardcoded values — the exe owns the dispatch
+  mechanism, GPL data owns the actual numbers
+
+**Empirical support (partial):** `exe_patcher.py` successfully hijacked an
+existing button's registration (control_id `0x13B3`, the "PowerfulItem"
+slot) and, in-game, the target button showed a cost pulled from a test GPL
+expression (`#ResearchCostTestItem`) instead of its original value. This
+demonstrates registration IS controllable and IS distinct from the panel
+open mechanism, but does NOT independently confirm the specific addresses,
+the "26 buttons" count, or the exact control_id ranges — those numbers were
+carried over from that session's notes, not re-derived via decompilation
+here.
+
+**Practical implication if true:** adding a genuinely new (not just cloned)
+purchase-style button to an existing panel likely requires either (a) an
+unused/free control_id already registered by the exe with no visible
+widget currently pointing at it, or (b) an exe patch to register a new
+control_id — the button widget itself (SMNU/STRT) is fully within our
+tooling's reach via quest CAM override, but making it produce true
+purchase behavior on click may not be, depending on how strict this
+range-based dispatch turns out to be.
+
+**Follow-up needed:** re-derive this via actual Ghidra decompilation (not
+just binary patching + observed in-game behavior) to confirm or correct
+the specific addresses/counts/ranges. See `TODO-Ghidra.md`.

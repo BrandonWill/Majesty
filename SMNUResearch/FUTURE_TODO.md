@@ -6,6 +6,16 @@
 - Only action code 8013 (return to parent) works from inside a sub-panel
 - Codes 4004, 8851, System B format — all silently ignored in sub-panel context
 - Multi-page navigation is impossible without an exe patch
+- **Concretely proven in `PanelTest_Quest`:** a genuine 5th widget was added to
+  MX03 (cloned Return button, target=35, code 8013) and rendered/worked
+  correctly — confirming widget insertion itself is solid. But it could only
+  ever be another "return to parent" button, since every other action
+  code/target combination tried for *forward* navigation (System B format,
+  code 4004 target=7, code 8851 action=83, code 8013 with a non-return
+  target) was silently ignored in this context. So the 5th slot is real and
+  functional, just not usable for what motivated the test (reaching a new
+  page of research items) — see PanelTest_Quest's commit history
+  (`8ba9226` through `e7e2882`) for the specific attempts.
 
 ### Quest CAM Override Capability (CORRECTED July 2026)
 - Quest CAMs loaded via `<CAM>` **DO override** all resource types (last-loaded wins)
@@ -116,6 +126,13 @@ New custom buildings (new DialogID) can't have Research panels without exe patch
 - Offsets: count × u32 absolute byte positions
 - Content: null-terminated strings (no index prefix)
 - STRT is found by SAME entry name as SMNU in the CAM
+- Reference point: a community Polish translation
+  (github.com/m-architek/Majesty-Tools) ships a working modified
+  `Data/textdata.cam` using STRT **version 0x00** (u16 offsets, not u32) —
+  an older/alternate STRT layout than English HD's version 0x02. Their
+  approach is plain direct file replacement, not a quest CAM override.
+  Useful as a second real-world reference if version 0x02 assumptions
+  ever need cross-checking, but not a format we target for our own tooling.
 
 ### CAM Override Behavior
 - Quest CAMs ARE loaded into the resource system (no error on load)
@@ -159,6 +176,95 @@ If we could make the research panel C++ code populate a type 6 list widget with
 research items (instead of fixed button slots), scrolling would work natively.
 BUT this likely requires an exe patch to the research panel populator function.
 Compare difficulty: one exe patch for scroll support vs one exe patch for sub-panel nav.
+
+---
+
+## Priority 3.6: New Research/Purchase Button (Same-Context Action, Not Navigation)
+
+### Already tested — do not re-run the navigation version of this
+`PanelTest_Quest` already added a genuine 5th widget to MX03 and proved
+widget insertion/rendering works, but every *navigation* action tried for
+it failed except 8013 (return to parent) — see "Building Sub-Panel
+Navigation" above and PanelTest_Quest commit history (`8ba9226`-`e7e2882`).
+That closes the "5th button that opens something new" version of this idea
+without an exe patch.
+
+### What's still actually untested
+A 5th widget that fires a same-context **purchase/GPL action** (not a
+navigation code) is a structurally different case from what was tested.
+The Magic Bazaar's own existing item buttons (action IDs 5061-5066) already
+prove the engine supports N purchase-style buttons firing GPL expressions
+in a single panel — that pattern isn't a "new" capability, it's just never
+been tried as an ADDED 5th button on a DIFFERENT panel (e.g. Marketplace's
+`APa3`) via quest CAM override.
+
+### Building blocks already confirmed and available
+- Quest CAM SMNU/STRT override works (last-loaded wins) — see "Quest CAM
+  Override Capability" above
+- `smnu_compiler.py` + `cam_writer.build_cam_from_sections()` can build a
+  byte-perfect textdata.cam from scratch (Priority 4 below)
+- Widget cloning/repositioning already works (`clone_widget()`) — proven
+  by the PanelTest_Quest 5th-widget test above
+- The panel's own per-panel STRT entry (matching SMNU entry name) is where
+  button label text lives — confirmed via the Marketplace `APa3[1]` /
+  `GMTX[210]` distinction (see `CAM_MODDING_GUIDE.md`, "change game
+  text/UI strings" recipe): `GMTX` is a red herring for this kind of work,
+  always edit the panel's own same-named STRT entry.
+
+### Open question: click dispatch may gate this (needs Ghidra confirmation)
+The Marketplace/Bazaar's existing item buttons work because the exe already
+registered a handler for their specific control_id at startup — reported
+(not yet independently Ghidra-confirmed) to be a per-building control_id
+RANGE dispatch, not a generic "any button with this action type works"
+mechanism. See `TODO-Ghidra.md` Priority 3.4 and
+`SMNUResearch/findings/exe_disassembly_results.md` ("Research Item Click
+Dispatch" section). If that's accurate, a genuinely NEW button (not a
+clone of an existing widget reusing its existing control_id) may not fire
+its purchase behavior without either finding an already-registered-but-
+unused control_id, or an exe patch to register a new one. This needs
+resolving BEFORE spending time hand-authoring new widget geometry, since it
+determines whether this task is achievable via quest CAM alone or not.
+
+### Steps
+- [ ] **First:** resolve the click dispatch question above (TODO-Ghidra.md
+  Priority 3.4) — if strict range dispatch is confirmed with no free slots,
+  this task is blocked on an exe patch, same as forward-navigation was
+- [ ] Clone an existing button widget in the target panel (e.g. `APa3`)
+  via `smnu_format.py`'s widget helpers, reposition it into the empty slot
+- [ ] Add the new button's label string to that panel's own STRT (same
+  entry name as the SMNU, e.g. `APa3` STRT) — NOT `GMTX`
+- [ ] Assign a same-context purchase-style action (mirror the Magic
+  Bazaar's 5061-5066 pattern — fires a GPL expression, does NOT try to
+  open/navigate to another panel) — only meaningful once dispatch is
+  understood; otherwise this reuses an EXISTING control_id (works, but
+  isn't really a "new" button, just relabeling/repositioning one)
+- [ ] Build via `smnu_compiler.build_textdata_cam()`, override via quest
+  `<CAM>` tag (all in-project generated files — no direct game file edits)
+- [ ] In-game test (see TODO-GameTests.md): confirm the button renders,
+  is clickable, fires its GPL expression, and doesn't corrupt the rest of
+  the panel
+
+### Related but distinct: hero-AI-driven purchases are a separate system
+Don't confuse this UI-click research/purchase system with hero AI
+autonomously buying items by wandering into a shop — that's a completely
+different code path (GPL decision trees, e.g. `Purchase_Equipment`,
+`Purchase_Bazaar` in `SDK/OriginalQuests/GPLMx/TaskModules/Buildings/
+Magic_Bazaar.gpl`, triggered by `Shop_Visited` when the hero physically
+arrives). The two systems are linked only through shared building
+attributes — e.g. hero AI's `Purchase_Bazaar` checks
+`#ATTRIB_ResearchBazaar_Item_One` via `$Researched_Item()` before a hero
+will consider buying an item, and that attribute is exactly what the
+player's UI research click sets to 1. So the UI-click system unlocks
+availability; the hero-AI system independently decides whether to spend
+gold on an unlocked item during normal gameplay. No exe involvement in the
+hero-AI half — it's pure GPL. See `CAM_MODDING_GUIDE.md`'s task-oriented
+recipes for where this distinction is now documented.
+
+### Note
+The Blacksmith reportedly has 6 research slots in its own panel layout,
+which suggests the underlying widget/slot system already supports more
+than 4 — worth checking that panel's SMNU as a reference for spacing/
+layout before hand-designing new geometry from scratch.
 
 ---
 

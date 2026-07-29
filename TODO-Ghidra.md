@@ -23,6 +23,15 @@ Work that requires the Ghidra machine and MajestyHD.exe disassembly/patching.
 
 **Goal:** Enable multi-page building research panels via a new action code.
 
+**Evidence this needs an exe patch (not just data authoring):** `PanelTest_Quest`
+concretely proved widget insertion itself works — a genuine 5th widget was added
+to MX03 and rendered/functioned correctly — but every action code/target
+combination tried for *forward* navigation (System B format, code 4004 target=7,
+code 8851 action=83, code 8013 with a non-return target) was silently ignored.
+Only code 8013 targeting the parent (return) works. See commits `8ba9226`
+through `e7e2882` in PanelTest_Quest, and `SMNUResearch/FUTURE_TODO.md`
+("Building Sub-Panel Navigation") for details.
+
 **Steps:**
 1. Find the building sub-panel click handler (the function that checks for code 8013)
 2. Identify where it rejects/ignores unknown codes
@@ -72,6 +81,48 @@ Cross-ref with action code 8013 handler to find the dispatcher.
 
 **Context:** Type 6 and type 9 constructors are at `FUN_006d0dd0` and `FUN_006cc5d0`.
 See `SMNUResearch/FUTURE_TODO.md` for geometry examples and known behavior.
+
+---
+
+## Priority 3.4: Confirm Research Item Click Dispatch Mechanism
+
+**Goal:** Re-derive via actual Ghidra decompilation (not binary-patch
+experimentation) the mechanism that dispatches clicks on individual
+research/purchase items WITHIN an already-open panel — distinct from the
+panel-OPEN mechanism (Priority answered, see "DEFINITIVE ANSWER" section
+above and `findings/exe_disassembly_results.md`).
+
+**Background:** An earlier `exe_patcher.py` session reported this
+architecture but never confirmed it via decompilation/disassembly:
+- `FUN_004a8510` registers all research buttons at startup (reported: 26)
+- Each via `FUN_004a83e0(cost_expr, time_expr, level, buttonID, iconIdx,
+  controlID)`, stored in a map keyed by control_id
+- Click handler `FUN_004a94c0` routes by control_id RANGE per building
+  (reported example: Marketplace 5040-5043)
+- Empirically, hijacking control_id `0x13B3` (PowerfulItem slot) via binary
+  patch did redirect that button's cost to a test GPL expression in-game —
+  so SOME registration/dispatch-by-id mechanism is real, just not
+  independently re-verified at the disassembly level
+
+**Steps:**
+1. Confirm/correct `FUN_004a8510` and `FUN_004a83e0` addresses and
+   signatures via decompilation
+2. Confirm the "26 buttons" count and control_id ranges per building
+   (at least Marketplace 5040-5043, ideally all buildings with research)
+3. Confirm `FUN_004a94c0` is the actual click dispatcher and how strictly
+   it validates control_id ranges (does it reject ids outside the
+   registered set, or fall through silently?)
+4. Determine whether an UNUSED/free control_id already exists in any
+   building's registered range that has no widget currently pointing at
+   it (would allow a new button without needing a NEW registration)
+
+**Record results in:** `SMNUResearch/findings/exe_disassembly_results.md`
+("Research Item Click Dispatch" section) — replace the UNCONFIRMED framing
+once addresses/ranges are independently verified.
+
+**Relevant to:** `SMNUResearch/FUTURE_TODO.md` Priority 3.6 (new
+research/purchase button) — this dispatch mechanism determines whether
+that task is achievable without an exe patch or not.
 
 ---
 
@@ -128,6 +179,49 @@ The reverse direction (GPL → cheat internals) should be structurally similar.
 
 ---
 
+## Low Priority: Investigate "Zoo" Building as a Possible EXE Expansion Point
+
+**Background:** Confirmed via direct data inspection (not yet Ghidra) that
+"Zoo" is real but orphaned content: `DialogID`-shaped sprites `ABn1`/`ABn2`/
+`ABn3` ("Zoo Level 1/2/3") exist in `DataMX/mx_maindata.cam`, and
+`GPLMx/TaskModules/Buildings/Zoo.gpl` has a working `zoo_flag_check`
+mechanic (charms a nearby monster to the closest hero via a `RewardFlag`/
+`charm_percentage` system, using the same `$control_monster` primitive as
+the Cultist's `Charm_Monster` spell). BUT there is no XML building
+definition (`M_Buildings.xml`/`MX_Buildings.xml`) referencing `ABn1/2/3`,
+and no quest data places it — it's unreachable in normal play. See
+`CAM_MODDING_GUIDE.md`'s Visited_Script table note for the full writeup.
+
+**Why this might matter for exe patching:** several patches we want
+(Priority 1 sub-panel nav, Priority 2 new building panel registration)
+are blocked on needing new vtable slots / DialogID mappings / control_ids
+that don't currently exist. An already-reserved-but-unused DialogID
+family (with its own sprites already in the game data) is exactly the
+kind of "free" slot that might be cheaper to repurpose than carving out
+brand new IDs from nothing — IF the exe still has any dormant
+Zoo-related building-class plumbing (vtable slots, panel factory
+mapping, etc.) sitting unused alongside the orphaned data.
+
+**Steps (low priority, exploratory):**
+1. Search the exe for xrefs to "ABn1"/"ABn2"/"ABn3" or "Zoo" — does the
+   panel/building class factory (`FUN_0051b150`, see "DEFINITIVE ANSWER"
+   section above) have ANY entry for these DialogIDs, even if currently
+   unreachable from the dataset?
+2. If a vtable/class mapping exists: what panel (if any) does it point to?
+   Does it reference a stub/dialog research panel that was never finished
+   (would answer the "any dialog/research panels exist" question)?
+3. If dormant plumbing IS found: assess whether repurposing it (redirect
+   an existing-but-dead mapping to a NEW panel/DialogID of our choosing)
+   is lower-risk than adding a brand new vtable entry from scratch
+4. If NOTHING exists in the exe for Zoo (i.e., only the data files have
+   orphaned content, exe has zero awareness of it): this dead-ends, Zoo
+   is not useful as an expansion point, note that and close this out
+
+**Record results in:** `SMNUResearch/findings/exe_disassembly_results.md`
+(new "Zoo / Orphaned Content Investigation" section)
+
+---
+
 ## Low Priority: Decompile Sound Editor EXE
 
 **Goal:** Reverse-engineer the SDK sound editor executable to understand sound/DSND authoring.
@@ -145,6 +239,9 @@ The reverse direction (GPL → cheat internals) should be structurally similar.
 | Identify sub-panel click dispatcher function | `SMNUResearch/findings/action_codes_decoded.md` |
 | Document resource search direction in `FUN_00679a80` | `CAM_MODDING_GUIDE.md` (Quest CAM Loading) |
 | What does `AllocateLocalID` do for particle systems | `CAM_MODDING_GUIDE.md` (particle section) |
+| (Low priority) Confirm the exe never calls a GPL "birthscript2" attribute directly (only "birthscript" is known to be engine-invoked, via `NewUnitInit`) — see `TODO-GPL-Deepdive.md` "birthscript vs birthScript2" finding, "Not yet checked / UNVERIFIED" | `TODO-GPL-Deepdive.md` (birthscript/birthScript2 section) |
+| (Low priority) Confirm whether the exe calls `$DoMarketDay`/`$EndMarketDay` on a Marketplace's `RevenueScript` thread (only the functions' own leading comments — "called by the ingame code" — are evidence; no GPL-side call site found) | `TODO-GPL-Deepdive.md` (building revenue finding) |
+| (Low priority) Find what sets a building's `#ATTRIB_isTaxed`/`#ATTRIB_QuickTax` flags — no GPL/`.dat` set-site found, only read-sites in `collect_tax.gpl` | `TODO-GPL-Deepdive.md` (building revenue finding) |
 
 ---
 

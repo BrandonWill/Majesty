@@ -722,6 +722,29 @@ python str_tool.py --cam Data/textdata.cam --extract --output text_dump/
 python str_tool.py --cam Data/textdata.cam --inject --input text_dump/ --output Data/textdata_modded.cam
 ```
 
+**Gotcha — a button label may not be where you expect.** Each building panel has
+its OWN per-panel STRT entry (e.g. `APa3` = Marketplace research panel), and
+that's usually where visible button/label text actually lives — NOT the general
+`GMTX` string table, even if `GMTX` happens to contain a matching-looking string.
+Confirmed case: the Marketplace "Market Day" research button's real label is
+`APa3` string index 1; `GMTX[210]` also contains "Market Day" text but is used
+elsewhere in the UI, not by this button. Editing the wrong one silently does
+nothing to the button you're targeting. Rule of thumb: find the panel's own
+SMNU entry name first (matches its STRT entry name 1:1 — see "SMNU Panel
+Format" below), then edit that STRT entry's string, not a same-looking string
+in `GMTX`.
+
+### "I want to understand how hero/player item purchases work"
+
+This is gameplay-logic territory (GPL/XML/.dat semantics), not CAM binary
+format — see `TODO-GPL-Deepdive.md` for the full, citation-backed writeup
+(building visit/purchase dispatch tables, the two separate purchase systems,
+Zoo/Mausoleum/Magic_Bazaar findings, and the shared-primitive dispatch
+limits like `check_rewards()`'s closed title set). This guide stays focused
+on CAM container/section formats; the gameplay-mechanics deep dive lives
+in its own tracked doc so it can be verified file-by-file without diluting
+this one.
+
 ### "I want to add a particle effect"
 
 Define in XML with `type="Unit" subType="ParticleSystem"`. Particle systems are
