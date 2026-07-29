@@ -30,11 +30,15 @@ def build_tile(height, width, rows_segments, palette_id=0):
             row_blobs.append(struct.pack("<HBB", 0, 0, 0x80))
         else:
             parts = []
-            for i, (x_pos, pixels) in enumerate(segments):
+            for i, (x_start, pixels) in enumerate(segments):
                 is_last = (i == len(segments) - 1)
                 flags = 0x80 if is_last else 0x00
                 count = len(pixels)
-                part = struct.pack("<HBB", x_pos, count, flags) + bytes(pixels)
+                # On-disk x is the exclusive END of the run (x_start + count),
+                # matching decode_tile/_encode_row's current encoding (see
+                # d9cb5e7 "Fix TILE v3 RLE X as exclusive end").
+                x_end = x_start + count
+                part = struct.pack("<HBB", x_end, count, flags) + bytes(pixels)
                 parts.append(part)
             row_blobs.append(b''.join(parts))
 
@@ -157,23 +161,30 @@ class TestDecodeTile:
 # ─── Tests: _encode_row ───────────────────────────────────────────────────
 
 class TestEncodeRow:
+    """
+    NOTE: the on-disk x value is the EXCLUSIVE END of each run
+    (x_start + count), not the start column. See d9cb5e7 "Fix TILE v3 RLE
+    X as exclusive end" / TODO.md for the root cause of why these fixtures
+    were previously wrong (they asserted the old start-relative encoding).
+    """
+
     def test_simple_row(self):
         """Encode a row with contiguous opaque pixels."""
         row = np.array([1, 2, 3, 4, 0, 0], dtype=np.uint8)
         blob = _encode_row(row)
 
-        # Should produce: [x=0, count=4, flags=0x80, pixels 1,2,3,4]
-        assert blob == struct.pack("<HBB", 0, 4, 0x80) + bytes([1, 2, 3, 4])
+        # Should produce: [x_end=4, count=4, flags=0x80, pixels 1,2,3,4]
+        assert blob == struct.pack("<HBB", 4, 4, 0x80) + bytes([1, 2, 3, 4])
 
     def test_multiple_segments(self):
         """Encode a row with a transparent gap creating two segments."""
         row = np.array([1, 2, 0, 0, 3, 4], dtype=np.uint8)
         blob = _encode_row(row)
 
-        # Two segments: x=0 count=2 flags=0x00, x=4 count=2 flags=0x80
+        # Two segments: x_end=2 count=2 flags=0x00, x_end=6 count=2 flags=0x80
         expected = (
-            struct.pack("<HBB", 0, 2, 0x00) + bytes([1, 2]) +
-            struct.pack("<HBB", 4, 2, 0x80) + bytes([3, 4])
+            struct.pack("<HBB", 2, 2, 0x00) + bytes([1, 2]) +
+            struct.pack("<HBB", 6, 2, 0x80) + bytes([3, 4])
         )
         assert blob == expected
 
@@ -190,28 +201,28 @@ class TestEncodeRow:
         row = np.array([0, 0, 5, 6, 7], dtype=np.uint8)
         blob = _encode_row(row)
 
-        assert blob == struct.pack("<HBB", 2, 3, 0x80) + bytes([5, 6, 7])
+        assert blob == struct.pack("<HBB", 5, 3, 0x80) + bytes([5, 6, 7])
 
     def test_trailing_transparency(self):
         """Transparent pixels at the end are skipped."""
         row = np.array([1, 2, 0, 0, 0], dtype=np.uint8)
         blob = _encode_row(row)
 
-        assert blob == struct.pack("<HBB", 0, 2, 0x80) + bytes([1, 2])
+        assert blob == struct.pack("<HBB", 2, 2, 0x80) + bytes([1, 2])
 
     def test_single_pixel(self):
         """A single opaque pixel is encoded correctly."""
         row = np.array([0, 0, 42, 0, 0], dtype=np.uint8)
         blob = _encode_row(row)
 
-        assert blob == struct.pack("<HBB", 2, 1, 0x80) + bytes([42])
+        assert blob == struct.pack("<HBB", 3, 1, 0x80) + bytes([42])
 
     def test_magenta_indices_preserved(self):
         """Palette indices 248-255 (shadow/blend) are real pixels, not transparent."""
         row = np.array([248, 249, 250, 255], dtype=np.uint8)
         blob = _encode_row(row)
 
-        assert blob == struct.pack("<HBB", 0, 4, 0x80) + bytes([248, 249, 250, 255])
+        assert blob == struct.pack("<HBB", 4, 4, 0x80) + bytes([248, 249, 250, 255])
 
 
 # ─── Tests: encode_tile ───────────────────────────────────────────────────
