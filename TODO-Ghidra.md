@@ -2,6 +2,41 @@
 
 Work that requires the Ghidra machine and MajestyHD.exe disassembly/patching.
 
+**Starting a Ghidra-machine session? Start from `GHIDRA_TASK.md`
+(repo root), not this file directly** — it points here plus the exact
+findings file for the current task, and confirms `Majesty_Files` isn't
+needed for any of this. This file is still the source of truth for task
+details/status; `GHIDRA_TASK.md` is just the minimal entry point.
+
+## Work Order (read this first — priority NUMBERS below are topic labels,
+## not a strict queue)
+
+1. **Priority 1 (Sub-Panel Navigation Action Code) — IN PROGRESS, continue
+   this first.** Was actively being worked when the Ghidra machine ran out
+   of monthly tokens; pick back up where that session left off.
+2. **Priority 3.4 (Research Item Click Dispatch) — do this NEXT, out of
+   its numeric order.** No dependency on Priority 1 (different target
+   functions — `FUN_004a8510`/`FUN_004a94c0` vs. the code-8013 sub-panel
+   dispatcher/`OpenPanelByName`), so it doesn't need to wait. Bumped ahead
+   because it gates the most other open work: `SMNUResearch/FUTURE_TODO.md`
+   Priority 3.6 (new research/purchase button), `TODO-New-Hero-Requirements.md`
+   §5's recruit-cost gap, and `TODO-New-Building-Requirements.md` §7(E)'s
+   combined-case gap all resolve once this lands.
+3. Resume remaining priorities in their existing numeric order (2, 3, 3.5,
+   4, 5, 6) after 3.4 is done, unless a future note here says otherwise.
+4. **Priority 7 (GPL engine-primitive semantics) is explicitly LAST** —
+   it's a batch of small "what does this primitive actually do outside its
+   one shipped call site" questions from the now-complete GPL Rules pass.
+   None of them block a modding workflow. Pick individual rows up
+   opportunistically when you're already in adjacent code rather than
+   scheduling the section as a unit.
+
+(Not renumbering the sections below to match this order — "Priority 3.4"
+etc. are referenced by that exact label from `TODO.md`, `TODO-GPL-Deepdive.md`,
+`TODO-New-Hero-Requirements.md`, `GPL_MODDING_GUIDE.md`, and
+`SMNUResearch/FUTURE_TODO.md`; relabeling risks stale cross-references
+without actually changing what work gets done.)
+
 **When you complete a task or discover new info, update THESE files:**
 
 | What you found | Update this file |
@@ -124,6 +159,28 @@ once addresses/ranges are independently verified.
 research/purchase button) — this dispatch mechanism determines whether
 that task is achievable without an exe patch or not.
 
+**Also relevant to:** `TODO-New-Hero-Requirements.md` §5 (Recruitment) —
+that doc's GPL/data-side trace found no GPL-side cost-check/`$SpawnUnit`
+call site for plain (non-Embassy) guild recruit buttons, strongly
+suggesting the recruit button's gold check + spawn happens entirely
+exe-side (panel click handler), the same class of gap as the research-item
+click dispatch above. Confirming/correcting `FUN_004a94c0`'s dispatch
+behavior (or finding the equivalent handler for the "Recruit" action
+code/control_id, Action ID 75 / Handler Code 8009 per
+`SMNUResearch/findings/action_codes_decoded.md`) would resolve both that
+doc's open item and this one — same disassembly work, applied to the
+recruit button specifically. Record findings for the recruit-specific case
+in `TODO-New-Hero-Requirements.md` §5 as well as here.
+
+**Also relevant to:** `TODO-New-Building-Requirements.md` §7 (the
+combined "building that recruits a new hero" case) — that section's item
+(E) flags the same open question (does the recruit-click gold-check/
+`$SpawnUnit` step behave differently for a brand-new building vs. an
+existing one) as genuinely unknown for the combined scenario specifically.
+No new disassembly target beyond what's already scoped above — resolving
+this item resolves that one too. Update `TODO-New-Building-Requirements.md`
+§7(E) if/when this lands.
+
 ---
 
 ## Priority 3.5: Confirm GDB4 Out-of-Range STRT References (Debugger Panel)
@@ -176,6 +233,448 @@ finding changes how string refs should be checked.
 
 **Context:** Some cheats already call GPL (`cheat_wave_undead`, `cheat_wave_raiders`).
 The reverse direction (GPL → cheat internals) should be structurally similar.
+
+---
+
+## Priority 5: Building-Specific EXE Research (from `TODO-New-Building-Requirements.md`)
+
+**Goal:** Resolve the building-specific engine internals that
+`TODO-New-Building-Requirements.md`'s research (all 8 sections
+complete) could not resolve from GPL/XML/`.dat`/CAM source alone. None
+of these have a hero-side equivalent — they're genuinely new targets,
+not overlap with Priority 1-4/3.4 above.
+
+### 5.1 Building Placement/Collision Footprint Validation
+
+**Why this needs Ghidra:** no dedicated footprint/collision-size field
+exists in `M_Buildings.xml`, `Building_Data.dat`, or the documented DUNT
+binary field list (confirmed by direct grep across all three — see
+`TODO-New-Building-Requirements.md` §2's "Footprint/collision size"
+item). The only spatial data confirmed anywhere is the per-frame
+`(x_off, y_off)` sprite hotspot. Whether the engine derives a
+placement/overlap collision box from that sprite bounding box, from an
+undocumented DUNT field, or from something else entirely is unconfirmed.
+
+**Steps:**
+1. Find the live placement-cursor validation code (triggered when the
+   player drags a building icon over the map before clicking to place)
+2. Identify what data it reads to determine "does this footprint
+   overlap an existing building" — sprite dimensions? a DUNT field not
+   yet reverse-engineered? a fixed per-building-class constant?
+3. Cross-check against the RGS `.q`-file generation-time overlap
+   prevention (`.kiro/steering/majesty-modding.md`'s "Overlap
+   prevention" note) — confirm or refute whether live placement and RGS
+   generation-time placement share the same underlying collision-size
+   lookup, or are two unrelated code paths
+
+**Record results in:** `TODO-New-Building-Requirements.md` §1/§4
+(footprint items) and `CAM_MODDING_GUIDE.md` if a new DUNT field is
+found.
+
+### 5.2 `$DisableUnitType`/`$EnableUnitType` Internal Storage
+
+**Why this needs Ghidra:** these are real, GPL-called, compiler-
+recognized engine primitives (confirmed listed in `SDK/Extras/GPL User
+Define[d] Language template for Notepad++.xml`'s `Keywords4` block,
+extensively used in `Rules/Demo.gpl`/`epic_quest_scripts.gpl` to gate
+what appears in the build menu) with zero GPL-visible implementation.
+What internal flag/table they write to, and whether it's per-player or
+global, is unconfirmed — see `TODO-New-Building-Requirements.md` §4.
+
+**Steps:**
+1. Find the primitive's dispatch entry (same GPL-primitive-table
+   mechanism as any other `$Function` — cross-reference with however
+   other confirmed primitives like `$SpawnUnit` were located)
+2. Identify what it writes (a per-player bitmask? a flag on the
+   unit-type's compiled DUNT record?) and where that data is read at
+   build-menu-render time
+
+**Record results in:** `TODO-New-Building-Requirements.md` §4 and
+`CAM_MODDING_GUIDE.md` (new "Engine Primitives" section if one doesn't
+exist yet).
+
+### 5.3 `$SetBuildingLimit`/`$RemoveBuildingLimit`/`$RemoveAllBuildingLimits` Semantics
+
+**Why this needs Ghidra:** same `Keywords4`-confirmed engine-primitive
+category as 5.2, but with **zero** GPL call sites found anywhere in the
+corpus — completely unused by any shipped quest, so there's no
+GPL-side usage pattern to infer behavior from at all.
+
+**Steps:**
+1. Find the primitives' dispatch entries and decompile their bodies
+2. Determine: limit by unit-type title? by count? per-player or global?
+   Does exceeding a limit block placement, hide the menu entry, or
+   something else?
+
+**Record results in:** `TODO-New-Building-Requirements.md` §4.
+
+### 5.4 `Menu` Value Engine-Keying + Graveyard/Sewer Anomaly
+
+**Why this needs Ghidra:** `Menu` values 0/1/2/3 correlate strongly with
+build-menu category (temple/guild/ordinary/non-buildable) and with
+`Flags value="IsGuild"`, but which field the engine actually keys off of
+for categorization is unconfirmed, and two Monster-`CanUse` lairs
+(`Graveyard`, `Sewer`/`BBN1`) break the otherwise-consistent
+Monster→`Menu="2"` pattern by using `Menu="3"` instead — see
+`TODO-New-Building-Requirements.md` §2.
+
+**Steps:**
+1. Find the build-menu-population/categorization code (likely near
+   whatever the `$DisableUnitType` render-time check in 5.2 lives)
+2. Confirm whether it reads `Menu` or `Flags value="IsGuild"` (or both)
+   for category placement
+3. Check whether `Graveyard`/`Sewer`'s `Menu="3"` value causes any
+   different runtime behavior than other `Menu="2"` monster lairs, or
+   is a harmless inconsistency in the shipped data
+
+**Record results in:** `TODO-New-Building-Requirements.md` §2.
+
+### 5.5 Construction-Stage `Build`-Set Selection Logic
+
+**Why this needs Ghidra:** buildings have 2-3 populated `Build`-family
+ImageSets (setIDs 80-82) per building, but no GPL/XML/`.dat` source
+selects among them based on construction progress (%HP built) —
+`Building_Births.gpl`'s `basic_birth`/`magical_birth`/
+`BuildingReachedMaxHP` only reference `birthscript`/`birthscript2`
+function pointers, never an ImageSet name. See
+`TODO-New-Building-Requirements.md` §1.
+
+**Steps:**
+1. Find the code that renders a building's current construction-stage
+   sprite (likely reads `#ATTRIB_FirstStageBuilt` or a raw HP percentage
+   directly)
+2. Confirm whether it selects `Build`/`Build-2`/`Build-3` by a fixed
+   percentage-of-max-HP threshold, or some other mechanism
+3. Also resolve whether the numbered `Die`-family variants (setIDs
+   97-103, confirmed present-but-not-content-verified on buildings) hold
+   genuinely distinct frame content or are unused/reserved slots
+
+**Record results in:** `TODO-New-Building-Requirements.md` §1.
+
+### 5.6 Ordinary-Building Minimap Representation
+
+**Why this needs Ghidra:** only Palace (`ABJ1`/`ABJ2`/`ABJ3`) has a
+dedicated `Minimap` ImageSet among all 91 `AB*`/`BB*` building/lair
+records checked — the other 88 have none, yet presumably still show
+something on the minimap. Heroes, by contrast, universally have a
+`Minimap` set (zero exceptions across 15 heroes checked) — a genuine
+building-vs-hero asymmetry. See `TODO-New-Building-Requirements.md` §1.
+
+**Steps:**
+1. Find the minimap-rendering code path
+2. Determine whether ordinary buildings render as a generic
+   engine-computed dot/rectangle (using player color/team only, no
+   per-building sprite), a downscaled existing ImageSet (e.g. `Active`),
+   or aren't individually represented at all
+
+**Record results in:** `TODO-New-Building-Requirements.md` §1.
+
+---
+
+## Priority 6: Hero Recruitment EXE Research (from `TODO-New-Hero-Requirements.md`)
+
+**Goal:** Resolve the recruitment-specific engine internals
+`TODO-New-Hero-Requirements.md` §5/§6 flagged as needing Ghidra, beyond
+the recruit-button click dispatch already scoped in Priority 3.4 above
+(don't duplicate that item — these are the narrower follow-ons it
+didn't cover).
+
+### 6.1 Hero `Cost` XML Field's Actual Consumer
+
+**Why this needs Ghidra:** every playable hero declares a `Cost` value
+in `M_Characters.xml`, but no GPL function anywhere reads it via
+`thisagent's "cost"` or an equivalent accessor. The one confirmed
+AI-facing gold-charge function (`Enemy_Guild_Spawn`) uses an unrelated
+hardcoded flat value (600) instead of the hero's own `Cost` — a genuine
+unexplained mismatch. See `TODO-New-Hero-Requirements.md` §5 item 4.
+
+**Steps:**
+1. Find the recruit-button click handler (likely the same function
+   Priority 3.4 targets for the Recruit action code/control_id)
+2. Confirm whether it reads the hero's `Cost` field from the compiled
+   unit-type table at click time, or does something else entirely
+
+**Record results in:** `TODO-New-Hero-Requirements.md` §5.
+
+### 6.2 `RecruitDelay` Enforcement Mechanism
+
+**Why this needs Ghidra:** `RecruitDelay` is a universal per-hero XML
+field (4000ms-20000ms range across sampled heroes), and
+`#DelayRecruitCheckPeriod`'s GPL comment is suggestive ("will be
+recruited if individual recruitment delay is up") but has zero GPL
+call sites anywhere in the corpus reading it as a real timer argument.
+See `TODO-New-Hero-Requirements.md` §5 item 4.
+
+**Steps:**
+1. Determine whether a per-guild recruit cooldown timer exists
+   exe-side at all, and if so what field it reads
+2. If found, confirm it reads the hero's own `RecruitDelay` value
+   rather than a fixed/global cooldown
+
+**Record results in:** `TODO-New-Hero-Requirements.md` §5.
+
+### 6.3 `$BuildingIsRecruiting` Primitive Contract
+
+**Why this needs Ghidra:** this engine primitive is consumed inside
+`GuildHasOpenSlots` (the one real, confirmed, shared capacity gate for
+recruitment) but has no GPL definition anywhere — its boolean return
+contract is used but never explained. See `TODO-New-Hero-Requirements.md`
+§5 items 2 and 4.
+
+**Steps:**
+1. Find the primitive's dispatch entry and decompile its body
+2. Determine exactly what condition it checks (building under
+   construction? already at capacity via a different counter? something
+   else?)
+
+**Record results in:** `TODO-New-Hero-Requirements.md` §5.
+
+**Cross-reference, not duplicated:** whether a genuinely new hero
+recruited via a brand-new building's `DialogID` behaves any differently
+at any of 6.1-6.3 than an existing building is the open question
+`TODO-New-Building-Requirements.md` §7(E) flags for the combined case —
+resolving 6.1-6.3 for the general case resolves that cross-reference
+too, no separate building-specific variant of this work is needed.
+
+---
+
+## Priority 7: GPL Engine-Primitive Semantics (from the completed `Rules/` pass)
+
+**Goal:** Resolve the engine-side primitive behaviors the GPL deep dive's
+quest rules pass (Batches A-G, now complete — `TODO-GPL-Deepdive.md`
+Completed item 16, `GPL_QUEST_RULES_REFERENCE.md` §16-§22) could not settle from
+source. These are collected here as one section because they share a
+shape: the GPL call sites are fully read and cited, the primitive's
+implementation is exe-side, and no amount of further GPL reading will
+close them. `GPL_QUEST_RULES_REFERENCE.md` §22.8's closing note is the canonical
+list; this is the Ghidra-facing half of it.
+
+**Low priority as a group** — none of these block a modding workflow the
+way Priority 1/3.4 do. Each is "I know how to use this primitive from the
+shipped examples, but not what it will do outside them." Pick them up
+opportunistically when already in adjacent code.
+
+| Primitive / behavior | What's unknown | Cited at |
+|---|---|---|
+| `$SetDrawEffects` | Full argument set. One shipped call site, `"gray"` is the only string ever passed, the integer argument's meaning is unread. Recolors a unit without new art, so it's a cheap effect for modders IF the arguments are known. | §22.6h |
+| `$EnchantWizTower` | What it actually changes. `Magical_Repair` sits unreferenced in the same file, suggesting self-repair is part of it — adjacency, not evidence. | §22.6j, §22.2 |
+| Thread-interval ceiling (~1 800 000 ms) | Whether the engine really enforces it and what it does when exceeded. Two shipped comments name it, one works around it by counting firings instead, no interval in the file exceeds it — the only evidence is the developers' own comment. | §22.4d |
+| `$SetEffectorDirection` | Index→frame mapping. | §21.4e |
+| `$DropGoldEveryone` | The split rule (per hero? per team? equal shares?). | §21.5b |
+| `"clear"` as a `$SpawnUnit` flag | What it clears. | §21.7 |
+| `-1` as an effector duration | Whether it means infinite, or something else. | §21.7 |
+| `#ATTRIB_CurrentEvent` | Value→event mapping beyond the 1-4 the Fairgrounds tourney uses. | §21.6e |
+| `$ElvesVoice_setOperative` / `$dwarvesVoice_setOperative` | What they actually silence. The argument is now confirmed a plain enable/disable boolean (Batch G found the first `1` calls) — the effect is still engine-side. | §20.7, §22.8 |
+| Whether the engine ever writes `"type"` itself | GPL writes it constantly (the `$ListObjects` class register, §20.2); whether the engine also does is unconfirmed, which matters for any census code. | §20.2 |
+| `$SetPlayerTeamNumber` scope | Per-player or per-agent. **Narrowed three times, still unproven** — Batch G showed the *getter* demonstrably accepts a non-palace agent and resolves through its owner, which is what per-player scope predicts, but that's not proof for the setter. | §19.8, §22.8 |
+| `#ATTRIB_NotFlaggable` / `#ATTRIB_NotSpellTarget` | What each does individually. The three-write temporary-invulnerability recipe and its exact reversal are confirmed; the split of responsibility between the writes is read off their names. | §22.6i |
+
+**Record results in:** `GPL_QUEST_RULES_REFERENCE.md` at the cited section
+(each row names it — every row in this table cites §19-§22, which live in
+the quest reference, not `GPL_MODDING_GUIDE.md`; see `TODO.md`'s "See also"
+note on the §-range split), and tick the matching entry in §22.8's
+"engine-side semantics" list.
+
+**Already tracked elsewhere, do not duplicate here:** the `$NewThread`/
+`$RunThread`/`$ResumeThread`/`$KillThread` scheduler semantics and the
+`$building_upgraded`/`$DoMarketDay`/`$EndMarketDay` engine-invocation
+questions are in the Verification Tasks table below; the research-button
+click dispatch is Priority 3.4; `$DisableUnitType`/`$EnableUnitType` and
+the building-limit primitives are Priority 5.2/5.3.
+
+**Not Ghidra work — routed to `TODO-GameTests.md` instead:** title-value
+case-sensitivity (one `DAY_OF_RECKONING` playthrough settles it),
+whether uninitialised GPL locals are reliably zero, what `=` in a
+condition compiles to, whether GPL discards extra call arguments, and
+whether `$Make_PC_Hunter` without `$Reset_Tasks` takes effect promptly.
+See that file's "GPL Language Semantics" section.
+
+---
+
+## Low Priority: `CanIBuildThisBuilding` Callback Contract
+
+**Background:** `GPL/Rules/construction_rules.gpl`'s
+`CanIBuildThisBuilding(agent thisBuilding, list dependencies)` is
+confirmed (see `GPL_QUEST_RULES_REFERENCE.md` §16.1) to be an exe-invoked GPL
+callback — zero GPL call sites anywhere in the tree, the engine calls it
+by name, returns 0 to permit a build and a non-zero `#chat_*` code to
+refuse it. It's a real, modder-extensible placement-prerequisite hook
+(per-building-title proximity rules). Two things about the contract
+can't be resolved from GPL/XML source:
+
+**Steps:**
+1. **When is it called?** Build-menu entry filtering vs. live
+   placement-cursor validation. Evidence leans placement-time (the
+   function does `$ListObjects(thisbuilding, ...)` measuring distance
+   from the candidate building's own position, meaningless for a
+   position-less menu entry) — but that's an inference from argument
+   usage, not a trace. Also worth confirming whether it's called
+   repeatedly during cursor drag or once on click.
+2. **What does the engine put in `dependencies`?** No shipped branch
+   reads the parameter, no `M_Buildings.xml` field feeds it (grepped
+   `Depend`/`Prereq`/`Requir`, zero matches), and the only description
+   is a commented-out design sketch referencing never-implemented
+   `"maxBuildRange"`/`"buildRequirements"` fields. If the engine passes
+   something real, this is a free, already-wired input a modder could
+   use.
+3. While in this code, check whether `$removetitles` exists in the
+   base-game exe at all — it has zero call sites in the base `GPL/`
+   tree and appears only under `GPLMx/` (§16.1's mx-diff finding).
+
+**Record results in:** `GPL_QUEST_RULES_REFERENCE.md` §16.1 and
+`TODO-New-Building-Requirements.md`'s §4 placement items (both already
+cross-reference this question).
+
+---
+
+## ~~Low Priority: Freestyle Victory-Condition Dropdown Row Definitions~~ — LARGELY RESOLVED WITHOUT GHIDRA
+
+**RESOLVED, keep for the residual question only.** The dropdown labels
+were found in plain CAM `STRT` data, not the exe: `Data/gpltext.cam`'s
+`GOAL` entry (header count = 4) holds the four victory labels, and
+`textdata.cam`'s `GMTX` holds the companion status/prompt strings. See
+`GPL_QUEST_RULES_REFERENCE.md` §16.3's correction block. The same pass also
+resolved the sibling special-event registry the same way (§17.7:
+`mx_gpltext.cam`'s `EVSC`/`ENTX`/`EDTX`).
+
+**No Ghidra needed for the original question.** Two residual items, both
+**in-game tests** now tracked in `TODO-GameTests.md`, not disassembly:
+1. Does adding a 5th `GOAL` row produce a 5th dropdown entry (and make
+   `$GetVictoryConditionIndex()` return 4)? The header has an explicit
+   count field, but the engine may read a fixed 4.
+2. The `GOAL` row order does not obviously match the GPL branch indices
+   (`GOAL` row 0 = "Survive", but §16.2's dispatcher handles survive at
+   `index == 2`) — the real mapping needs establishing empirically via
+   the dispatcher's own `$debugout` of the index.
+
+Only escalate to Ghidra if the in-game tests come back ambiguous.
+
+**Original background retained below for reference:**
+`GPL/Rules/victory_conditions.gpl`'s
+`SetVictoryCondition()` dispatches on `$GetVictoryConditionIndex()` — an
+engine primitive reporting which row the player selected in the setup
+menu's victory dropdown. Confirmed (see `GPL_QUEST_RULES_REFERENCE.md` §16.2/
+§16.3): **the dropdown's row labels exist nowhere in GPL, nowhere in
+`M_*`/`MX_*` XML, and nowhere in any `.mqxml`** (grepped for `Victory`,
+zero matches) — so adding a genuinely new selectable victory condition
+is an exe/UI change, while repurposing an existing row's meaning is
+GPL-only and fully supported.
+
+**Steps:**
+1. Find where the victory dropdown's row list/labels are defined
+   (likely UI/`.cam` string data — cross-reference the SMNU/STRT panel
+   research already done in `SMNUResearch/`, since this may just be a
+   panel string table nobody has connected to this feature yet).
+2. Confirm the index→row mapping (§16.2 notes the GPL branch order is
+   2,1,0,3 — NOT dropdown order — so the mapping is currently only
+   discoverable by reading the function's own
+   `$debugout(911,"victory condition index:",index)` at runtime).
+3. Assess whether a 5th row can be added via panel/string data alone
+   (if the dropdown is SMNU-driven, this might be data-moddable after
+   all, which would upgrade the §16.3 verdict) or needs a real exe
+   patch.
+4. Also resolve what `$GetVictoryConditionIndex()` returns outside a
+   freestyle game (a custom quest that calls `$setvictorycondition()`
+   with no dropdown ever shown) — this project's own
+   `QuestMapGenerator/rgs_format.py` asserts the default behaves as
+   "destroy all enemy structures" (index 0), but that's a
+   project-internal claim with no source citation behind it.
+
+**Record results in:** `GPL_QUEST_RULES_REFERENCE.md` §16.2/§16.3.
+
+---
+
+## Low Priority: Temple-to-Dauros Level-3 Petrify Unlock Mechanism
+
+**Background:** confirmed (by an experienced modder, then cross-checked
+against source — see `GPL_MODDING_GUIDE.md` §11's Petrification
+re-verification) that the base game's Petrify spell is cast directly
+from the Temple to Dauros building's own panel (`DialogID="AP05"`,
+shared across all 3 tiers per `M_Buildings.xml`), and only becomes
+available once the Temple reaches Level 3. This is a genuinely different
+casting pathway from hero-`AllowedSpells` or monster-attack-spells (which
+both have real Action XML + GPLFunction wiring) — no comparable wiring
+exists for base Petrify anywhere in XML/GPL/`.dat` source. `Petrify_Begin`
+(the GPL function) has no caller anywhere in the `.gpl` tree, and
+`Temple_Dauros3`'s XML `<Game>` block has no spell-grant/unlock field
+distinguishing it from tiers 1/2 beyond ordinary `Cost`/`MaxHP` fields.
+
+**Why this needs Ghidra:** the Level-3 gate and the actual "cast Petrify"
+click handler are both invisible from data alone — this is presumably an
+exe-hardcoded per-`DialogID`/per-building-level mechanism (same general
+opacity class as the already-documented `DialogID`→panel-factory
+hardcoding, Priority 2 above, though a different specific mechanism —
+that one is about which PANEL opens, this one is about which SPELL
+BUTTONS appear inside an already-open, already-mapped panel based on
+building level).
+
+**Steps:**
+1. Find the AP05 panel's populate/render code (likely near whatever
+   populates other building-panel spell/research buttons generally —
+   cross-reference with Priority 3.4's research-button registration
+   work, since this may be a related or identical mechanism)
+2. Determine what condition gates the Petrify button's visibility —
+   reads the building's `Level`/tier directly? A hidden attribute set
+   somewhere? Confirm the Level-3-specifically claim mechanically, not
+   just by observed behavior
+3. Note whether this same level-gated-spell-button pattern exists on any
+   OTHER temple/building panel (worth checking once you're in this code,
+   low additional cost) — would confirm or refute whether this is a
+   general "buildings can gate spell buttons by level" mechanism or a
+   Dauros-specific special case
+
+**Record results in:** `GPL_MODDING_GUIDE.md` §11 (Petrification
+re-verification section) and `.kiro/steering/majesty-modding.md`'s
+Petrification System template if it changes the guidance there.
+
+**Related, still needs a narrower Ghidra pass (source research is
+done, and the scope shrank after user input):** `TODO-GPL-Deepdive.md`
+Topic 13 resolved the source-side investigation for ordinary guild skills
+(Rage of Krolm / Call to Arms via `Guild_Skills.gpl`'s
+`DoRageOfKrolm`/`DoAssembly`). **Correction (kept visible, not
+overwritten in that doc either):** the original framing treated "how is
+Rage of Krolm/Call to Arms triggered" as an open trigger-class question
+of the same kind as Petrify's genuinely-unresolved gap — the user
+confirmed directly that both are ordinary button clicks inside their own
+guild's building panel, the same trigger CLASS as Petrify's AP05 button,
+not a separate mystery. So the trigger CLASS no longer needs Ghidra to
+confirm. What's still open is narrower: the exe-side click-dispatch code
+for these two specific buttons — the same general class of question as
+Priority 3.4's research-item click dispatch, not a new mechanism to
+discover. Also still genuinely new: `Temple_Krolm`/`Warriors_Guild` are
+both single-tier (no `UpgradeTo` chain at all), so whatever gates these
+two abilities' panel buttons, it CANNOT be a Level-3-style tier gate the
+way Petrify's is — there's no tier to gate on. This is confirmed
+structurally different from Petrify's mechanism, not the same gate
+reused, so it needs its own decompilation target, not just an assumption
+that Priority "Low: Temple-to-Dauros Level-3 Petrify Unlock Mechanism"'s
+findings will transfer.
+
+**Steps (guild skills, separate from Petrify's Level-3 steps above):**
+1. Find the AP24 (Temple_Krolm)/AP52 (Warriors_Guild) panel populate/
+   render code — likely the same general research/spell-button
+   registration mechanism as Priority 3.4 and Petrify's AP05, but must be
+   independently confirmed since these buildings have no tier to gate on
+2. Determine what condition (if any) gates `DoRageOfKrolm`/`DoAssembly`
+   button visibility — building's mere existence? A hidden attribute?
+   Always visible with no gate at all (plausible given single-tier)?
+
+**Dropped from this Ghidra scope (moved to an in-game test instead):**
+whether destroying `Temple_Krolm`/`Warriors_Guild` revokes the
+corresponding skill no longer needs decompilation first — no GPL-side
+revoke logic exists in `building_death`/`guild_destroyed_common`/
+`guild_destroyed_a`, and the likely mundane explanation (the button
+lives ON that building's own panel, so losing the only copy just removes
+panel+button together, not a separate revocation mechanic) is directly
+testable in-game with a duplicate guild, no exe research required. See
+`TODO-GameTests.md`'s "Guild Skill Panel Persistence" item. Only revisit
+this as a Ghidra item if that in-game test finds surprising behavior
+(e.g. the skill remains castable from elsewhere after the building is
+destroyed).
+
+**Record results in:** `GPL_MODDING_GUIDE.md` §12 (guild skills section)
+and cross-reference from `TODO-GPL-Deepdive.md` Topic 13 if the finding
+changes that section's framing.
 
 ---
 
@@ -242,6 +741,7 @@ mapping, etc.) sitting unused alongside the orphaned data.
 | (Low priority) Confirm the exe never calls a GPL "birthscript2" attribute directly (only "birthscript" is known to be engine-invoked, via `NewUnitInit`) — see `TODO-GPL-Deepdive.md` "birthscript vs birthScript2" finding, "Not yet checked / UNVERIFIED" | `TODO-GPL-Deepdive.md` (birthscript/birthScript2 section) |
 | (Low priority) Confirm whether the exe calls `$DoMarketDay`/`$EndMarketDay` on a Marketplace's `RevenueScript` thread (only the functions' own leading comments — "called by the ingame code" — are evidence; no GPL-side call site found) | `TODO-GPL-Deepdive.md` (building revenue finding) |
 | (Low priority) Find what sets a building's `#ATTRIB_isTaxed`/`#ATTRIB_QuickTax` flags — no GPL/`.dat` set-site found, only read-sites in `collect_tax.gpl` | `TODO-GPL-Deepdive.md` (building revenue finding) |
+| (Low priority) Find what exe-side code, if any, calls `HallOfChampions_Bounty_Cost`/`Period` (`Lair.gpl` — pure cost/period lookups, 400/800 gold and 60000/120000ms for bounty_index 1/2) — zero GPL call sites found anywhere in the corpus; unknown whether a "bounty" mechanic exists beyond these two values | `TODO-GPL-Deepdive.md` (Building visit-system deep dive / Retracted Claims update) |
 
 ---
 

@@ -57,6 +57,16 @@ directly in new scripts — import from `game_paths` instead. Resolution order:
   brand-new CAM from scratch (`build_cam_from_sections()`, used by quest-only CAMs
   that have no "original" file to repack against)
 - `CAM_MODDING_GUIDE.md` — Task-oriented modding guide (includes binary format appendix)
+- `GPL_MODDING_GUIDE.md` — Gameplay-systems reference, **§1-§15** (state machine,
+  building lifecycle/visits/economy, guards, intents, death/revival, effectors,
+  primitives, hero decision trees). Has a Contents list at the top.
+- `GPL_QUEST_RULES_REFERENCE.md` — Quest-scripting reference, **§16-§22**
+  (`GPL/Rules/` + `GPLMx/Rules/`, all 15 files). Split out of the guide because
+  it was 76% of a 9,858-line file. Organised into 10 mechanism chapters with a
+  task-oriented **"I want to …" index** — start there when looking up how to
+  achieve something in a quest. Subsection numbers were NOT changed by the
+  split, so **a bare `§1`-`§15` means `GPL_MODDING_GUIDE.md` and a bare
+  `§16`-`§22` means `GPL_QUEST_RULES_REFERENCE.md`**, in either file.
 - `README.md` — High-level documentation of the modding toolkit
 - `utility/` — Scratch/investigation scripts (gitignored, NOT migrated to use
   game_paths.py — they're throwaway and expected to be overwritten/rewritten
@@ -131,13 +141,31 @@ M_Actions.xml → action definitions (XML source for action.cam)
 - Status effects use the effector system: a visible overlay + an invisible timer effector
 
 ### Petrification System (Template for New Status Effects)
-The existing petrify system uses:
-1. **Action XML** — defines the spell (ID, GPLFunction, timeout, spell type)
-2. **Two overlays** — `petrify_effector` (visible grey stone overlay) + `petrify_icon` (invisible timer that calls end function)
-3. **GPL functions** — `Petrify_Begin` (applies effect) and `Petrify_End` (removes it)
-4. **Attributes** — `#ATTRIB_HasEffectPetrify` flag, `#ATTRIB_IsFrozen` flag
-5. **Intent** — `#intent_petrified` forces unit to stop acting
-6. **IsFrozen check** — AI uses this to skip petrified units in decision trees
+Re-verified against actual GPL/XML source — see `GPL_MODDING_GUIDE.md`
+§11 for full citations. The existing petrify system uses:
+1. **Action XML** — defines the spell (ID, GPLFunction, timeout, spell type).
+   **Correction (confirmed by an experienced modder, then cross-checked
+   against source):** the *base* player-cast `Petrify_Begin` has no
+   Action XML entry, no `AllowedSpells` grant, and no GPL call site
+   anywhere — because it's not a hero-cast spell at all. **It's cast
+   directly from the Temple to Dauros building's own panel
+   (`DialogID="AP05"`, shared by all 3 tiers), unlocked once the Temple
+   reaches Level 3.** This is a third spell-casting pathway (building-
+   cast) distinct from hero-`AllowedSpells` and monster-attack-spells —
+   the Action-XML-with-`GPLFunction` template only applies to the latter
+   two. The Level-3 unlock itself has no visible XML/GPL/`.dat` field
+   (checked directly, none found) — it's presumably an exe-hardcoded
+   per-building-panel mechanism, not yet a scoped Ghidra item. Use the
+   expansion's fully-wired `Gorgon_Petrify` entry
+   (`DataMX/MX_Actions.xml` ID `A030`) as your template if building a
+   HERO- or MONSTER-cast status effect; a BUILDING-cast one has no
+   confirmed data-only template at all. See `GPL_MODDING_GUIDE.md` §11
+   for full citations.
+2. **Two overlays** — `petrify_effector` (visible grey stone overlay) + `petrify_icon` (invisible timer that calls end function). Confirmed exactly — `petrify_icon`'s own XML `<Script GPLFunction="Petrify_End"/>` wires the callback directly.
+3. **GPL functions** — `Petrify_Begin` (applies effect) and `Petrify_End` (removes it). Confirmed exactly, line by line.
+4. **Attributes** — `#ATTRIB_HasEffectPetrify` flag, `#ATTRIB_IsFrozen` flag. Confirmed — NOT redundant: `HasEffectPetrify` is petrify's specific vote in a shared 4-effect "freeze lock" gate; `IsFrozen` is a generic movement-lock flag set as a side effect of `$Freeze_Unit`/`$UnFreeze_Unit`, unrelated to petrify specifically.
+5. **Immobilization** — **Correction:** it's not `#intent_petrified` that stops the unit acting (that's a display-only flag, see §7 of `GPL_MODDING_GUIDE.md`). The actual immobilizer is `$Freeze_Unit`, called immediately before `$SpecifyIntent` — it does `$StopMoving` + `$SuspendThread(ThisAgent's "ActiveScript")` + sets `#ATTRIB_IsFrozen = 1`. `#intent_petrified` just labels the unit's status for display.
+6. **IsFrozen check** — **Correction:** UNVERIFIED/no call sites found. No decision-tree code anywhere reads `#ATTRIB_IsFrozen` or calls `$IsFrozen()`. The two real callers of `$IsFrozen()` (`Guild_Skills.gpl`'s `DoAssembly`, `mx_Spells.gpl`'s `ChangeOfHeart_Begin`) are not decision trees.
 
 ### Creating New Visual Effects (Overlays)
 To create a new visual overlay (like an ice/frozen effect):

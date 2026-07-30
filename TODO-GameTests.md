@@ -63,6 +63,216 @@ loader is happy with it (e.g. CAM-level quirks, load order/scope).
 
 ---
 
+## Guild Skill Panel Persistence
+
+**Background:** `Temple_Krolm` (Rage of Krolm) and `Warriors_Guild` (Call
+to Arms) both trigger their guild skill via an ordinary button click on
+their own building panel (confirmed by the user, not GPL-derived — see
+`GPL_MODDING_GUIDE.md` §12 / `TODO-GPL-Deepdive.md` Topic 13). No GPL-side
+revoke logic exists in `building_death`/`guild_destroyed_common`/
+`guild_destroyed_a`, so if destroying the building revokes the skill at
+all, it's exe-side. The likely mundane explanation is that the button
+simply disappears along with its building's panel (no separate
+revocation mechanic needed) — this is what the test below checks before
+treating it as a Ghidra item (see `TODO-Ghidra.md`'s "Low Priority:
+Temple-to-Dauros Level-3 Petrify Unlock Mechanism" section).
+
+- [ ] Build a second `Temple_Krolm` (or `Warriors_Guild`), confirm Rage of
+  Krolm/Call to Arms is still castable from either one
+- [ ] Destroy one of the two guilds, confirm the skill is still castable
+  from the remaining guild's panel (expected/mundane outcome)
+- [ ] Destroy the last remaining guild of that type, confirm the skill is
+  no longer reachable at all (no leftover global grant)
+- If either destruction step behaves unexpectedly (skill castable with
+  zero guilds of that type standing, or skill missing despite another
+  guild still standing), record it here and escalate to `TODO-Ghidra.md`'s
+  guild-skills section — that would indicate a real exe-side
+  revocation/grant mechanism worth decompiling, not just panel-follows-
+  building behavior.
+
+---
+
+## Special-Event Registry — Is the Dropdown Row Count Data-Driven?
+
+**Why this matters:** `GPL_QUEST_RULES_REFERENCE.md` §17.7 confirmed the
+freestyle "special event" dropdown is driven by three CAM `STRT` tables
+in `DataMX/mx_gpltext.cam` — `EVSC` (binds `EVxx` → a GPL function name),
+`ENTX` (label), `EDTX` (description) — all 16 rows (`NONE` + `EV01`-`EV15`).
+Since quest-CAM `STRT` override already works, **repointing an existing
+row at a custom event function is confirmed possible with no exe patch.**
+The one open question is whether a *new* row can be added.
+
+- [ ] **Add an `EV16` row to all three tables** (`EVSC`, `ENTX`, `EDTX`)
+  in a quest-CAM override of `mx_gpltext.cam`, pointing `EVSC`'s `EV16`
+  at a trivial custom event function, and check whether a 16th entry
+  appears in the freestyle setup dropdown.
+  - If it appears: the special-event framework is a fully open-ended,
+    quest-distributable mod entry point — arguably the single best
+    extension point found in the whole GPL deep dive. Update §17.7 and
+    §17.3's verdict.
+  - If it doesn't: the engine reads a fixed row count, so modders are
+    capped at repointing the existing 15 slots. Still very usable, but
+    worth documenting the cap explicitly.
+- [ ] **Simpler prerequisite test first (do this one before the above):**
+  repoint an existing row — override `EVSC`'s `EV15` row
+  (`20 Veteran_Heroes`) to name your own function instead, with a
+  matching `ENTX`/`EDTX` label change, and confirm selecting it in
+  freestyle runs your function. This validates the whole override path
+  before spending time on the row-count question.
+- [ ] **While testing, note what the `EVSC` numeric field does** (values
+  20-95 in shipped data, loosely tracking event severity; no GPL reads
+  it). Try changing one row's number and see if anything observable
+  changes — difficulty rating shown in UI? spawn scaling? nothing?
+
+---
+
+## Custom Quest Music — Is `MusicTracks.txt` Extensible?
+
+**Why this matters:** `GPL_QUEST_RULES_REFERENCE.md` §19.4 found the music
+subsystem is unusually mod-friendly — `$PlayMusic(integer)` /
+`$LastMusicTrack()` / `$SetMusicStoppedCallback("FunctionNameString")`,
+backed by `Data/MusicTracks.txt`, a six-line plain-text registry
+(`GeneralTheme.mp3`, `GeneralTheme.mp3`, `EarlyGame.mp3`, `MidGame.mp3`,
+`EndGame.mp3`, `EpicQuest.mp3`). No XML, no CAM, no exe involvement. Two
+things need confirming before documenting it as a supported route:
+
+- [ ] **Confirm the file is 1-indexed.** `#early_theme` 3 / `#midgame_theme`
+  4 / `#endgame_theme` 5 line up with lines 3/4/5 (`EarlyGame`/`MidGame`/
+  `EndGame`) only under 1-indexed reading. Easiest check: call
+  `$PlayMusic(6)` from a test quest and confirm `EpicQuest.mp3` plays
+  (track 6 is **orphaned** — no shipped GPL ever requests it, so this
+  doubles as a "does the orphan work" test).
+- [ ] **Append a 7th line pointing at a custom `.mp3` and call
+  `$PlayMusic(7)`.** If it plays, custom quest music is fully supported
+  with a text-file edit plus one GPL call — worth promoting in §19.4 from
+  UNVERIFIED to confirmed.
+- [ ] **While there, confirm `$SetMusicStoppedCallback` accepts a
+  mod-defined function name** (register your own handler and check it
+  fires when a track ends). §19.4 confirmed the shipped handlers use it
+  by string name; a mod-supplied name should work identically but hasn't
+  been tested.
+
+---
+
+## Quest-Actives Mechanisms — Two Cheap Observations
+
+Both flagged by `GPL_QUEST_RULES_REFERENCE.md` §18.11 as answerable by looking at
+the game rather than by more source reading or Ghidra.
+
+- [ ] **Which art does `#ATTRIB_ForceBuildingState` select?** Values are
+  `#building_normal_state` 0 / `#building_force_inactive` 1 /
+  `#building_force_active` 2 (`globals.gpl` 22-25). The shipped code
+  contradicts itself: `Drop_Ring`'s comment says "Set the ring site to
+  Active" while the code sets `#Building_force_inactive`, and
+  `Treasure.gpl`'s `Open_Chest` forces *active* for a looted (open) chest
+  while `Holy_Chalice_Chest_Birth` forces *inactive* for a fresh (closed)
+  one. Observe a treasure chest before/after looting to establish which
+  enum value gives which art, then correct §18.3/§18.8.
+- [ ] **Does an agent survive its own HP-zero death long enough for a
+  `BirthScript` respawn thread to fire?** §18.8's respawn-by-rebirth
+  pattern does `Type = "Dead"` then
+  `$RunThread(ThisAgent's "BirthScript", 90000-180000, ThisAgent)` — but
+  `Treasure.gpl`'s `Open_Chest` comments that `$SetAttribute(…,
+  #ATTRIB_HP, 0)` "WILL DELETE THE AGENT!" The Holy Chalice quest
+  demonstrably relies on chests respawning, so something defers the
+  cleanup (`Type = "Dead"` set first? `#ATTRIB_AlwaysView`? the comment
+  simply being wrong?). Play/observe the Holy Chalice quest (or a test
+  quest cloning the pattern), loot a chest, and confirm it reappears
+  after ~1.5-3 game days. If it does, the "will delete" comment is
+  misleading and the pattern is safe to clone as-is; if it doesn't, the
+  shipped mechanism needs re-tracing.
+
+---
+
+## Victory-Condition Dropdown — Row Count and Index Mapping
+
+**Why this matters:** `GPL_QUEST_RULES_REFERENCE.md` §16.3's correction block
+confirmed the freestyle victory dropdown's labels are CAM `STRT` data —
+`Data/gpltext.cam`'s `GOAL` entry, header count field = 4, holding
+`Survive for Specified Time` / `Acquire Specified Amount of Wealth` /
+`Eliminate all` / `Destroy all other players`. (Base game, not
+expansion.) Two things need in-game confirmation:
+
+- [ ] **Establish the real index→row mapping first.** `GOAL` row 0 is
+  "Survive", but `victory_conditions.gpl`'s dispatcher handles survive at
+  `index == 2` — so the index is NOT simply the table row position, or
+  the displayed order differs from table order. Start a freestyle game
+  with each dropdown row selected in turn and read the dispatcher's own
+  `$debugout(911,"victory condition index:",index)` output (see
+  `.kiro/steering/gpl-debugger.md` for how to view GPL debug output).
+  Record the mapping in §16.2's dispatch table — this is a prerequisite
+  for safely repurposing a row.
+- [ ] **Then test whether the row count is data-driven:** add a 5th row
+  to `GOAL` via a quest-CAM override and add a matching
+  `else if (index == 4)` branch in a mod copy of `SetVictoryCondition`.
+  Does a 5th entry appear, and does selecting it return index 4?
+  - If yes: custom freestyle victory conditions are fully
+    data+GPL-moddable, no exe patch. Update §16.3's verdict.
+  - If no: modders are capped at repurposing the existing 4 (still
+    viable, and relabeling via `GOAL` override works either way).
+- [ ] **Also confirm relabeling works standalone** (simplest test, do it
+  first): override just the `GOAL` row 1 label text via a quest CAM and
+  confirm the dropdown shows your text. Validates the override path
+  before the harder tests above.
+
+---
+
+## GPL Language Semantics — Five One-Test-Each Questions
+
+All five come out of the now-complete GPL `Rules/` pass
+(`GPL_QUEST_RULES_REFERENCE.md` §16-§22; the consolidated split is §22.8's closing
+note). They are grouped here because they share a shape: **the source has
+been read as far as it can be, and each is settled by one observation
+rather than by disassembly.** They're language/runtime questions, not exe
+internals — the Ghidra-facing half of §22.8's list lives in
+`TODO-Ghidra.md` Priority 7 instead.
+
+- [ ] **Is title-value comparison case-sensitive?** The cleanest test in
+  the whole pass. `all_enemies_dead`
+  (`GPL/Rules/epic_quest_scripts.gpl` 1217-1221) filters its enemy census
+  with `!=` against **lowercase** `"ratman"`/`"skeleton"`/`"zombie"`/
+  `"troll"`, while the shipped titles in `GPL/Monster_Data.dat` are
+  capitalised (`(title Ratman)` 380, `(title Skeleton)` 473,
+  `(title Troll)` 497, `(title Zombie)` 569). If `==`/`!=` is
+  case-sensitive those four never match, the rabble stays in the census,
+  and **`DAY_OF_RECKONING` is unwinnable while any ratman, skeleton,
+  zombie or troll is alive.** So: play `DAY_OF_RECKONING`, clear the
+  quest's real objectives, and see whether victory fires with that rabble
+  still on the map. Settles the `==` half outright.
+  - Note **why source can't settle this**: every case-mismatched call
+    shipped in the game fails toward granting victory *early*, so "it
+    ships and nobody filed a bug" carries almost no information (§22.8
+    spells this out). The `$ListTitles` half stays UNVERIFIED even if this
+    test succeeds — it's a separate code path.
+  - Record in §22.2's `no_monsters_titled` row and §22.8's narrowing
+    block. Modder guidance is unchanged either way: match the shipped
+    `(title …)` case exactly.
+- [ ] **Do uninitialised GPL locals reliably start at zero?** Three
+  shipped instances now depend on it: `spawn_monsters` never initialises
+  `i` before `while (i < num)`, `bbc_victory` does `sites_gone += 1` on a
+  fresh local (340), plus §18.10's. Write a trivial test quest that
+  `$DebugOut`s an untouched integer/float local on entry. If it isn't
+  reliably zero, three shipped functions are latent bugs and our own GPL
+  needs explicit initialisation everywhere. (§22.3)
+- [ ] **What does a bare `=` inside a condition compile to?** Two shipped
+  instances in `Darkness_Events` use `=` where `==` was clearly meant
+  (§19.3). Assignment-returning-a-value, silent coercion to `==`, or a
+  compile error the shipped code somehow dodged? Compile a test case with
+  `Gplbcc.exe` first — if it errors, that's the answer with no game
+  needed; if it compiles, run it and observe the branch.
+- [ ] **Does GPL discard extra call arguments, or corrupt the frame?**
+  §21.6f found a shipped call passing more arguments than the callee
+  declares. Compile-then-run a minimal case. Same shortcut applies: a
+  compiler error settles it offline.
+- [ ] **Does `$Make_PC_Hunter` take effect promptly without a following
+  `$Reset_Tasks`?** Batch D saw `$Reset_Tasks` paired with it everywhere;
+  Batch E found one shipped site that omits it (§20.8). Observe whether
+  the retargeted unit changes behavior on the next tick or only after its
+  current task ends. Determines whether the pairing is required or just
+  convention.
+
+---
+
 ## Particle Systems
 
 - [ ] Does the 4th color value = alpha? (observe fade behavior)

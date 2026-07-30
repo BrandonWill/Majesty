@@ -60,6 +60,8 @@ This repo contains:
 ├── sprite_extractor.py         # Extract sprites as PNGs with correct colors
 ├── sprite_injector.py          # Encode PNGs back into TILE RLE format
 ├── CAM_MODDING_GUIDE.md          # Data file modding guide (includes binary format appendix)
+├── GPL_MODDING_GUIDE.md          # Gameplay-systems reference (§1-§15)
+├── GPL_QUEST_RULES_REFERENCE.md  # Quest-scripting reference (§16-§22)
 ├── README.md                  # This file
 ├── tests/                     # Unit tests for CAM/STRT tools
 │
