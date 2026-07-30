@@ -1,4 +1,4 @@
-"""
+r"""
 game_paths.py - Locate the Majesty HD game data files
 =========================================================
 This repo (Majesty_Mod) contains only our own tooling and mod source.

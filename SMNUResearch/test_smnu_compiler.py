@@ -24,6 +24,15 @@ from cam_reader import read_cam
 
 @pytest.fixture(scope="module")
 def all_panels():
+    # load_panels() reads both textdata.cam files, which live in the
+    # separate Majesty_Files repo / a Steam install. Skip rather than
+    # error when they aren't present (CI has no game data) -- same
+    # pattern as the fixtures in tests/test_cam_reader.py.
+    from game_paths import game_dir
+    for rel in ("Data/textdata.cam", "DataMX/mx_textdata.cam"):
+        folder, name = rel.split("/")
+        if not (game_dir(folder) / name).exists():
+            pytest.skip(f"{rel} not available (set MAJESTY_GAME_PATH)")
     from smnu_analysis import load_panels
     return load_panels()
 
