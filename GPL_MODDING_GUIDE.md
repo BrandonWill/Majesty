@@ -200,6 +200,88 @@ starts `upgradescript2` (`palace_upgrade2`) on a 15-second poll —
 `palace_upgrade2` waits for construction to finish, then restarts the
 Palace's Guard/Tax/Peasant spawner threads to enforce new henchman limits.
 
+### `$UpgradeAgentAttributes` is the moment an upgrade takes effect — and the reason scripted upgrades misbehave
+
+**Added after the above, prompted by a question about where
+`upgradescript` targets are defined. This subsection is about the step
+those scripts lead to.**
+
+**`$UpgradeAgentAttributes(agent)` is an engine primitive** — no GPL
+function definition anywhere in either repo. It has exactly **two shipped
+call sites, both in `Building_Births.gpl`**:
+
+1. Inside **`BuildingReachedMaxHP`**, in the `else if
+   ($getattribute(theBuilding,#ATTRIB_currentstagebuilt) != 1)` branch —
+   i.e. *the building was already built once and is now finishing an
+   upgrade.* This is followed by the advisor "Building_Upgraded" sound,
+   `#chat_building_upgraded`, a Palace special case
+   (`#ATTRIB_Upgrade_herosNeeded`), and a Guardhouse special case
+   (`$RestartGuardSpawnThread`, because `Max_Guards` may have changed).
+2. Inside **`magical_upgrade`**'s completion branch, which inlines its own
+   finish instead of routing through `BuildingReachedMaxHP`.
+
+**So the full human upgrade path is:** player clicks upgrade → engine
+calls `building_upgraded` → `$runthread(upgradescript)` →
+`basic_upgrade` pushes the building onto `palace's "buildings_waiting"` →
+a peasant/gnome/dwarf works it and raises HP → HP reaches max →
+`BuildingReachedMaxHP` → **`$UpgradeAgentAttributes` applies the new
+tier's attributes.** `BuildingReachedMaxHP` then unconditionally sets HP
+to max and both `#ATTRIB_currentstagebuilt` and
+`#ATTRIB_FirstStageBuilt` to 1.
+
+**`$UpgradeAgentAttributes` evidently resolves the target tier itself.**
+No shipped call site passes it a tier or type argument, and no shipped
+code calls `$ChangeUnitType` as part of an upgrade — so the engine must
+derive the next tier on its own (the XML `UpgradeTo` field is the obvious
+candidate). **UNVERIFIED** that `UpgradeTo` is specifically what it
+reads; only that the primitive needs no help from GPL to find the target.
+
+#### Why this matters: two real failure modes when scripting an upgrade
+
+Both are confirmed from the `Dwarfeh_AI` mod
+(`PanelTest_Quest/MyAI/GPL/custom_rules.gpl`), whose author hit them
+building an AI opponent and left comments recording the symptoms.
+**Evidence class: another modder's field experience plus his in-code
+notes, not an engine trace.**
+
+1. **Calling `$UpgradeAgentAttributes` early unlocks tier content
+   early.** That mod upgrades with `$ChangeUnitType(building,
+   "Blacksmith2")` + `$UpgradeAgentAttributes(building)` immediately,
+   rather than waiting for labor. Result: **tier-2 abilities become
+   available before the building is physically upgraded** — the author's
+   confirmed example is Rogues' Guild level-2 poison being available to
+   heroes early. He fixed it for that one building by commenting the call
+   out, with the note "*This lets heroes poison before the building
+   completes so disabled it to be more human like*." The other upgrade
+   branches still call it, so the behavior persists elsewhere in that
+   mod. **Corollary worth stating explicitly: resetting
+   `#ATTRIB_currentstagebuilt` to 0 does NOT re-gate tier content** — the
+   mod does that on every branch and it does not help. That attribute
+   tracks construction state; it is not the content gate.
+2. **`$ChangeUnitType` leaves the agent inconsistent, and
+   `$UpgradeAgentAttributes` is what repairs it.** The same mod's comment
+   on its Palace upgrade path: "*No idea why it's needed but game will
+   crash after a few seconds if it isn't ran after changing unit type.*"
+   So the two calls are load-bearing as a pair. **This puts anyone using
+   `$ChangeUnitType` for upgrades in a bind — omit the follow-up and the
+   game crashes within seconds, include it and tier content unlocks
+   early.** ❓ What state `$ChangeUnitType` leaves stale is unknown.
+
+#### The recommended shape for a scripted upgrade
+
+**Don't use `$ChangeUnitType` for tier upgrades.** No shipped code does.
+Instead reuse the labor path the engine already drives — call
+`$basic_upgrade(building)` (or replicate its one meaningful line, pushing
+the building onto `$getpalace(building)`'s `"buildings_waiting"` list),
+and let workers and `BuildingReachedMaxHP` complete it on the engine's
+own schedule. That gets correct timing, the advisor sound, the chat
+message, the Guardhouse guard-thread restart, and the flag bookkeeping
+for free, because it is the same code the player's click runs.
+
+**UNTESTED** — this follows from the shipped call graph rather than from
+a working implementation; the mod that hit the problem never tried this
+route. Recorded as the indicated fix, not as a verified recipe.
+
 **Confirmed inconsistency, unexplained:** Zoo (all 3 levels), MagicBazaar
 (all 3 levels), HallOfChampions, and Mausoleum all keep `upgradescript
 basic_upgrade` set despite apparently having no reachable upgrade path

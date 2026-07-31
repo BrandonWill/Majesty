@@ -146,15 +146,28 @@ See also:
   but art changes as HP drops), and **the build menu has no visible
   categories**, so `Menu` is not a category field — observed ordering
   matches XML document order filtered by availability.
-- [ ] **NEW (from §10.3): work out how to mimic a human building upgrade
-  in GPL.** A human-clicked upgrade is worker-gated — a
-  peasant/gnome/dwarf must build it, and only then does tier-2 content
-  unlock. `$ChangeUnitType` flips the type instantly, unlocking content
-  early (confirmed example: Rogues' Guild level-2 poison), and resetting
-  `#ATTRIB_currentstagebuilt` does not restore the gate. Hypothesis to
-  test: defer `$ChangeUnitType` until construction completes, driving it
-  off `BuildingReachedMaxHP`/`birthScript2` instead. Would fix a known
-  behavioral gap in the `Dwarfeh_AI` mod.
+- [x] **§10.3's upgrade mystery RESOLVED — the mechanism is
+  `$UpgradeAgentAttributes`.** `upgradescript` targets (`basic_upgrade`,
+  `magical_upgrade`, `palace_upgrade`/`2`) live in
+  `GPL/Building_Births.gpl` + `mx_` twin. The human path is: click →
+  `building_upgraded` → `upgradescript` → `basic_upgrade` queues onto
+  `palace's "buildings_waiting"` → worker raises HP → at max HP
+  `BuildingReachedMaxHP` calls `$UpgradeAgentAttributes`, which is where
+  tier benefits land. That primitive has only 2 shipped call sites, and
+  **no shipped code uses `$ChangeUnitType` for upgrades.** The owner had
+  already found this for one building — his mod comments the call out on
+  the Rogues' Guild branch citing the exact poison symptom. Why it felt
+  unfixable: `$ChangeUnitType` leaves the agent inconsistent and
+  `$UpgradeAgentAttributes` repairs it (his comment: game "will crash
+  after a few seconds" without it), so that approach forces a choice
+  between crashing and unlocking early. Confirmed negative: resetting
+  `#ATTRIB_currentstagebuilt` does NOT re-gate content. Written up in
+  `GPL_MODDING_GUIDE.md` §2.
+- [ ] **Test the indicated upgrade fix in the `Dwarfeh_AI` mod** — drop
+  `$ChangeUnitType`, call `$basic_upgrade(building)` instead, and let
+  workers plus `BuildingReachedMaxHP` complete it. Follows from the
+  shipped call graph but is UNTESTED; would also pick up the advisor
+  sound, chat message and Guardhouse guard-thread restart for free.
 - [ ] **NEW (from §10.5): render the numbered `Die`/damage slots to
   confirm they hold progressive damage art.** Extract setIDs 96-103 for
   Inn (`ABF1`, 8 slots) and a Marketplace tier (`ABH1`, 6 slots) as PNGs

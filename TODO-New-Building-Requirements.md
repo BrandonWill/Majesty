@@ -3545,15 +3545,39 @@ the mod does try to compensate — it calls `$setAttribute(building,
 not sufficient, which is itself a data point: **`#ATTRIB_currentstagebuilt`
 alone does not gate tier-2 content.**
 
-**HYPOTHESIS, explicitly not confirmed:** the real path likely runs
-through the same two-stage birth chain §3 documents — upgrade puts the
-building into an under-construction state, workers raise its HP,
-`BuildingReachedMaxHP` fires (it checks `#ATTRIB_FirstStageBuilt`), and
-`upgradescript2`/`birthScript2` then enable tier features. If so, the
-correct way to mimic a human upgrade in GPL would be to **defer
-`$ChangeUnitType` until construction actually completes**, rather than
-changing type first and resetting a flag. **Untested.** Recorded as a new
-research item rather than as guidance.
+> **RESOLVED, same session — the mechanism is `$UpgradeAgentAttributes`.**
+> Prompted by the owner asking where `upgradescript` targets are defined.
+> They are in `GPL/Building_Births.gpl` (+ `mx_` twin), and tracing them
+> answers this item. Full write-up in `GPL_MODDING_GUIDE.md` §2, under
+> "`$UpgradeAgentAttributes` is the moment an upgrade takes effect."
+> Summary:
+>
+> - The human path is: click → engine calls `building_upgraded` →
+>   `$runthread(upgradescript)` → `basic_upgrade` pushes the building onto
+>   `palace's "buildings_waiting"` → a worker raises HP → at max HP
+>   `BuildingReachedMaxHP` calls **`$UpgradeAgentAttributes`**, which is
+>   where tier benefits actually land.
+> - `$UpgradeAgentAttributes` is an engine primitive with only **two**
+>   shipped call sites, both in that file. **No shipped code uses
+>   `$ChangeUnitType` for an upgrade at all.**
+> - **The owner had already found this for one building.** His mod
+>   comments out the call on the Rogues' Guild branch with the note "*This
+>   lets heroes poison before the building completes so disabled it to be
+>   more human like*" — so the poison example he described is explained by
+>   his own code. Other branches still call it, which is why the behavior
+>   persisted elsewhere.
+> - **Why it felt unfixable:** his other comment records that the game
+>   "will crash after a few seconds if it isn't ran after changing unit
+>   type." `$ChangeUnitType` leaves the agent inconsistent and
+>   `$UpgradeAgentAttributes` repairs it — so with that approach the
+>   choice is crash or early unlock.
+> - **Confirmed negative:** resetting `#ATTRIB_currentstagebuilt` to 0
+>   does not re-gate tier content. It tracks construction state, not
+>   content availability.
+> - **Indicated fix (UNTESTED):** skip `$ChangeUnitType`; call
+>   `$basic_upgrade(building)` and let workers plus
+>   `BuildingReachedMaxHP` finish it, which also gets the advisor sound,
+>   chat message and Guardhouse guard-thread restart for free.
 
 ---
 
