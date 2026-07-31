@@ -5,8 +5,26 @@ description: GPL scripting reference — undocumented primitives, engine gotchas
 
 # GPL Scripting Reference
 
-Complete reference for GPL (Game Programming Language) scripting in Majesty Gold HD.
-Combines SDK documentation, Workshop mod analysis (10 mods), and Ghidra decompilation findings.
+**Scope of THIS file: undocumented primitives, engine gotchas, patterns and
+debugging** — reverse-engineered from Workshop mod analysis (10 mods),
+shipped-source reading, and Ghidra decompilation.
+
+> **For official function signatures, parameters and return values, use
+> `Majesty_Mod/GPL_LANGUAGE_REFERENCE.md` instead.** That file is a
+> transcription of the SDK's own "GPL (Game Play Language) Reference" PDF —
+> ~150 built-in functions, the type system, the agent-vs-unit attribute
+> split, and the `ListObjects` modifier table. It is the highest-authority
+> source in the project and **outranks anything here or in
+> `GPL_MODDING_GUIDE.md` where they disagree.** Its §0 lists every prior
+> project finding it corrected — including that `$ChangeUnitType` changes
+> appearance only while `$UpgradeAgentAttributes` changes attributes only
+> (so a scripted building upgrade needs both), that `$RandomNumber(N)` is
+> inclusive of N, and that GPL's `float` is fixed-point with 1/255
+> precision.
+>
+> This file remains the place for things the official docs **don't** cover:
+> primitives absent from their function list, silent-failure modes, crash
+> causes, and working code patterns.
 
 ---
 

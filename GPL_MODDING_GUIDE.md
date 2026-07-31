@@ -343,7 +343,50 @@ author recalls only that workers never upgraded the building.
 > things around its `$ChangeUnitType` call, which is why its upgrades
 > complete at all.
 
-#### Does the sprite change without `$ChangeUnitType`? Yes — by elimination
+#### RESOLVED by official SDK documentation — and it REVERSES the advice below
+
+> **Read this before anything else in this subsection.** The official
+> "GPL (Game Play Language) Reference" PDF has since been transcribed to
+> `GPL_LANGUAGE_REFERENCE.md`, and it settles the question outright. The
+> reasoning kept below is left visible because it shows how a plausible
+> elimination argument reached the wrong answer.
+>
+> **The two primitives are complementary halves, not alternatives:**
+> - **`$ChangeUnitType(agent, type)`** — *"This does not update any
+>   attributes on the unit to be exactly like the new unit type, **only the
+>   appearance**."* Previous type saved to `#ATTRIB_OriginalType`;
+>   `$RevertUnitType` undoes it.
+> - **`$UpgradeAgentAttributes(agent)`** — *"**Copies the GPL attribute
+>   values from the agent's definition template** into its local storage.
+>   This is usually called when a building upgrades to the next level."*
+>   No appearance change.
+>
+> **So a GPL-scripted tier upgrade needs BOTH calls.** The
+> `Dwarfeh_AI` mod's `$ChangeUnitType` + `$UpgradeAgentAttributes` pairing
+> was correct all along, and **this guide's recommendation further down to
+> drop `$ChangeUnitType` in favour of a bare `$basic_upgrade` is WRONG** —
+> following it would leave the building displaying its old tier's art
+> permanently.
+>
+> It also explains the mod author's crash note exactly: with
+> `$ChangeUnitType` alone, appearance advances to the new type while the
+> agent's attributes still describe the old one. `$UpgradeAgentAttributes`
+> is what reconciles them.
+>
+> **What remains genuinely open** (and is a better-posed Ghidra question
+> than before): the *human* upgrade path calls only
+> `$UpgradeAgentAttributes`, never `$ChangeUnitType`, yet the player's
+> building visibly becomes its new tier. So **the engine performs the
+> appearance swap itself for player-initiated upgrades** — we now know for
+> certain the GPL-visible half does not do it.
+>
+> Minor note: the official doc scopes `$ChangeUnitType` to "building and
+> vehicle units", yet shipped code calls it on heroes and monsters. So
+> "vehicle" evidently means *any mobile agent*, consistent with `$Move`'s
+> `avoid_vehicles` modifier being defined as "any other agent that is able
+> to move." No contradiction.
+
+#### Superseded reasoning: does the sprite change without `$ChangeUnitType`?
 
 **A fair objection to the advice above:** building tiers are genuinely
 distinct unit types. `ABH1`/`ABH2`/`ABH3` are three separate XML
@@ -478,6 +521,18 @@ notes, not an engine trace.**
    early.** ❓ What state `$ChangeUnitType` leaves stale is unknown.
 
 #### The recommended shape for a scripted upgrade
+
+> **CORRECTED — do NOT drop `$ChangeUnitType`.** Official SDK docs (see
+> the block above and `GPL_LANGUAGE_REFERENCE.md` §0.1) establish that
+> `$ChangeUnitType` is the **only** GPL-visible way to change a unit's
+> appearance, and `$UpgradeAgentAttributes` changes attributes only.
+> Keep both. The corrected recipe is: **queue the building via
+> `$basic_upgrade` (or push it onto the palace's `"buildings_waiting"`),
+> clear `#ATTRIB_CurrentStageBuilt`, ensure `HP < MaxHP`, and call
+> `$ChangeUnitType` + `$UpgradeAgentAttributes`** — the open question is
+> only *when* to call the pair (immediately, as the mod does, versus
+> deferred to completion to avoid unlocking tier content early).
+> The original wording follows.
 
 **Don't use `$ChangeUnitType` for tier upgrades.** No shipped code does.
 Instead reuse the labor path the engine already drives — call
@@ -2148,6 +2203,17 @@ bar).
 
 ### 4. `$RandomNumber`/`$RandomCoord` — confirmed inclusive-range convention, universal `+1` idiom
 
+> **CORRECTED by official SDK docs — the range is `[0, N]` INCLUSIVE**,
+> i.e. **N+1** possible values, not N. See `GPL_LANGUAGE_REFERENCE.md`
+> §0.2: *"Return a random number from 0 up to and including the input
+> value."* The `+1` idiom below is real and shipped, but with the correct
+> range `$RandomNumber(2) + 1` yields **1, 2 or 3** — not 1-2. **Any
+> probability derived from the old reading needs re-deriving.** Shipped
+> comments are themselves inconsistent on this (the `Dwarfeh_AI` mod
+> comments the same expression "1-3" in one place and "1-2" in another),
+> which is presumably how the wrong range got recorded. Original text
+> follows.
+
 **`$RandomNumber(N)` is confirmed to return a value in `[0, N-1]` (or
 possibly `[0, N]`), not `[1, N]`** — inferred from an extremely
 consistent idiom repeated at hundreds of call sites across every system
@@ -2283,13 +2349,27 @@ crashes without error." So **integer/float overflow in GPL arithmetic is
 a silent-crash class, not an exception** — clamp before multiplying in
 any compounding loop.
 
-**UNVERIFIED, deliberately:** the precise rule behind claim 1 (whether
-it is a parser issue, a bytecode-emission issue, a `float`-vs-`integer`
-coercion issue, or specific to certain operand types) is not established
-— only the observed behavior and the working workaround. Do not
-generalise it into "GPL has no floats": `is float` return types,
-`float` declarations and float literals all clearly exist and the
-divisor functions return them.
+**ROOT CAUSE FOUND — official SDK docs explain both symptoms.** GPL's
+`float` is **fixed-point, not IEEE floating point**: maximum signed
+integer portion **2^23**, maximum precision **1/255**. The documented
+reason is multiplayer determinism — real FPUs round differently across
+clients, which would desync a simulation that runs in parallel on every
+machine. See `GPL_LANGUAGE_REFERENCE.md` §0.3.
+
+That accounts for both hazards recorded above:
+- **1/255 quantisation** makes many decimal literals unrepresentable, so
+  a single `x * 1.5` loses precision where `x * 3 / 2` stages the
+  operation and avoids the lossy intermediate.
+- **The 2^23 integer ceiling** (8,388,608) is the real overflow boundary
+  behind the silent crash; the mod's `400000.0` clamp was conservative
+  but correct in direction.
+
+**Still not established:** whether the misbehaviour is a compiler
+emission detail or purely a representable-value problem, and exactly
+which literals survive a round trip. The practical rule (keep numerator
+and denominator separate to the call site) is unchanged. And do **not**
+generalise this into "GPL has no floats" — `float` is a real declared
+type with `is float` return values, it is simply fixed-point.
 
 ### Candidates checked and discarded (fewer than 3 unrelated systems)
 

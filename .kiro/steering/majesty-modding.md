@@ -57,6 +57,13 @@ directly in new scripts — import from `game_paths` instead. Resolution order:
   brand-new CAM from scratch (`build_cam_from_sections()`, used by quest-only CAMs
   that have no "original" file to repack against)
 - `CAM_MODDING_GUIDE.md` — Task-oriented modding guide (includes binary format appendix)
+- `GPL_LANGUAGE_REFERENCE.md` — **official SDK "GPL Reference" PDF,
+  transcribed.** ~150 built-in function signatures with params/returns, the
+  type system (note: `float` is **fixed-point**, 1/255 precision), the
+  agent-vs-unit attribute split, and the `ListObjects` modifier table.
+  **Highest-authority GPL source in the project — outranks our inferred
+  findings on any disagreement.** Its §0 lists every prior finding it
+  corrected. Check it BEFORE reverse-engineering a primitive's signature.
 - `GPL_MODDING_GUIDE.md` — Gameplay-systems reference, **§1-§15** (state machine,
   building lifecycle/visits/economy, guards, intents, death/revival, effectors,
   primitives, hero decision trees). Has a Contents list at the top.

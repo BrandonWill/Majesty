@@ -293,20 +293,36 @@ global, is unconfirmed — see `TODO-New-Building-Requirements.md` §4.
 `CAM_MODDING_GUIDE.md` (new "Engine Primitives" section if one doesn't
 exist yet).
 
-### 5.3 `$SetBuildingLimit`/`$RemoveBuildingLimit`/`$RemoveAllBuildingLimits` Semantics
+### 5.3 ~~`$SetBuildingLimit`/`$RemoveBuildingLimit`/`$RemoveAllBuildingLimits` Semantics~~ — RESOLVED, DO NOT WORK
 
-**Why this needs Ghidra:** same `Keywords4`-confirmed engine-primitive
-category as 5.2, but with **zero** GPL call sites found anywhere in the
-corpus — completely unused by any shipped quest, so there's no
-GPL-side usage pattern to infer behavior from at all.
+> **RESOLVED from official SDK documentation, no Ghidra needed.** The
+> "GPL (Game Play Language) Reference" PDF documents all three. See
+> `GPL_LANGUAGE_REFERENCE.md`:
+>
+> - **`SetBuildingLimit(string type, integer limit)`** — *"Limits **all
+>   players** to no more than the specified number of buildings for the
+>   specified type. When the limit = 0 this has much the same effect as
+>   `DisableUnitType`. **Note that these limits are NOT enforced by
+>   `SpawnUnit`.**"*
+> - **`RemoveBuildingLimit(string type)`** and
+>   **`RemoveAllBuildingLimits()`** — remove limits imposed by
+>   `SetBuildingLimit` **or by the player in the Build Tree Editor**.
+>
+> So: **global, not per-player**; keyed by **type name**; a **count**, not
+> a boolean; and `SpawnUnit` bypasses it entirely.
+>
+> **Bonus finding worth following up elsewhere:** the docs reveal a
+> **Build Tree Editor available to players in freestyle games only**,
+> which can itself impose building limits. That is a player-facing
+> feature nothing in this project had identified, and it is plausibly
+> connected to the freestyle conflicting-faction behavior recorded in
+> `TODO-New-Building-Requirements.md` §10.8. Not a Ghidra task.
 
-**Steps:**
-1. Find the primitives' dispatch entries and decompile their bodies
-2. Determine: limit by unit-type title? by count? per-player or global?
-   Does exceeding a limit block placement, hide the menu entry, or
-   something else?
+**Original steps (do not execute):** find the dispatch entries, determine
+limit keying, scope, and enforcement point.
 
-**Record results in:** `TODO-New-Building-Requirements.md` §4.
+**Record results in:** already recorded — `GPL_LANGUAGE_REFERENCE.md` and
+`TODO-New-Building-Requirements.md` §4.
 
 ### 5.4 `Menu` Value Engine-Keying + Graveyard/Sewer Anomaly
 
@@ -459,10 +475,10 @@ opportunistically when already in adjacent code.
 | `$SetDrawEffects` | Full argument set. One shipped call site, `"gray"` is the only string ever passed, the integer argument's meaning is unread. Recolors a unit without new art, so it's a cheap effect for modders IF the arguments are known. | §22.6h |
 | `$EnchantWizTower` | What it actually changes. `Magical_Repair` sits unreferenced in the same file, suggesting self-repair is part of it — adjacency, not evidence. | §22.6j, §22.2 |
 | Thread-interval ceiling (~1 800 000 ms) | Whether the engine really enforces it and what it does when exceeded. Two shipped comments name it, one works around it by counting firings instead, no interval in the file exceeds it — the only evidence is the developers' own comment. | §22.4d |
-| `$SetEffectorDirection` | Index→frame mapping. | §21.4e |
-| `$DropGoldEveryone` | The split rule (per hero? per team? equal shares?). | §21.5b |
-| `"clear"` as a `$SpawnUnit` flag | What it clears. | §21.7 |
-| `-1` as an effector duration | Whether it means infinite, or something else. | §21.7 |
+| ~~`$SetEffectorDirection`~~ | **RESOLVED — no Ghidra needed.** Official SDK docs: *"The direction of the effect. 0–31, with 0 being NORTH and increasing values going clockwise around the agent."* See `GPL_LANGUAGE_REFERENCE.md`. | §21.4e |
+| `$DropGoldEveryone` | The split rule (per hero? per team? equal shares?). **Still open** — absent from the official function list entirely, so it is a GPL library function or an undocumented primitive. | §21.5b |
+| ~~`"clear"` as a `$SpawnUnit` flag~~ | **RESOLVED — no Ghidra needed.** Official SDK docs: *"any units under the footprint of the new unit will be removed. This is useful when spawning buildings."* | §21.7 |
+| `-1` as an effector duration | **Narrowed.** Official docs give **`"infinite"` as a documented string option** on `$CreateEffector`, and `after` to fire the effect's DeathScript on completion — but say nothing about a `-1` integer duration. So `-1` is either undocumented or incidental. | §21.7 |
 | `#ATTRIB_CurrentEvent` | Value→event mapping beyond the 1-4 the Fairgrounds tourney uses. | §21.6e |
 | `$ElvesVoice_setOperative` / `$dwarvesVoice_setOperative` | What they actually silence. The argument is now confirmed a plain enable/disable boolean (Batch G found the first `1` calls) — the effect is still engine-side. | §20.7, §22.8 |
 | Whether the engine ever writes `"type"` itself | GPL writes it constantly (the `$ListObjects` class register, §20.2); whether the engine also does is unconfirmed, which matters for any census code. | §20.2 |
@@ -738,7 +754,8 @@ mapping, etc.) sitting unused alongside the orphaned data.
 | Identify sub-panel click dispatcher function | `SMNUResearch/findings/action_codes_decoded.md` |
 | Document resource search direction in `FUN_00679a80` | `CAM_MODDING_GUIDE.md` (Quest CAM Loading) |
 | What does `AllocateLocalID` do for particle systems | `CAM_MODDING_GUIDE.md` (particle section) |
-| **Trace `$UpgradeAgentAttributes` and the building tier transition.** Building tiers are separate unit types with their own `ImageIDBase` and `.dat` scripts (`ABH1`/`ABH2`/`ABH3`), yet **no shipped GPL calls `$ChangeUnitType` on a building** — all 5 call sites are character shape-shifts. The only call in the human upgrade path is `$UpgradeAgentAttributes`, inside `BuildingReachedMaxHP` (`Building_Births.gpl`). So the tier/sprite swap is exe-side, but **which routine does it is unknown**: (a) `$UpgradeAgentAttributes` resolves the XML `UpgradeTo` field and applies the whole next-tier definition, or (b) it only refreshes attributes and the engine swaps type/sprite separately in its own upgrade handling. **This decides whether a GPL-only scripted upgrade can work at all** — under (b) it would update stats but keep the old sprite. Also worth capturing: what state `$ChangeUnitType` leaves stale, since a modder reports the game crashes within seconds unless `$UpgradeAgentAttributes` follows it. | `GPL_MODDING_GUIDE.md` §2 ("Does the sprite change without `$ChangeUnitType`?") |
+| **RESCOPED by official SDK docs — find the engine's appearance swap for player-initiated building upgrades.** The original framing asked whether `$UpgradeAgentAttributes` performs the tier transition. **It does not:** official docs say it *"copies the GPL attribute values from the agent's definition template into its local storage"* — attributes only — while `$ChangeUnitType` changes *"only the appearance"*. So GPL needs both, and a scripted upgrade must call both. **What's left:** the human upgrade path calls only `$UpgradeAgentAttributes` (inside `BuildingReachedMaxHP`), never `$ChangeUnitType`, yet the building visibly becomes its new tier — so the engine swaps appearance itself somewhere in its own upgrade handling. Find that. Secondary: what state `$ChangeUnitType` leaves inconsistent, given a modder reports a crash within seconds unless `$UpgradeAgentAttributes` follows it (now explained in principle — appearance advanced, attributes stale — but not traced). | `GPL_MODDING_GUIDE.md` §2 |
+| ~~**Trace `$UpgradeAgentAttributes` and the building tier transition.**~~ *(superseded by the row above)* Building tiers are separate unit types with their own `ImageIDBase` and `.dat` scripts (`ABH1`/`ABH2`/`ABH3`), yet **no shipped GPL calls `$ChangeUnitType` on a building** — all 5 call sites are character shape-shifts. The only call in the human upgrade path is `$UpgradeAgentAttributes`, inside `BuildingReachedMaxHP` (`Building_Births.gpl`). So the tier/sprite swap is exe-side, but **which routine does it is unknown**: (a) `$UpgradeAgentAttributes` resolves the XML `UpgradeTo` field and applies the whole next-tier definition, or (b) it only refreshes attributes and the engine swaps type/sprite separately in its own upgrade handling. **This decides whether a GPL-only scripted upgrade can work at all** — under (b) it would update stats but keep the old sprite. Also worth capturing: what state `$ChangeUnitType` leaves stale, since a modder reports the game crashes within seconds unless `$UpgradeAgentAttributes` follows it. | `GPL_MODDING_GUIDE.md` §2 ("Does the sprite change without `$ChangeUnitType`?") |
 | (Low priority) Confirm the exe never calls a GPL "birthscript2" attribute directly (only "birthscript" is known to be engine-invoked, via `NewUnitInit`) — see `TODO-GPL-Deepdive.md` "birthscript vs birthScript2" finding, "Not yet checked / UNVERIFIED" | `TODO-GPL-Deepdive.md` (birthscript/birthScript2 section) |
 | (Low priority) Confirm whether the exe calls `$DoMarketDay`/`$EndMarketDay` on a Marketplace's `RevenueScript` thread (only the functions' own leading comments — "called by the ingame code" — are evidence; no GPL-side call site found) | `TODO-GPL-Deepdive.md` (building revenue finding) |
 | (Low priority) Find what sets a building's `#ATTRIB_isTaxed`/`#ATTRIB_QuickTax` flags — no GPL/`.dat` set-site found, only read-sites in `collect_tax.gpl` | `TODO-GPL-Deepdive.md` (building revenue finding) |
