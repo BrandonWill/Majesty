@@ -173,12 +173,30 @@ See also:
   Inn (`ABF1`, 8 slots) and a Marketplace tier (`ABH1`, 6 slots) as PNGs
   and compare visually. Doable on this machine with `sprite_extractor.py`;
   would upgrade §10.5's reframe from play observation to confirmed.
-- [ ] **NEW (from §10.7): find where Ballista Tower's build prerequisite
-  lives** — routed to `TODO-Ghidra.md`. Its XML has no prerequisite field
-  and its `CanIBuildThisBuilding` branch is commented out in shipped
-  source, yet it is gated in game. If the mechanism is general it may be
-  reusable for new buildings. **Ask the owner what the in-game
-  requirement actually is first** — that would narrow the search a lot.
+- [x] **§10.7 RESOLVED — Ballista Tower requires a completed Dwarven
+  Settlement, and the whole exe-side tech tree is now captured** in
+  `TODO-New-Building-Requirements.md` §10.8. The owner had already
+  reverse-engineered it into his AI mod (`canBuild()` +the `build_*` flag
+  block in `custom_rules.gpl`); his from-memory account and his code
+  agree. Prerequisites: Gnome_Hovel = palace L1; Dwarven_Settlement =
+  completed Blacksmith **L3** + palace L2; Elven_Bungalow = completed Inn
+  + Marketplace + palace L2; Ballista_Tower = completed
+  Dwarven_Settlement. Exclusivity groups (none of it data-driven): one
+  race only; at palace L2 one deity group of Agrela+Dauros /
+  Krypta+Fervus / Krolm; at palace L3 Helia **or** Lunord, and neither if
+  Krolm was taken. Explains why source reading never found it and why
+  shipped GPL keeps special-casing Dwarven_settlement alongside
+  ballista_tower.
+- [ ] **Ghidra (now well-specified): find the exe prerequisite table.**
+  Target the rule gating `Ballista_Tower` on `Dwarven_Settlement` — the
+  simplest single-dependency case in the tree — then check whether the
+  table is data-addressable at all. If it is, new buildings could join
+  the prerequisite system. Route to `TODO-Ghidra.md`.
+- [ ] **Confirm GPL field-name case sensitivity.** The mod has a live
+  example: it reads `palace's "build_Krolm"` while declaring
+  `build_krolm`. The wider codebase implies case-insensitive matching
+  (`$disableunittype`, `#CheckTitles`), but it is not actually confirmed
+  and this is a cheap compile/runtime test.
 - [ ] **Minor cleanup in `TODO-New-Building-Requirements.md` §3** — the
   `birthScript` passage has an unfinished self-correcting sentence that
   reads like a mid-edit artifact ("**Confirmed real exception in the

@@ -714,20 +714,31 @@ player? hide the menu entry or refuse the placement?) are therefore
 unknowable from source — with zero call sites there is no usage example
 anywhere to infer a signature from.
 
-⚠️ **No `Researched_Item()`-style tech-tree gate exists in GPL or XML —
-but an exe-side prerequisite system demonstrably DOES exist.** The
-project owner reports that **Ballista Tower is not available until you
-meet its requirements**, and nothing in the data layer expresses that:
-`ABB1`'s XML has no prerequisite field, and the `ballista_tower` branch of
+⚠️ **No `Researched_Item()`-style tech-tree gate exists in GPL or XML, but
+the engine has a rich exe-side prerequisite and exclusivity system.** None
+of it is data-driven, so **a new building cannot join it** — your building
+will simply have no prerequisite. Don't mistake that for the engine
+lacking the capability. The full shipped tree, confirmed by the project
+owner and cross-checked against his AI mod's `canBuild()`:
+
+| Building | Requirement |
+|---|---|
+| `Gnome_Hovel` | palace level 1 (no other gate) |
+| `Dwarven_Settlement` | completed Blacksmith at **level 3** + palace level ≥ 2 |
+| `Elven_Bungalow` | completed **Inn** + completed **Marketplace** + palace level ≥ 2 |
+| `Ballista_Tower` | at least one completed **`Dwarven_Settlement`** |
+
+Plus mutual-exclusion groups the data layer says nothing about: **one race
+only** (gnomes / dwarves / elves); **one deity group at palace 2**
+(Agrela+Dauros, Krypta+Fervus, or Krolm alone); and at **palace 3**,
+Helia *or* Lunord — but neither if you took Krolm. See §10.8 of
+`TODO-New-Building-Requirements.md`.
+
+For historical context on why source reading missed this: `ABB1`'s XML has
+no prerequisite field at all, and the `ballista_tower` branch of
 `CanIBuildThisBuilding` is **commented out** in both
-`construction_rules.gpl` and `mx_Construction_Rules.gpl` (along with its
-`#chat_out_range_ball_dsettle` failure code and a proximity test against
-`dwarven_settlement`) — so the developers implemented it in GPL and then
-moved or disabled it. ❓ Where that rule now lives, and whether it is a
-general reusable mechanism or a hardcoded special case, is unknown; see
-§10.7 of `TODO-New-Building-Requirements.md`. **Practical upshot: your new
-building will have no prerequisite, which is fine — but don't conclude
-the engine has no prerequisite mechanism, because it clearly does.**
+`construction_rules.gpl` and `mx_Construction_Rules.gpl` — the developers
+implemented it in GPL and then moved it into the exe.
 
 ✅ **But there IS a real GPL-side placement prerequisite you can extend:
 `CanIBuildThisBuilding(agent thisBuilding, list dependencies)` in
@@ -896,10 +907,13 @@ field, so their unlock structurally cannot be a Level-3-style tier gate.
 from custom GPL — confirmed via the Dwarfeh_AI mod's real call into
 `DoRageOfKrolm`. ⚠️ But making a NEW such ability player-triggerable from
 a building panel hits the identical exe-hardcoded-panel wall, and there
-is no base-game "spell registry" to hook into instead. ❓ Whether
-destroying the building revokes the ability is unverified from source
-(the mundane explanation — losing the building removes its panel and
-button along with it — is settleable in-game, no Ghidra needed).
+is no base-game "spell registry" to hook into instead. ✅ **Destroying the
+granting building DOES revoke the ability** — confirmed by the project
+owner from play. The mundane explanation holds: the ability lives on that
+building's own panel, so losing the building takes the panel and its
+button with it. **Consequence for authoring one:** the ability is
+inherently tied to the building's survival, there is no separate
+"permanently learned" state, and you need no cleanup logic on death.
 
 ---
 

@@ -3706,12 +3706,130 @@ considerably.
 
 ---
 
-**§10 tally:** 3 CLOSED (10.2 pricing formula, 10.3 construction art
-visible, 10.4 Palace never built), 1 NARROWED (10.1 `RecruitDelay`
-meaning confirmed, unit still inferred), 2 REFRAMED/REFUTED (10.5 damage
-art vs collapse, 10.6 no build-menu categories), 1 NEW open item (10.7
-exe-side build prerequisites). Plus one new research item from 10.3 (how
-to mimic a human upgrade in GPL).
+#### 10.8 The full player build tech tree — §10.7 RESOLVED, and the whole exclusivity system captured
+
+**§10.7 asked where Ballista Tower's requirement lives. Answer: it is
+exe-side, and the owner had already reverse-engineered the entire tree
+into his AI mod.** The authoritative reference is `canBuild()` in
+`PanelTest_Quest/MyAI/GPL/custom_rules.gpl` (~line 1325) for building
+prerequisites, plus the `build_*` flag block (~lines 460-690) for the
+race/deity exclusivity. The owner stated the rules from memory first and
+they match his code exactly — two independent agreeing sources, both his.
+
+**Evidence class:** owner's play knowledge, corroborated by his own
+working implementation. **Not** an engine trace. None of this is
+expressed in XML or shipped GPL — it is entirely exe-enforced, which is
+why source reading never found it.
+
+**Building prerequisites (from `canBuild()`, verbatim logic):**
+
+| Building | Requirement |
+|---|---|
+| `Dwarven_Settlement` | a **Blacksmith at level 3**, completed (`#ATTRIB_FirstStageBuilt == 1`), **and** palace level ≥ 2 |
+| `Ballista_Tower` | at least one **completed `Dwarven_Settlement`** |
+| `Elven_Bungalow` | a completed **Inn** *and* a completed **Marketplace**, **and** palace level ≥ 2 |
+| `Gnome_Hovel` | none beyond **palace level 1** (absent from `canBuild()` entirely) |
+
+**So Ballista Tower's gate is a completed Dwarven Settlement** — which
+also explains why shipped `epic_quest_scripts.gpl` repeatedly
+special-cases `Dwarven_settlement` and `ballista_tower` together, and why
+the commented-out `CanIBuildThisBuilding` branch tested proximity to
+`dwarven_settlement`. Those were adjacency hints pointing at a real
+dependency.
+
+**Race exclusivity — pick exactly ONE of three:**
+- **Gnomes** (`Gnome_Hovel`) — available at palace level 1
+- **Dwarves** (`Dwarven_Settlement`) — Blacksmith L3 + palace L2
+- **Elves** (`Elven_Bungalow`) — Inn + Marketplace + palace L2
+
+The mod models this as three mutually exclusive `build_gnomes` /
+`build_dwarves` / `build_elves` flags, and notably **only offers gnomes
+when palace level == 1** (its level-2+ branch randomises between elves
+and dwarves only), consistent with gnomes being the early-game choice.
+
+**Deity exclusivity — two tiers of choice:**
+
+At **palace level 2**, pick one group:
+1. **Agrela + Dauros**
+2. **Krypta + Fervus**
+3. **Krolm** (alone)
+
+At **palace level 3**:
+- If you took **Krolm** → you get **neither Helia nor Lunord**.
+- If you did **not** take Krolm → choose **either Helia or Lunord** (not
+  both).
+
+The mod implements exactly this: `build_agrela`/`build_krypta`/
+`build_krolm` are set exclusively, and both the "started with one" and
+"randomly choose" paths for Helia/Lunord are gated on
+`palace's "build_krolm" == FALSE`. Its random deity picker even narrows
+its range from 1-3 to 1-2 (excluding Krolm) when Helia or Lunord is
+already present — the same rule read from the other direction.
+
+**A structural hint worth recording, offered as a HYPOTHESIS.** When the
+AI finds itself starting with temples from more than one group
+(pre-placed by the quest), it picks one and calls
+`$destroyBuildingsInList()` on the losers — it demolishes them. That it
+*has* to suggests **the exclusivity is enforced at build time, not
+retroactively**: a quest can pre-place temples that violate the rule and
+the engine tolerates them. **Unconfirmed** — the demolition may equally
+be the AI keeping its own strategy coherent. Worth knowing if you are
+authoring a quest that pre-places temples.
+
+**Why this matters for a NEW building.** It confirms an exe-side
+prerequisite system exists and is rich (building level, completion state,
+palace level, mutual exclusion groups), and that **none of it is
+data-driven** — so a new building cannot join that system. ❓ Whether the
+exe's prerequisite table is data-addressable at all is exactly the
+Ghidra question §10.7 raised, now much better specified: the disassembly
+should look for the rule that gates `Ballista_Tower` on
+`Dwarven_Settlement`, since that is the simplest single-dependency case
+in the whole tree.
+
+**Two incidental bugs spotted in the mod while reading it** (reported to
+the owner, not fixed here, and irrelevant to the findings above):
+1. The two "Started with…" `$debugout` labels for Helia/Lunord are
+   **swapped** — the `hasLunord` branch logs "Started with Helia" and
+   vice versa. The flag assignments themselves are correct, so this is
+   cosmetic log noise only.
+2. One condition reads `palace's "build_Krolm"` with a capital K while
+   the attribute is declared `build_krolm`. Harmless if GPL field lookup
+   is case-insensitive — which the wider codebase suggests it is
+   (`$disableunittype` and `#CheckTitles` both match case-insensitively)
+   — but ❓ **field-name case sensitivity is not actually confirmed
+   anywhere**, and this is a live example worth resolving.
+
+---
+
+#### 10.9 Two smaller confirmations
+
+**Guardhouse really does cost less to upgrade than to build.** Owner
+confirms `Cost 600` for Guardhouse1 and `Cost 500` to upgrade to
+Guardhouse2 is correct behavior, not a data error. So the general
+"upgrades cost more" intuition has at least one genuine shipped
+exception — don't validate a new building's tier costs against
+monotonicity.
+
+**Destroying the granting building DOES revoke its castable spell.**
+Owner confirms: lose the temple, lose the spell. This closes the ❓ raised
+in the deliverable's Step 6 about building-granted abilities (Rage of
+Krolm, Call to Arms, Petrify). The mundane explanation stands — the
+ability lives on the building's own panel, so losing the building removes
+the panel and the button with it. **Consequence for modders:** a
+building-granted ability is inherently tied to that building's survival;
+there is no separate "learned permanently" state to worry about, and no
+cleanup step needed when authoring one.
+
+---
+
+**§10 tally:** 5 CLOSED (10.2 pricing formula, 10.3 construction art
+visible + upgrade mechanism, 10.4 Palace never built, 10.8 the full tech
+tree incl. Ballista Tower, 10.9 Guardhouse costs + spell revocation),
+1 NARROWED (10.1 `RecruitDelay` meaning confirmed, unit still inferred),
+2 REFRAMED/REFUTED (10.5 damage art vs collapse, 10.6 no build-menu
+categories). §10.7 opened and closed within the same pass. New items
+raised: mimic-the-human-upgrade test, render the damage slots, GPL field-
+name case sensitivity, and a much better-specified Ghidra target.
 
 ---
 
