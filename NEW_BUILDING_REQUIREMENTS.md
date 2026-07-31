@@ -306,11 +306,22 @@ both files opens with exactly these three, and every prototype in the
 whole `.dat` system declares them first. This is the one universal
 pattern across the entire system.
 
-✅ **`birthScript` is present on 100% of the ~130 entries** — but its
-target varies. Buildings that start under construction point it at
-`basic_birth`; every level-2/3 tier entry points it straight at the
-completion function instead (Marketplace2/3 use `(birthScript
-Building_Birth)` with no `basic_birth` step). The engine's call is
+✅ **`birthScript` is present on 100% of non-`map_goodie` entries** — 84
+named entries in base `Building_Data.dat` (the only 7 without it are all
+`map_goodie`) and 110 in `mx_Building_Data.dat` (8 without, all
+`map_goodie`). **Its target varies, and the pattern is per-FAMILY, not
+per-tier.** Buildings that start under construction use a
+`basic_birth` + `birthScript2` pair. Marketplace, Blacksmith,
+Rogues_Guild, Wizards_Guild and the temples drop that pair at tier 2/3
+and point `birthScript` straight at the completion function
+(`Marketplace2`/`3` use `(birthScript Building_Birth)` with no
+`birthScript2`) — but **`GuardHouse2` and `Library2` do not**: both keep
+`basic_birth` + `birthScript2`, identical to their tier-1 entries. Don't
+assume a tier-2 building collapses the chain; check the family.
+`Palace` is a third shape again — all three tiers use `Palace_Birth`
+with no `birthScript2` at any tier, so it never had a two-stage chain,
+which is the `.dat`-side counterpart of Step 1's finding that Palace is
+the one building with no `Build` ImageSet. The engine's call is
 conditional, not an assert — `LowLevel.gpl`'s `NewUnitInit` does `if
 ($ValidFunction(NewAgent's "BirthScript")) $RunThread(…)` — so omitting
 it won't crash, it just leaves the building with no self-registration
@@ -328,8 +339,9 @@ nothing runs on death — no `Become_Rubble`, no `$release_occupants`, no
 Treat as required even though it isn't compiler-enforced.
 
 ✅ **Confirmed optional, behavior-dependent only:** `birthScript2`/
-`upgradescript` (skipped by every level-2/3 tier and by any building
-with no build-from-zero or upgrade path), `Visited_Script`/
+`upgradescript` (dropped by most level-2/3 tiers — though not
+`GuardHouse2`/`Library2`, see above — and by any building with no
+build-from-zero or upgrade path), `Visited_Script`/
 `Lived_In_Script`, the `RevenueScript`/`Revenue_Amount`/`Revenue_Time`
 trio (only 6 buildings across base + expansion set them), and the
 `Guard_Function`/`Guard_Spawn_Function`/`Max_Guards` family.

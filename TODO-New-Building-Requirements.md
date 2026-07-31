@@ -967,16 +967,62 @@ most with existing research, the job here is COMPLETING the picture for
   `auto_Birth`/`built_or_auto_birth`/every other `birthScript` target
   found in the `.dat` are what wire a building into
   `buildings_waiting`/`RevenueScript` threads/its own `ActiveScript`
-  etc. (`GPL_MODDING_GUIDE.md` §2). **Confirmed real exception in the
-  shipped data:** `Palace3`, `Rogues_Guild2`... — actually every
-  level-2/3 tier entry across every building family skips `birthScript`
-  and jumps straight to setting `birthScript` to the *completion*
-  function directly (e.g. `Marketplace2`/`3` set `(birthScript
-  Building_Birth)` with no `basic_birth` step at all) — meaning
-  `birthScript` itself is present on 100% of the ~130 total `.dat`
-  entries checked (base + expansion), it is just pointed at a different
-  target depending on whether the building starts under construction —
-  **`birthScript` presence is universal, its target function is not.**
+  etc. (`GPL_MODDING_GUIDE.md` §2).
+
+  **`birthScript` presence is universal; its target function is not.**
+  Re-verified by parsing every `[Name] {Prototype …} [end]` entry in both
+  `.dat` files: **base `Building_Data.dat` has 84 named entries, 7
+  without `birthScript` — all 7 `map_goodie`; expansion
+  `mx_Building_Data.dat` has 110, 8 without — all 8 `map_goodie`.** Zero
+  non-`map_goodie` entries lack it, in either file. Targets are varied
+  (22 distinct in base, 25 in expansion), and the split is **whether the
+  building starts under construction**, which is expressed as a
+  `basic_birth` + `birthScript2` pair:
+
+  | Entry | `birthScript` | `birthScript2` |
+  |---|---|---|
+  | `Marketplace1` | `basic_birth` | `Building_Birth` |
+  | `Marketplace2`/`3` | `Building_Birth` | *(absent)* |
+  | `BlackSmith1` | `basic_birth` | `Building_Birth` |
+  | `BlackSmith2`/`3` | `Building_Birth` | *(absent)* |
+  | `Rogues_Guild1` | `basic_birth` | `Rogues_Guild_Birth` |
+  | `Rogues_Guild2` | `Rogues_Guild_Birth` | *(absent)* |
+  | `Temple_Agrela1` | `basic_birth` | `agrela_Birth` |
+  | `Temple_Agrela2`/`3` | `agrela_Birth` | *(absent)* |
+  | `GuardHouse1` | `basic_birth` | `GuardHouse_Birth` |
+  | **`GuardHouse2`** | **`basic_birth`** | **`GuardHouse_Birth`** |
+  | `Library1` | `basic_birth` | `Building_Birth` |
+  | **`Library2`** | **`basic_birth`** | **`Building_Birth`** |
+  | `Palace1`/`2`/`3` | `Palace_Birth` | *(absent at every tier)* |
+
+  > **CORRECTED, and the sentence this replaces was garbled as well as
+  > wrong.** The original read: "**Confirmed real exception in the
+  > shipped data:** `Palace3`, `Rogues_Guild2`... — actually every
+  > level-2/3 tier entry across every building family skips
+  > `birthScript` and jumps straight to setting `birthScript` to the
+  > *completion* function directly." Three problems, kept visible per
+  > convention:
+  >
+  > 1. **Self-contradictory as written** — it says tiers "skip
+  >    `birthScript`" and then "set `birthScript`". What they actually
+  >    skip is the `basic_birth` **stage**, not the field.
+  > 2. **"every level-2/3 tier entry across every building family" is
+  >    FALSE.** `GuardHouse2` and `Library2` are real counter-examples:
+  >    both keep `basic_birth` + a `birthScript2`, identical to their
+  >    tier-1 counterparts. **The collapse is per-FAMILY, not per-tier** —
+  >    Marketplace, Blacksmith, Rogues_Guild, Wizards_Guild and the
+  >    temples collapse; Guardhouse and Library do not.
+  > 3. **"~130 total entries" was wrong** — the real counts are 84 base
+  >    and 110 expansion (the expansion file re-declares the base
+  >    entries, so these are per-file totals, not a unique union).
+  >
+  > **`Palace` is a separate case worth naming, because it is easy to
+  > misread as a collapsed tier:** all three Palace tiers use
+  > `Palace_Birth` with **no `birthScript2` at any tier**, so Palace
+  > never had a two-stage chain to collapse in the first place. That is
+  > the same fact §1 reports from the art side (Palace is the one
+  > building with no `Build` ImageSet), reached independently from the
+  > `.dat`.
   `map_goodie`-typed decorative placeholder entries at the end of
   `Building_Data.dat` (`Stone_tablet`, `obelisk`, `sign_fancy_iron`,
   etc.) are the one genuine exception — those have only `type`/
@@ -3239,6 +3285,37 @@ settle it. Nothing "loosely related" is padded in here.
    `Temple_Krolm` and `Temple_Fervus1` share `Cost="900"` but differ
    (1.5 vs 2.0). So it is **not** a derived value of either neighbour
    field. Its consumer is still exe-side and unknown.
+
+   **New data point + a testable HYPOTHESIS (added later; explicitly NOT
+   a confirmed finding).** Pulling `Cost`/`Multiplier`/`IncomeAmount`
+   per tier shows `Multiplier` is essentially constant within a family
+   and varies a lot *between* families, and the ordering is suggestive:
+
+   | Building (tier 1 = the buildable one) | `Multiplier` |
+   |---|---|
+   | `Inn` | 1.1 |
+   | `Guardhouse1` | 1.25 |
+   | `Marketplace1` | 1.3 |
+   | `Blacksmith1`, `Library1` | 1.0 |
+   | `Temple_Agrela1` | 1.5 |
+   | `Rogues_Guild1`, `Warriors_Guild`, `Rangers_Guild` | 2.0 |
+   | `Wizards_Guild1` | 4.0 |
+
+   **Hypothesis: `Multiplier` is the per-additional-copy cost escalation
+   factor** — Majesty charges progressively more for each further copy of
+   the same building. The ordering fits that reading: the buildings a
+   player spams (Inn 1.1, Guardhouse 1.25) escalate gently, while the
+   ones a player should not spam (Wizards_Guild 4.0) escalate steeply.
+   It also explains why tier-2/3 entries carry seemingly arbitrary
+   values (Marketplace2/3 = 1.0): those tiers are `NotBuildable` and
+   reached only by upgrade, so their `Multiplier` is never consulted and
+   is inert. Consistent too with `Flags value="NumberedName"` appearing
+   on exactly the build-several-of-them buildings.
+
+   **This is pattern-matching on shipped numbers, not a traced
+   mechanism. Do not promote it to a finding without either an exe trace
+   or a deliberate in-game check** (build two Inns and two Wizards'
+   Guilds, compare the second price against the first × Multiplier).
 4. **Why `Graveyard` deviates from the Monster→`Menu="2"` pattern, and
    whether a wrong-but-nonzero `Menu` value misfiles or breaks a
    building** (§8, from §2). **Restated after a §2 correction:** this
