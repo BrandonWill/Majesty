@@ -328,6 +328,32 @@ the existing IMAG/TILE docs)
   render nothing — no source describes the fallback, same class of gap
   as the missing-animation-frame question already flagged in the hero
   doc; not tested in-game here.
+
+  **Update (quest-rules cross-reference pass): the missing-`Crumble`
+  fallback question stays UNVERIFIED — re-checked against §16-§22 and
+  nothing there addresses what `$performaction` does with an absent
+  ImageSet (the quest-rules material is entirely GPL-level; it never
+  discusses art resolution). Recorded so the next session doesn't repeat
+  the search.** What the pass DID add is a fourth, fully independent
+  confirmation of the surrounding claim — that `Become_Rubble` is on
+  every building-death path, including quest-authored ones that
+  reimplement the teardown from scratch. `GPLMx/Rules/Quests_3.gpl`
+  lines 2236-2264, `Siege_Palace_Death` (read in full first-hand;
+  `GPL_QUEST_RULES_REFERENCE.md` §22 also cites it) is a bespoke
+  `IGDeathScript` installed onto the enemy palace at quest setup with the
+  shipped rationale "This is overwritten onto the evil palace at the
+  start of the mission, to allow the normal data structure for the palace
+  to be reusable later on" — it deliberately calls **neither**
+  `$building_death` **nor** `Palace_Death`, hand-rolling all six teardown
+  steps instead (`"type" = "Dead"` → `$Dump_Contained_Units` →
+  `$performaction ( thisagent, "Become_Rubble", thisagent )` →
+  treasury zero-out + `$dropgoldeveryone` → `$deleteagent` →
+  `$Siege_Victory`) — and it **still** calls the identical
+  `Become_Rubble` line. So even an author writing a building's death from
+  first principles, with no stock handler involved, treats the rubble
+  action as non-optional. That makes the `Crumble` requirement stronger
+  than "every stock path reaches it": every *authored* path checked
+  reaches it too.
 - [x] Minimap icon requirements.
 
   **Not a general building requirement — refuted the item's implicit
@@ -360,6 +386,46 @@ the existing IMAG/TILE docs)
   the minimap to resolve which of (a)/(b)/(c) is correct. Do not assume
   "probably a generic dot" — mark explicitly unknown, same standard the
   hero doc used for its own missing-animation-frame gap.
+
+  **Update (quest-rules cross-reference pass): option (c) is now RULED
+  OUT — ordinary buildings DO have a minimap representation. (a) vs. (b)
+  stays undistinguished, so the item remains UNVERIFIED overall, and a
+  new XML flag turned up that §2's field catalog is missing.** The
+  original three-way framing stood because nothing read so far had
+  looked for a minimap *opt-out*. There is one: `Flags
+  value="NotInMiniMap"` is a real shipped XML flag, found by direct grep
+  — 11 occurrences in `SDK/OriginalQuests/Data/M_Buildings.xml`, 1 in
+  `SDK/OriginalQuests/DataMX/MX_Buildings.xml`, plus a separate
+  population on `M_Characters.xml`/`MX_Characters.xml` entries. Every one
+  of the 11 building occurrences sits in a `<Game>` block that also
+  carries `NotBuildable` + `NoFlaggable` + `NotSpellTarget`, i.e. they
+  are all decorative props rather than real buildings — read two in full
+  to confirm the shape: `BBs1` `Name="banner_wood"` (`Menu="12"`,
+  `MaxHP="10"`, `DefaultSound="0"`) and `BBt1` `Name="treasure_chest1"`
+  (`Menu="12"`, `MaxHP="20"`). **No ordinary player building — no
+  Marketplace tier, Guardhouse tier, guild, temple, Inn, Blacksmith,
+  Library, Fairgrounds — carries `NotInMiniMap` anywhere in either
+  file.** An explicit opt-out flag whose entire shipped population is
+  props is only meaningful if the default for everything else is
+  "appears on the minimap," so (c) ("buildings simply don't appear
+  individually on the minimap") is refuted: ordinary buildings appear by
+  default, and the flag exists precisely so that banners and chests
+  don't. **What is still UNVERIFIED, unchanged:** whether that default
+  representation is an engine-computed dot/rectangle (a) or a
+  downscaled existing ImageSet (b) — the flag proves the behaviour
+  exists, not what art it draws from, and it does not affect §1's
+  separate confirmed finding that only the 3 Palace tiers have a
+  dedicated `Minimap` (setID 300) ImageSet. Still a Ghidra or in-game
+  question for (a)-vs-(b).
+
+  **Side finding worth carrying into §2's field catalog (which does not
+  currently list it): `Flags value="NotInMiniMap"`, `Flags
+  value="NoFlaggable"` and `Flags value="NotSpellTarget"` are real,
+  shipped, optional `<Game>`-block flags** — none of them appear on any
+  of §2's 5 sampled buildings, which is why that catalog missed them,
+  and all three are confirmed prop-only in this data. A genuinely new
+  *ordinary* building should set none of them; a new decorative
+  prop-style building should set all three plus `NotBuildable`.
 - [x] Palette constraints — same question as the hero doc: existing-only
   vs. quest-scoped-new-palette-allowed.
 
@@ -991,6 +1057,106 @@ most with existing research, the job here is COMPLETING the picture for
   bookkeeping (`Num_Guards`/`Max_Guards` counters, `Waiting_Guards`
   list) without also being one of the 3 real guard-prototype types —
   no source traced this far, out of this item's direct scope.
+
+  **Update (quest-rules cross-reference pass): NARROWED substantially,
+  and the narrowing goes the OPPOSITE way from what the wording above
+  implies. The bookkeeping's consumer side is now CONFIRMED entirely
+  type-agnostic at the GPL level — every reader and writer of the guard
+  pool is a bare `agent's "field"` access with no prototype or title
+  check. The only remaining blocker is the already-known field-
+  declaration/compiler question, not the bookkeeping itself.** The
+  original "no source traced this far" framing stood because the earlier
+  pass read the two *spawner* functions but not the guard's own birth
+  script or death script, which is where the attachment and the counter
+  updates actually happen. Traced the full cycle first-hand here (the
+  §18.7/§20.6 "buildings acting on their own" material in
+  `GPL_QUEST_RULES_REFERENCE.md` pointed at the field-set style of
+  question; the guard-specific chain below was read directly from GPL,
+  not taken from that reference):
+
+  - **Spawn.** `City_Guard_Spawner` (`TaskModules/Buildings/
+    Building_Guard.gpl` lines 556-591, re-read in full) does **not** set
+    `Home` at all. It spawns the guard **from the Palace**
+    (`$spawnunit(Palace, "City_Guard")`, or `"Veteran_City_Guard"` if
+    `#ATTRIB_ResearchGoodGuard` is set), then pushes itself onto
+    `Palace's "Waiting_Guardhouses" << ThisAgent` and returns, with the
+    shipped comment saying so verbatim: "Num_Guards will be updated when
+    the new Guard attaches to the Guardhouse, in its birthscript, which
+    will be run after we exit. It will restart this thread if needed."
+  - **Attach — this is the decisive part.** `City_Guard_Birth`
+    (`GPL/Hero_Births.gpl` lines 407-437, read in full) does:
+    `ThisAgent's "Home" = $ListMember (Palace's "Waiting_Guardhouses",
+    1);` → `$RemoveListMember (Palace's "Waiting_Guardhouses", 1);` →
+    `If ($IsDead (Home) == False) begin Home's "Guards" << ThisAgent;
+    (home's "num_guards") ++; $RestartGuardSpawnThread(Home,
+    #Guard_Spawn_Time); end`. **There is no check of any kind on what
+    kind of agent came out of that queue** — not a `"type"` check, not a
+    `"title"` check, not a prototype check. It is a FIFO pop plus three
+    bare dynamic-attribute operations. (`Palace_Guard_Birth`, lines
+    440-462, is the simpler sibling: `Home = $Parent(ThisAgent)`, then
+    the same `"Guards" <<` / `num_guards ++` pair, no queue, again no
+    type check.)
+  - **Death decrement.** `Guard_Death` (`GPL/Hero_Deaths.gpl` lines
+    140-163, read in full) does `Home = ThisAgent's "Home"` then, guarded
+    only by `$isvalidgamepiece(home)` and `$isdead(home) == FALSE`:
+    `Home's "Guards" -= ThisAgent`, `If ($AgentInList (ThisAgent, Home's
+    "Waiting_Guards")) Home's "Waiting_Guards" -= ThisAgent`, `(Home's
+    "Num_Guards") --`, `$RestartGuardSpawnThread(Home,
+    #Guard_Spawn_Time)`. Again no type/title/prototype check.
+  - **Respawn.** `RestartGuardSpawnThread` is an ordinary GPL function,
+    not an engine primitive (`Building_Guard.gpl` lines 594-611, read in
+    full) — `numGuards = thisAgent's "num_guards"; if (numGuards <
+    thisAgent's "max_guards") if ($IsRunning (thisAgent's
+    "Guard_Spawn_Function") == False) $RunThread (thisAgent's
+    "Guard_Spawn_Function", delay, thisAgent);`. Bare field reads, no
+    type check.
+  - **`Waiting_Guardhouses` lives on the Palace, not on the guard-capable
+    building** — `prototype.gpl` line 479, declared inside the `Palace`
+    prototype's field list only. So a custom building pushing itself onto
+    that queue needs to declare nothing new of its own for the queue
+    half to work; the Palace already has the list.
+
+  **So the answer to the item's own question, as far as source can
+  answer it: YES, a custom mechanic would integrate with the real
+  bookkeeping — provided the custom building can hold the fields.** The
+  shipped cycle would pick it up unchanged: push self onto `Palace's
+  "Waiting_Guardhouses"`, `$SpawnUnit(Palace, "City_Guard")`, and the
+  base game's own `City_Guard_Birth` will set the guard's `"Home"` to
+  your building, append to your `"Guards"` list, increment your
+  `"num_guards"`, and arm your `"Guard_Spawn_Function"`; `Guard_Death`
+  will decrement and re-arm on loss. **What is STILL UNVERIFIED is
+  narrower and already stated elsewhere in this doc:** whether a
+  `{Building}`-prototype `.dat` block can declare/set
+  `num_guards`/`max_guards`/`Guards`/`Waiting_Guards`/
+  `Guard_Spawn_Function` at all, given `building` declares none of them
+  (the same compiler-strictness question as the `Hero_Guarded` anomaly
+  in the previous checklist item). If the compiler refuses, the route is
+  a hand-written 5th prototype block, exactly as the previous paragraph
+  says — the difference this update makes is that the *bookkeeping* is
+  no longer a second, independent unknown on top of that.
+
+  **Two real gotchas found while tracing this, both first-hand, neither
+  previously noted:** (1) `Building_Guard` and `Release_Guards` **are**
+  partly title-gated — `If (ThisAgent's "Title" == "Guardhouse")` wraps
+  the arrow volley (`#ATTRIB_ResearchArrows` →
+  `$PerformAction(ThisAgent,"Guardhouse_Arrow",...)`), the 1-in-100
+  "wander" behaviour, and the `#ATTRIB_ResearchGoodGuard` guard-swap
+  — exact sites, grepped: line 46 (`If (ThisAgent's "Title" ==
+  "Guardhouse")`, wrapping the wander roll and the guard-swap, in
+  `Building_Guard`), line 89 (same test, wrapping the arrow volley, in
+  `Release_Guards`), and line 199 (`If (Home's "Title" == "Guardhouse"
+  && Home's "TaskName" == "Wander")`, in `Guard_Find_Target` — so the
+  *guard* title-checks its home too). A custom building reusing these functions
+  keeps the core release/scan loop but **silently loses all three
+  Guardhouse-only behaviours**, since its `.dat` `title` won't be
+  `Guardhouse` (and per the `CanIBuildThisBuilding` finding in §4, the
+  `title` compared here is the `.dat` `title` field). (2)
+  `Building_Guard`'s very first statement is `if (thisagent's "enemytype"
+  == "nothing") return;` — so a custom guard-capable building must also
+  set `EnemyType` in its `.dat` block (shipped precedent for
+  `EnemyType` on non-guard buildings exists: `[Wizards_Tower]` and
+  `[Dwarven_Settlement]` both set `(EnemyType Monster)` in
+  `Building_Data.dat`), or the scan loop no-ops on the first tick.
 - [x] `subtype`/prototype selection — how does a `.dat` entry's `{Building
   ...}` block vs. `{Guild ...}` block vs. other prototype blocks actually
   get selected, and what does choosing the wrong prototype type break?
@@ -1203,6 +1369,57 @@ recruitment, trace it fully)
     is proximity/title-based only — it never reads terrain data, so
     this doc's separate terrain-tile findings are unaffected, and the
     footprint/overlap-collision question remains fully open.
+
+    **Update (quest-rules cross-reference pass — additive detail, no
+    contradiction): WHICH string `CanIBuildThisBuilding` branches on is
+    now confirmed, and it is a different string from the one
+    `$DisableUnitType` uses. That distinction is load-bearing for a new
+    building and was not stated above.** Re-read
+    `GPL/Rules/construction_rules.gpl` in full first-hand rather than
+    relying on §16.1: every branch opens with `title = thisbuilding's
+    "title";` then compares `title == "wizards_tower"` /
+    `"marketplace"` / `"trading_post"` — that is the **`.dat` `title`
+    field**, not the XML `Description Name`. Read directly from
+    `SDK/OriginalQuests/GPL/Building_Data.dat`, the shipped titles are
+    `(title Wizards_Tower)`, `(title Marketplace)`, `(title
+    Trading_Post)` — mixed case in the `.dat`, lowercase in the GPL
+    comparison, so **GPL's `==` on these title strings is
+    case-insensitive** (same conclusion the `$DisableUnitType` item
+    below reaches independently for its own lookup, but confirmed here
+    from its own source, not carried over by analogy). Two real
+    consequences:
+    - **`CanIBuildThisBuilding` branches are per-building-FAMILY, not
+      per-tier.** All three Marketplace tiers share `(title
+      Marketplace)` and all three Wizards Guild tiers share `(title
+      Wizards_Guild)` (read directly — `[Marketplace1/2/3]` and
+      `[Wizards_Guild1/2/3]` blocks differ only in `(Level N)` and
+      their per-tier values). So the `marketplace` branch applies to
+      every Marketplace tier at once, and the `wizards_tower` branch's
+      `$listtitles(masterlist,"wizards_guild")` proximity test is
+      satisfied by **any** tier of Wizards Guild. **A new building
+      cannot get tier-specific rules out of this function** without
+      also giving each tier a distinct `.dat` `title` — which the
+      shipped data never does for a tiered family.
+    - **This is the exact inverse of `$DisableUnitType`'s granularity**
+      (which keys per-tier on the XML `Name` — see that item below,
+      confirmed from the Marketplace `title`-collision case). So the two
+      GPL-reachable build gates a new building can be subject to
+      address it by two different strings at two different
+      granularities: quest-level enable/disable is per-tier by XML
+      `Name`, placement rules are per-family by `.dat` `title`. Get one
+      of the two strings wrong and the gate silently does nothing.
+    - **Also confirmed first-hand:** every `$ListObjects` in the
+      function passes `#MyPlayer`, so the proximity checks are
+      explicitly scoped to the building's own player — the "competing
+      marketplace" test does not see an opponent's markets. Not
+      previously stated.
+    - **`dependencies` stays UNVERIFIED, re-confirmed:** the only
+      appearance of the parameter in the live body is inside the
+      commented-out `$DebugOut` and the commented-out design sketch at
+      the end of the function (`buildRequirements`/`maxBuildRange`/
+      `$GetClosest` — none of which exist as real fields or primitives
+      elsewhere). Re-checked against §16-§22: nothing in the quest-rules
+      material feeds or reads it either. Stays unknown.
     **Confirmed absence, not an oversight** (this part of the original
     finding holds): grepped the entire corpus for any building-specific
     analog of `Researched_Item()` (a function checking an attribute
@@ -1214,6 +1431,46 @@ recruitment, trace it fully)
     shipped quest actually uses them, and their exact semantics
     (limit count? limit by title? per-player?) are not documented in
     any GPL/XML source read in this pass — mark explicitly UNKNOWN.
+
+    **Update (quest-rules cross-reference pass): the zero-call-sites
+    half of this claim is now CONFIRMED, not merely "not found yet" —
+    the negative result is upgraded, but the semantics question stays
+    UNKNOWN.** The original UNVERIFIED framing left open "maybe a
+    shipped quest calls these somewhere the earlier pass hadn't read."
+    That gap is now closed: the most likely place for a shipped quest
+    to call a build-limit primitive is quest-init/rules code, and all
+    15 `Rules/` files (`GPL/Rules/`: `construction_rules.gpl`,
+    `Demo.gpl`, `epic_quest_scripts.gpl`, `Quest_Actives.gpl`,
+    `victory_conditions.gpl`; `GPLMx/Rules/`:
+    `mx_Construction_Rules.gpl`, `mx_Demo.gpl`,
+    `mx_Epic_Quest_Scripts.gpl`, `mx_Quest_Actives.gpl`,
+    `mx_Victory_Conditions.gpl`, `Quests_1.gpl`, `Quests_2.gpl`,
+    `Quests_3.gpl`, `Random_Events.gpl`, `Special_Events.gpl`) have now
+    been read in full by the quest-rules pass
+    (`GPL_QUEST_RULES_REFERENCE.md` §16-§22) and **none of the three
+    primitives is mentioned anywhere in that reference or in any of
+    those files.** Re-confirmed first-hand here, not taken on the
+    reference doc's word: a case-insensitive grep for `buildinglimit`
+    across every `.gpl` file in both repos returns **zero matches**,
+    and a grep across the whole of `SDK/` returns matches **only** in
+    the two `SDK/Extras/GPL User Define[d] Language template for
+    Notepad++.xml` keyword lists (`Keywords4`, the same
+    engine-primitive-declaration evidence the original finding already
+    cites) — i.e. the primitives exist in the compiler's keyword table
+    and literally nowhere else in the shipped corpus, quest rules
+    included. **What is now settled:** no shipped quest, base or
+    expansion, uses `$SetBuildingLimit`/`$RemoveBuildingLimit`/
+    `$RemoveAllBuildingLimits`. **What stays UNKNOWN, unchanged:**
+    their argument shapes and exact semantics (limit count? by title?
+    per-player? does the limit hide the build-menu entry or just refuse
+    the placement?) — with zero call sites in the entire corpus there
+    is no usage example anywhere to infer a signature from, so this is
+    now a *definitively* Ghidra-only question rather than a "keep
+    looking in GPL" one (already tracked as `TODO-Ghidra.md` §5.3).
+    Note the contrast with `$DisableUnitType`, which IS heavily used by
+    shipped quests (below) — these two look like sibling build-gating
+    primitives but only one of them has any shipped usage at all, and
+    that difference is real, not an artifact of incomplete searching.
   - **What actually makes a building's OWN entry exist in the menu at
     all (as opposed to being enabled/disabled) is the plain
     `CanUse value="HumanPlayer"` + `Menu value="N"` XML pair — already
@@ -1247,6 +1504,113 @@ recruitment, trace it fully)
     question of whether the menu LIST itself is hardcoded vs.
     data-driven — that one did not require Ghidra to resolve, but the
     enable/disable bit's storage mechanism genuinely would).
+
+    **Update (quest-rules cross-reference pass): NARROWED, not closed.
+    The "where does the bit live" half stays UNVERIFIED exactly as
+    written above — but three separate properties of the primitive are
+    now confirmed first-hand, and they rule out two of the guesses this
+    bullet itself offers.** The original framing stood because the
+    earlier pass had only read `Demo.gpl` and `epic_quest_scripts.gpl`
+    and so had a two-call-site sample; the quest-rules pass
+    (`GPL_QUEST_RULES_REFERENCE.md` §17.1, §22.6a) read all 15 `Rules/`
+    files, and the shipped call-site population is roughly 120 calls,
+    which is enough spelling and context variance to read real
+    properties off. Each of the three below was re-verified directly in
+    the cited source, not taken from the reference doc:
+
+    1. **No player or agent parameter exists — the signature is exactly
+       one type-name string, at every shipped call site.** Confirmed by
+       grepping every `.gpl` file in both repos for
+       `isableunittype`/`nableunittype`: every hit is
+       `$disableunittype("<Name>")` / `$enableunittype("<Name>")` with a
+       single string literal — `GPL/Rules/Demo.gpl`'s 22-call init
+       block, `GPLMx/Rules/Quests_2.gpl` lines 829-853 (the fixed-roster
+       quest, ~24 calls in one block), `Quests_1.gpl` 627/1911,
+       `Quests_3.gpl` 24-25/1256, `mx_Epic_Quest_Scripts.gpl` 44-48,
+       166-167, 461, 688-701, 944-954, 1354-1367, 1581, 1763,
+       1902-1903, 2093-2103, and the enable sites listed in (2). **So
+       "a per-player bitmask" cannot be selected by argument** — if the
+       storage is per-player at all, the player must be implicit.
+    2. **It is not scoped to the calling agent's owning player — this is
+       the one guess the new evidence positively refutes.**
+       `GPL/Building_Deaths.gpl` line 696 (read in full, function
+       `Hidden_Sword_Death`) calls `$Enableunittype("Dwarven_Settlement")`
+       from a **building death script**, under the shipped authored
+       comment "Enable the Dwarven Settlement, so that the player can
+       build it in order to give the magic sword to each of the Heroes."
+       The agent running that death script is a `Hidden_sword_site`,
+       and that unit type is `CanUse value="Monster"` — read directly
+       from `SDK/OriginalQuests/Data/M_Buildings.xml`, entry `BBe1`
+       `Name="Hidden_sword_site"`, which also carries `Flags
+       value="NotBuildable"`. So a **Monster-owned** agent's death
+       script unlocks a **HumanPlayer** build-menu entry, in shipped,
+       playable content ("Quest for the Magic Sword"). **Honest bound on
+       this:** the evidence is authored intent plus the shipped comment,
+       not an engine trace — strictly it proves Cyberlore expected the
+       call to reach the human player's menu from a monster-owned
+       caller, and if the engine actually keyed off the caller's owner
+       that shipped quest would be broken. Treat as strong narrowing,
+       not proof.
+    3. **The lookup key is a per-TIER unit-type name string, matched
+       case-insensitively — and it is definitively NOT the `.dat`
+       `title` field and NOT the 4-char XML `ID`.** The decisive case is
+       Marketplace: all three tiers in
+       `SDK/OriginalQuests/GPL/Building_Data.dat` share the identical
+       `(title Marketplace)` (read directly — `[Marketplace1]`,
+       `[Marketplace2]`, `[Marketplace3]` blocks, differing only in
+       `(Level 1/2/3)` and revenue values), yet shipped quests disable
+       `"Marketplace3"` alone ("//No level 3's of applicable buildings",
+       `Demo.gpl`) and `"Marketplace1"` alone
+       (`mx_Epic_Quest_Scripts.gpl` line 461, "Player can't build
+       markets in this quest") to genuinely different effect. A
+       `title`-keyed lookup could not distinguish those. The strings
+       that DO distinguish them are the per-tier XML
+       `<Description ... Name="Marketplace1/2/3">` values (and,
+       identically spelled, the `.dat` block names) — **so the key is
+       the per-tier name, and a new building must be addressed by its
+       XML `Name`, not by its `title` or its `ID`.** Case-insensitivity
+       is proven by shipped spelling variance against the real XML
+       `Name` attributes, all read directly:
+       `$enableunittype("fairgrounds")` vs `Name="Fairgrounds"`;
+       `$disableunittype("Magicbazaar")` vs `Name="MagicBazaar"` and
+       `("Sorcerersabode")` vs `Name="SorcerersAbode"`
+       (`DataMX/MX_Buildings.xml`); `("Temple_dauros1")` vs
+       `Name="Temple_Dauros1"`; `("rogues_guild1")` vs
+       `Name="Rogues_Guild1"`; `("Warriors_guild")` vs
+       `Name="Warriors_Guild"`; and `Dwarven_Settlement` appears as
+       `"dwarven_Settlement"`, `"Dwarven_settlement"` and
+       `"Dwarven_Settlement"` in three different shipped files, all
+       plainly meaning the same type.
+
+    **What is still genuinely UNVERIFIED after this, unchanged:** where
+    the enable/disable bit is actually stored (global per unit type vs.
+    per-player-with-implicit-player), and whether the name resolution
+    indexes the compiled DUNT record's name or the `.dat` block name —
+    those two strings are identical for every case checked, so no
+    shipped data can separate them. Still a Ghidra question
+    (`TODO-Ghidra.md` §5.2, which does now exist as a scoped item —
+    the "not yet a scoped item; should be added" note above is stale).
+
+    **Usage-pattern enrichment, worth carrying into the final guide
+    (this is the part that is only usage, said plainly rather than
+    dressed up as a storage answer):** the disable-at-init /
+    enable-as-reward pair is the base game's main mid-quest progression
+    device, not a rare trick — `GPL_QUEST_RULES_REFERENCE.md` §22.6a,
+    re-verified first-hand: `epic_quest_scripts.gpl` lines 867-880
+    (`dark_forest_victory`) re-enables **14 building types in one
+    block**, one call each with no batch form, immediately followed by
+    `$ElvesVoice_setOperative(1)`/`$dwarvesVoice_setOperative(1)`; line
+    125 re-enables `"fairgrounds"` alone as a staged reward paired with
+    `$messageflag(palace,#message_barren_fairground)`; line 1463
+    (`Slay_Dragon_Victory`) re-enables `"Dwarven_Settlement"`
+    conditionally. Combined with (2), that gives **three distinct
+    call-site classes for the enable half** — a polled victory/event
+    thread, a quest-flag-guarded staged unlock, and a building's own
+    `IGdeathscript` — where the earlier pass had only seen the polled
+    form. For a new building this means: expect quests to gate it, and
+    if your new building is meant to unlock something, its own
+    `IGdeathscript`/`birthScript2` is a confirmed-legal place to call
+    `$EnableUnitType` from.
 - [x] Is the build-menu list hardcoded (same limitation class as the
   already-confirmed "building-to-panel mapping is hardcoded per building
   class" finding) or is it data-driven from the XML/`.dat` definitions?
@@ -1782,6 +2146,82 @@ recruitment, trace it fully)
   question this pass surfaced, not one carried over from either doc's
   existing Known Gaps.
 
+  **>>> RETRACTION (quest-rules cross-reference pass) — the premise of
+  the caveat above is WRONG, and the wrong text is kept visible on
+  purpose, per this project's "Retracted Claims" convention. <<<**
+
+  **`AI_Takeover` DOES have an XML `<Description>` entry. It is the very
+  first entry in the mod's OWN overlay copy of the file:**
+  `MyQuest/MyAI/Data/MX_Buildings.xml` line 2 —
+  `<Description type="Unit" subType="Building" ID="AI_Takeover"
+  Name="AI_Takeover" Description="AI Takeover">` — read directly, and
+  present identically in all three sibling mod folders
+  (`IceSpell_Quest/MyAI/Data/MX_Buildings.xml`,
+  `PanelTest_Quest/MyAI/Data/MX_Buildings.xml`). **Why the original claim
+  stood:** the earlier pass grepped the *shipped* `SDK/OriginalQuests/
+  Data/M_Buildings.xml` and `SDK/OriginalQuests/DataMX/MX_Buildings.xml`
+  and correctly found zero matches there — but a mod ships its own full
+  overlay copy of `MX_Buildings.xml` under `MyAI/Data/`, which is exactly
+  where a mod-added building's XML entry has to live. The grep was right
+  about the two files it looked at and wrong about the conclusion drawn
+  from them.
+
+  **What this changes:**
+  - **The "necessary but not sufficient" conclusion still stands, and is
+    now confirmed by positive evidence rather than by an absence.** The
+    mod author wrote BOTH layers: a `.dat` block (`[AI_Takeover]`,
+    `{Building}` prototype) *and* a full XML `<Description>` with
+    `CanUse="HumanPlayer"`, `Menu="2"`, `ImageIDBase="ABr1"` (reusing
+    the Embassy's sprite record), `DefaultSound="Embassy"`,
+    `DialogID="MX22"`, `Cost="3000"`, `Multiplier="3.5"`,
+    `IncomeType="2"`, `IncomeAmount="30"`, `MaxHP="300"`,
+    `SightRange="200"`, `MaxGuildMembers="2"`, `Flags value="IsGuild"`,
+    `Flags value="HasHPBar"`, `HelpID="h167"`. That field list is a real
+    worked example of §2's mandatory-field catalog being satisfied by a
+    fan-authored building, which the doc did not previously have.
+  - **The `.dat`-only spawn question loses its supporting example and
+    stays UNVERIFIED — but it should no longer be framed as "AI_Takeover
+    spawns with no XML counterpart," because it has one.** There is now
+    **no known `.dat`-only building anywhere in this workspace** to
+    reason from. Re-checked the spawn-heavy quest-rules material
+    (`GPL_QUEST_RULES_REFERENCE.md` §17.2/§19.x/§21.7, plus the shipped
+    `$SpawnUnit` call sites themselves) for a counter-example and found
+    none: every building-type string ever passed to `$SpawnUnit` in
+    shipped GPL resolves to BOTH an XML `<Description>` and a `.dat`
+    block. Verified on the clearest case — `$spawnunit(bldg,
+    "BrokensewerMain","maxhp")` (`GPLMx/Rules/Quests_2.gpl` line 203,
+    also `GPLMx/mx_Hero_Deaths.gpl` line 54, `Quests_1.gpl` 1673-1674)
+    has both `DataMX/MX_Buildings.xml` `Name="BrokenSewerMain"` (ID
+    `BBv1`) and `GPLMx/mx_Building_Data.dat` `[BrokenSewerMain]`. **So
+    the shipped corpus contains zero evidence either way, and the
+    question is only settleable in-game** — worth saying plainly so the
+    next session doesn't re-run this search.
+  - **Genuinely new, and confirmed, from the same source:
+    `$SpawnUnit` really does spawn BUILDINGS, not just characters and
+    monsters — with a `"MaxHP"` string flag that makes them arrive
+    pre-completed.** Shipped examples, all read first-hand:
+    `$spawnunit(palace,"general_housing",palace,"MaxHP")` ×5 in
+    `Housing_Boom` (`GPLMx/Rules/Random_Events.gpl` lines 364-368), with
+    base-game siblings at `GPL/Rules/epic_quest_scripts.gpl` line 994
+    (`$spawnunit(Palace,"general_housing",$RandomCoord(Palace,525,1500),
+    "MaxHP")`) and `GPL/Hero_Births.gpl` line 203
+    (`$spawnunit(palace,"general_housing","maxhp")` — the 3-argument
+    form, no coordinate, fired when `palace's "Waiting_population" >=
+    #population_waiting_limit`, i.e. **the base game grows its own
+    housing by GPL-spawning buildings**);
+    `$SpawnUnit(Palace, "BrokenSewerMain",
+    $RandomCoord(Palace,300,1000), #Player_3, "MaxHP")` in
+    `Quests_1.gpl` 1673; `$SpawnUnit(ThisAgent, ThisAgent's "Title",
+    $RandomCoord(ThisAgent, #Autospawn_Lair_Min_Dist,
+    #Autospawn_Lair_Max_Dist), "MaxHP")` in `GPLMx/TaskModules/Buildings/
+    Autospawn_Lair.gpl` line 29. That last one is worth noting for a new
+    building specifically: **it spawns by passing the agent's own `.dat`
+    `title` as the type string**, i.e. `$SpawnUnit`'s type argument
+    accepts the same `title` string the `.dat` uses — but since every
+    checked case has an identically-spelled XML `Name`, this still does
+    not establish which table resolves it (same ambiguity as
+    `$DisableUnitType`'s, §4).
+
   **No other gap found beyond these two.** Re-scanned
   `GPL_MODDING_GUIDE.md`'s own "Open Questions Catalog" for anything
   framed as blocking "add a new building" specifically — none of its
@@ -1866,6 +2306,68 @@ synthesis step, not just background context.)
     cosmetic UI/tooltip mismatch rather than a crash, given `Produces`
     was never traced to a GPL consumer in this doc's §2 research, but
     this is inference, not confirmed.
+
+    **Update (quest-rules cross-reference pass): the "must they name the
+    same hero" half is now ANSWERED — NO, they demonstrably need not,
+    and the shipped base game itself doesn't make them match. The
+    remaining half (what `Produces` actually drives) stays UNVERIFIED.**
+    The original framing stood because neither doc had put the two
+    declarations side by side on a multi-hero guild. Decisive shipped
+    case, both halves read directly:
+    - `SDK/OriginalQuests/Data/M_Buildings.xml`, `Warriors_Guild`
+      (`ABV1`): `<Produces><Unit ID="Paladin"/><Unit ID="Warrior"/><Unit
+      ID="Warrior_of_Discord"/></Produces>` — **three** hero types.
+    - `SDK/OriginalQuests/GPL/Building_Data.dat`, `[Warriors_Guild]`:
+      `(member_title warrior)` — **one** string, naming only one of the
+      three.
+    So `Produces` is a *list* and `member_title` is a *single string*;
+    they are structurally incapable of being "the same declaration
+    twice," and the base game ships them deliberately mismatched. **A
+    new recruiting building does not need them to agree.**
+    - **`member_title` is confirmed to be the one that actually drives
+      spawning**, re-verified first-hand at three independent call sites:
+      `GPL/TaskModules/Buildings/Lair.gpl` line 157 (`Hero_Generator`:
+      `If ($ListSize (ThisAgent's "Members") < ThisAgent's "Max_Members")
+      $SpawnUnit (ThisAgent, ThisAgent's "Member_Title");`), its
+      expansion twin `GPLMx/TaskModules/Buildings/mx_Lair.gpl` lines
+      188-192 (identical but capped on `$getattribute(thisagent,
+      #ATTRIB_MaxGuildMembers)` instead of the `.dat` `Max_Members`
+      field — a real base/expansion divergence, confirmed by reading
+      both), and `GPLMx/Rules/Quests_3.gpl` lines 1494-1500 (the
+      GPL-implemented AI kingdom of `GPL_QUEST_RULES_REFERENCE.md` §21.6:
+      `members = $ListSize(guild's "members"); max_members =
+      $getattribute(guild, #ATTRIB_MaxGuildMembers); if (members <
+      max_members) ... Type = Guild's "Member_Title"; enemy_hero =
+      $SpawnUnit(Guild, Type, $LocationOf(guild)); $Generate_Character_
+      Attributes(enemy_hero);`). All three read `Member_Title` and spawn
+      exactly that one type.
+    - **`Produces` has zero GPL readers anywhere** — grepped every
+      `.gpl` file in both repos for the string `"Produces"`: no matches.
+      So it is consumed by the engine/UI only, never by script. That
+      upgrades the original "inference, not confirmed" note about the
+      failure mode: a mismatch cannot break any *GPL* logic, because no
+      GPL logic reads `Produces` at all. **What `Produces` actually
+      drives on the engine side stays UNVERIFIED** (build-menu tooltip?
+      the recruit panel's button roster? nothing at all?) — no
+      GPL/XML/`.dat` source answers it, and §16-§22 does not touch it.
+    - **Also confirmed, and not previously in this doc: `member_title`
+      never appears alone — every one of the ~28 `.dat` entries that
+      sets it also sets `member_basicscript` on the next line**
+      (`Building_Data.dat`, read in full: `(member_title warrior)
+      (member_basicscript warrior_tree)`, `(member_title Elf)
+      (member_basicscript elf_tree)`, `(member_title healer)
+      (member_basicscript healer_tree)`, … zero exceptions across all
+      `{Guild}`/`{Dwarven_Settlement}` entries). **So a recruiting
+      building's `.dat` block needs the PAIR** — the recruited hero's
+      title AND that hero's decision-tree function — not just
+      `member_title`. Confirmed absent from every non-recruiting entry:
+      no `{Building}`/`{GuardHouse}`/`{Palace}`/`{Tower}`/`{Library}`/
+      `{Fairgrounds}` entry sets either field, **including `Guardhouse1`
+      and `Palace1`, which DO have XML `Produces` lists**
+      (`City_Guard`, and `Palace_Guard`/`Tax_Collector`/`Peasant`
+      respectively, per §2) — a second, independent shipped case of
+      `Produces` present with `member_title` entirely absent, from a
+      different building family than Warriors_Guild.
   - **Capacity gating — `MaxGuildMembers`/`Flags value="IsGuild"` (XML,
     this doc's §2) and the corresponding `.dat`-side `max_members`
     field feeding `GuildHasOpenSlots`** (hero doc §5 item 2, cited not
@@ -1959,6 +2461,13 @@ synthesis step, not just background context.)
 **Consolidated from every UNVERIFIED/UNKNOWN item flagged across §1-§7 —
 cited from where each was first raised, not re-derived here:**
 
+> **Pointer:** §9 of this file reconciles a further set of these items
+> against the later quest-rules research (`GPL_QUEST_RULES_REFERENCE.md`
+> §16-§22 and `GPL_MODDING_GUIDE.md` §12-§15), labelling each
+> CLOSED / NARROWED / UNCHANGED. Items already carrying an inline
+> **`Update (quest-rules cross-reference pass)`** note below are covered
+> by an earlier pass and are not repeated in §9 — see §9.0.
+
 - **Whether Palace's `Minimap` IMAGE set and lack of a `Build` set are
   enforced/required-by-engine, or coincidental to the one Palace example
   checked** — no second birthScript-less building type was checked to
@@ -1971,10 +2480,27 @@ cited from where each was first raised, not re-derived here:**
 - **Whether omitting a `Crumble` ImageSet on a new building crashes
   `$performaction(...,"Become_Rubble",...)` outright or just renders
   nothing** — not tested in-game (§1).
+  **Re-checked against §16-§22 (quest-rules cross-reference pass): still
+  UNVERIFIED, nothing found — the quest-rules material is entirely
+  GPL-level and never discusses art/ImageSet resolution. Don't re-run
+  this search.** The pass did add a fourth independent confirmation of
+  the surrounding requirement: `Siege_Palace_Death`
+  (`GPLMx/Rules/Quests_3.gpl` 2236-2264), a bespoke quest `IGDeathScript`
+  that calls neither `$building_death` nor `Palace_Death` and hand-rolls
+  the whole teardown, still calls `$performaction(thisagent,
+  "Become_Rubble", thisagent)` (§1).
 - **What actually represents an ordinary (non-Palace) building on the
   minimap** — generic engine-computed dot, a downscaled existing
   ImageSet, or no per-building representation at all; not distinguished
   by any GPL/XML source read (§1).
+  **Update (quest-rules cross-reference pass): the third option is now
+  RULED OUT — ordinary buildings do appear.** `Flags
+  value="NotInMiniMap"` is a real shipped opt-out flag (11 building
+  occurrences in `M_Buildings.xml`, 1 in `MX_Buildings.xml`, all on
+  decorative props that also carry `NotBuildable`/`NoFlaggable`/
+  `NotSpellTarget` — e.g. `BBs1` `banner_wood`, `BBt1`
+  `treasure_chest1`); no ordinary player building carries it. Dot-vs-
+  downscaled-ImageSet is still open (§1).
 - **What the XML `<Multiplier>` field's real engine consumer is** — no
   GPL function reads it directly; only its correlation with revenue-type
   buildings was confirmed, not its actual effect (§2).
@@ -1997,10 +2523,30 @@ cited from where each was first raised, not re-derived here:**
 - **The internal storage mechanism `$DisableUnitType`/`$EnableUnitType`
   write to** — opaque engine primitive, no GPL-visible body, not
   addressed in any reviewed Ghidra research file (§4).
+  **Update (quest-rules cross-reference pass): NARROWED, still open — see
+  §4 for the full trace. Confirmed: the signature is one type-name string
+  with no player/agent parameter at any of ~120 shipped call sites; the
+  effect is not scoped to the calling agent's owner (a Monster-owned
+  `Hidden_sword_site`'s death script unlocks a HumanPlayer build-menu
+  entry, `Building_Deaths.gpl` line 696); and the lookup key is the
+  per-tier XML `Description Name`, case-insensitive — definitively not
+  the `.dat` `title` (all three Marketplace tiers share `(title
+  Marketplace)` yet are gated independently) and not the 4-char `ID`.
+  Where the bit itself lives is still Ghidra-only (`TODO-Ghidra.md`
+  §5.2).**
 - **Whether `$SetBuildingLimit`/`$RemoveBuildingLimit`/
   `$RemoveAllBuildingLimits` are used by any shipped quest, and their
   exact semantics** — real engine primitives with zero found GPL call
   sites anywhere in the corpus (§4).
+  **Update (quest-rules cross-reference pass): the "used by any shipped
+  quest" half is now CONFIRMED NO, not merely unfound.** All 15
+  `Rules/` files have been read in full by the quest-rules pass and
+  mention none of the three; a case-insensitive grep for `buildinglimit`
+  across every `.gpl` file in both repos returns zero, and across all of
+  `SDK/` returns only the two Notepad++ `Keywords4` template lists.
+  Semantics stay UNKNOWN and are now definitively Ghidra-only
+  (`TODO-Ghidra.md` §5.3) — with zero call sites there is no usage
+  example anywhere to infer a signature from.
 - **Why `Dwarven_Settlement` got its own bespoke prototype instead of
   reusing `{Guild}` the way `Elven_Bungalow`/`Gnome_Hovel` did** — no
   functional difference confirmed between the two paths (§3).
@@ -2012,10 +2558,34 @@ cited from where each was first raised, not re-derived here:**
   entry can successfully spawn via `$SpawnUnit`/`$CreateAgent`** — the
   `AI_Takeover` example spawns via GPL with no traced XML counterpart,
   but the spawn call site itself wasn't traced further (§6).
+  **Update (quest-rules cross-reference pass): the supporting example
+  here was wrong and is retracted in §6 — `AI_Takeover` DOES have an XML
+  `<Description>`, in the mod's own overlay copy
+  `MyQuest/MyAI/Data/MX_Buildings.xml` line 2 (the earlier grep only
+  covered the two shipped SDK copies). The QUESTION stays UNVERIFIED,
+  but there is now no known `.dat`-only building anywhere in this
+  workspace to reason from, and re-checking §16-§22's spawn-heavy
+  material plus every shipped `$SpawnUnit` building-type target turned up
+  zero counter-examples — each one resolves to both an XML
+  `<Description>` and a `.dat` block. Settleable only in-game; don't
+  re-run the source search.**
 - **Whether `Produces` and a recruiting building's `member_title` field
   must name the same hero, or serve genuinely different purposes** —
   newly surfaced by this pass's §7 synthesis, not previously flagged in
   either doc.
+  **RESOLVED in part by the quest-rules cross-reference pass (see §7-C):
+  they need NOT match, and the shipped base game ships them deliberately
+  mismatched** — `Warriors_Guild`'s XML `Produces` lists three heroes
+  (`Paladin`/`Warrior`/`Warrior_of_Discord`) while its `.dat`
+  `(member_title warrior)` names one; `Guardhouse1`/`Palace1` have
+  `Produces` lists and no `member_title` at all. `member_title` (+ its
+  always-paired `member_basicscript`) is what GPL actually spawns from
+  (`Lair.gpl` 157, `mx_Lair.gpl` 188-192, `Quests_3.gpl` 1494-1500);
+  `Produces` has **zero** GPL readers corpus-wide. **Still UNVERIFIED:**
+  what `Produces` drives on the engine side (tooltip? panel roster?
+  nothing?). Also newly confirmed: a recruiting building's `.dat` block
+  needs `member_title` AND `member_basicscript` as a pair — all ~28
+  shipped entries that set one set the other, zero exceptions.
 - **Whether a `.dat`/GPL compile step cross-validates a `{Guild}`
   building's `member_title` string against a real, existing hero
   `title`** — same open compiler-validation-strictness question as the
@@ -2078,6 +2648,529 @@ none of it has been shown to block basic building or building+hero
 functionality, only to leave some secondary behaviors (minimap
 representation, construction-stage visual selection, exact recruit-cost
 deduction mechanics) without a citation-backed explanation.
+
+### 9. Reconciliation Pass Against the Quest-Rules Research (§16-§22)
+
+**What this section is.** A cross-reference-only pass. It reads no new
+GPL source of its own; its evidence base is
+`GPL_QUEST_RULES_REFERENCE.md` (quest-scripting layer, **§16-§22**) and
+`GPL_MODDING_GUIDE.md` **§12-§15** (building-unlocked guild skills,
+effectors, cross-system primitive sweep, hero decision trees), plus
+targeted confirmation reads of the primary GPL/XML files those
+subsections themselves cite.
+
+**Numbering convention, stated explicitly so no reader has to know the
+convention:** a bare `§1`-`§15` means **`GPL_MODDING_GUIDE.md`**; a bare
+`§16`-`§22` means **`GPL_QUEST_RULES_REFERENCE.md`**. This section always
+writes the filename out. Within *this* file, `§1`-`§9` mean this
+document's own coverage areas — where that is ambiguous the text says
+"this doc's §N".
+
+**Evidence rule specific to this section:** a citation inside a reference
+doc is **not** a primary source. Every CLOSED/NARROWED claim below cites
+both (a) the reference-doc subsection and (b) the primary GPL/XML
+file+line that subsection itself names. Where a subsection does not name
+a primary source precisely enough to re-check, the item is recorded as
+**NARROWED, not CLOSED**, and says so.
+
+**Outcome labels used below:** **CLOSED** (confirmed answer now exists),
+**NARROWED** (still open, but the answer space shrank, or it moved from
+"unknown mechanism" to "known mechanism, unknown internal detail"),
+**UNCHANGED** (the newer material has nothing to say — listed on purpose
+so the next session does not re-search it).
+
+---
+
+#### 9.0 Scope correction found on arrival — most of the highest-value leads were ALREADY reconciled
+
+**Read this before using this section.** An earlier cross-reference pass
+against §16-§22 has already landed inline updates in this doc and in
+`TODO-New-Hero-Requirements.md`, marked with the literal string
+**`Update (quest-rules cross-reference pass)`**. That pass already
+covers, and this section deliberately does **not** re-derive:
+
+- this doc's §1 missing-`Crumble` fallback (line ~332)
+- this doc's §1 minimap-representation item (line ~390)
+- this doc's §3 `member_title`/`member_basicscript` bookkeeping (line ~1061)
+- this doc's §4 `CanIBuildThisBuilding` string-identity detail (line ~1373)
+- this doc's §4 `$SetBuildingLimit` zero-call-sites (line ~1435)
+- this doc's §4 `$DisableUnitType` internal storage (line ~1508)
+- this doc's §6 `.dat`-only-building retraction (line ~2148)
+- this doc's §7 `Produces` vs `member_title` (line ~2310)
+- and the matching consolidated entries in §8 above
+
+`TODO-New-Hero-Requirements.md` likewise already carries updates at its
+lines ~310, ~541, ~736, ~901, ~1039, ~1089 and ~1159.
+
+**Consequence for anyone dispatching further work:** the five leads most
+often nominated as "highest-yield" against §16-§22 (`Produces` vs
+`member_title`, `$DisableUnitType` storage, `$SetBuildingLimit` call
+sites, `CanIBuildThisBuilding`, and the hero doc's hardcoded-600 recruit
+cost) are **spent**. Their status is recorded at the line references
+above. §9.1 onward covers only what that pass did *not* touch.
+
+### CLOSED
+
+#### 9.1 `Menu` vs. `Flags value="IsGuild"` — CLOSED, and it retracts a §2 claim
+
+**The open item** (§8, and §2 lines ~565-572): "*Whether `Menu` value
+alone (vs. `Flags value="IsGuild"`) is what the engine actually keys off
+of for build-menu categorization*". §2's supporting claim was:
+`Menu="1"` = guild/recruitment-family buildings — "*every building
+carrying `Flags value="IsGuild"` uses `Menu="1"` with zero exceptions
+found*", listing `Warriors_Guild`, `Rangers_Guild`, `Rogues_Guild1`,
+`Wizards_Guild1`, `Dwarven_Settlement`, `Elven_Bungalow`, `Gnome_Hovel`.
+Because both fields appeared to always co-occur, §2 concluded which one
+the engine keys off "*cannot be distinguished from data alone*."
+
+**Outcome: CLOSED — and the premise that made it undecidable is false.**
+
+>>> **RETRACTION (§9 reconciliation pass) — the wrong text is left in
+place in §2 on purpose, per this project's "Retracted Claims"
+convention (`GPL_MODDING_GUIDE.md`, end of file). <<<**
+>
+> **WRONG (§2):** "every building carrying `Flags value="IsGuild"` uses
+> `Menu="1"` with zero exceptions found."
+>
+> **Correction: there are seven exceptions, and they are all the base
+> game's temples.** Every base temple carries `Flags value="IsGuild"`
+> *and* `Menu value="0"` simultaneously. Read directly from
+> `Majesty_Files/SDK/OriginalQuests/Data/M_Buildings.xml`, full
+> `<Description>` blocks, not grep context:
+>
+> | Building | ID | line | `Menu` | `Flags value="IsGuild"` | `MaxGuildMembers` |
+> |---|---|---|---|---|---|
+> | `Temple_Agrela1` | `ABO1` | 453 | `0` | present | `4` |
+> | `Temple_Dauros1` | `ABP1` | 482 | `0` | present | `4` |
+> | `Temple_Fervus1` | `ABQ1` | 511 | `0` | present | `4` |
+> | `Temple_Helia1` | `ABR1` | 540 | `0` | present | `4` |
+> | `Temple_Krolm` | `ABS1` | 569 | `0` | present | `4` |
+> | `Temple_Krypta1` | `ABT1` | 597 | `0` | present | `4` |
+> | `Temple_Lunord1` | `ABU1` | 626 | `0` | present | `4` |
+>
+> For contrast, read in the same pass: `Warriors_Guild` (`ABV1`, line
+> 655) and `Rangers_Guild` (`ABW1`, line 685) are `Menu value="1"` with
+> the identical `Flags value="IsGuild"` + `MaxGuildMembers value="4"`
+> pairing.
+>
+> §2's *other* claim about this pairing survives unchanged — `IsGuild`
+> and `MaxGuildMembers` really do always co-occur (the temples pair them
+> too, so they are additional confirming cases, not counterexamples).
+> Only the `IsGuild`→`Menu="1"` implication is retracted. §2's
+> `Menu="0"` = temple-family finding also survives; the error was
+> asserting the `Menu="1"` set was exhaustive of `IsGuild`.
+
+**Why this closes the question.** A field cannot be the key the engine
+categorises on if it takes the same value across two different
+categories. `Flags value="IsGuild"` is constant (present) across
+`Menu="0"` and `Menu="1"` buildings, so **`IsGuild` is ruled out as the
+build-menu categoriser and `Menu` is confirmed to be the field carrying
+the category.** The two are orthogonal fields with different jobs:
+
+- `Menu` (in the `<Engine>` block) = which build-menu tab/category the
+  entry files under.
+- `Flags value="IsGuild"` (in the `<Game>` block) = "this building
+  houses/recruits heroes," which is why it always travels with
+  `MaxGuildMembers` and a `Produces` list.
+
+**Citations, both layers as this section requires:**
+- **Reference-doc subsection:** `GPL_MODDING_GUIDE.md` §12, item 2 —
+  which reads `Temple_Krolm`'s (`ABS1`, `DialogID="AP24"`) and
+  `Warriors_Guild`'s (`ABV1`, `DialogID="AP52"`) full `<Description>`
+  blocks end to end and enumerates the `<Game>` field set as
+  `DialogID`, `Cost`, `Multiplier`, `IncomeType`/`IncomeAmount`,
+  `MaxHP`, `MaxGuildMembers`, `SightRange`, `Flags`
+  (`IsGuild`/`HasHPBar`/`HasGoldToolTip`), `HelpID`, `Produces`. This is
+  what surfaced a `Menu="0"` temple carrying `IsGuild` alongside a
+  `Menu="1"` guild carrying the same flag.
+- **Primary source, re-checked directly:** `M_Buildings.xml` lines
+  453-690 (the seven temple blocks plus `Warriors_Guild` and
+  `Rangers_Guild`), as tabulated above.
+- **Note on the reference doc's accuracy:** §12's `<Game>`-block field
+  enumeration checks out exactly against primary source for both
+  buildings. Its omission of `Menu` is correct, not an error — `Menu`
+  lives in the `<Engine>` block, which §12 did not claim to enumerate.
+
+**What remains open** (unchanged by this, carried forward to §9's
+UNCHANGED list): the other two halves of the original §8 entry — why
+`Graveyard`/`Sewer` deviate from the Monster→`Menu="2"` pattern, and
+whether a wrong-but-nonzero `Menu` value misfiles a building or breaks
+it. Both still need an exe trace or an in-game test; nothing in
+§16-§22 or §12-§15 touches either.
+
+---
+
+#### 9.2 Why `Dwarven_Settlement` has a bespoke prototype instead of reusing `{Guild}` — CLOSED
+
+**The open item** (§8, raised in §3): "*Why `Dwarven_Settlement` got its
+own bespoke prototype instead of reusing `{Guild}` the way
+`Elven_Bungalow`/`Gnome_Hovel` did — no functional difference confirmed
+between the two paths.*"
+
+**Outcome: CLOSED. There is a large functional difference, and it is
+structural, not stylistic: `Dwarven_Settlement` is a guild *and* an armed
+ranged-attack tower, and no pre-existing prototype declares both field
+families.**
+
+**Citations, both layers.**
+
+- **Reference-doc subsection:** `GPL_QUEST_RULES_REFERENCE.md` §18.2 —
+  its prototype-field table records `SpecialScript` as declared on
+  `Guild` (line 383) and `Dwarven_Settlement` (line 442) but **not** on
+  `prototype building()`, and it states it read `prototype building()`
+  (lines 248-281) in full. That is what flagged
+  `prototype Dwarven_Settlement()` as a separately-maintained
+  declaration rather than a wrapper. The same point is restated in
+  `GPL_QUEST_RULES_REFERENCE.md` §16's modder-guidance list ("*
+  `SpecialScript` is only declared on `prototype Guild()` and
+  `prototype Dwarven_Settlement()`*").
+- **Primary source, re-read directly** —
+  `Majesty_Files/SDK/OriginalQuests/GPL/prototype.gpl`:
+  - `prototype building()` (from line ~250) declares
+    `type`/`subtype`/`title`, `in_danger`, `Level`, `Sleep_For`,
+    `visited_script`, `ActiveScript`, `Occupants`, `RevenueScript`/
+    `Revenue_Amount`/`Revenue_Time`, `spawn_1`, the four birth/death
+    script slots, and `upgradescript`. **No guild-membership fields and
+    no combat fields.**
+  - `prototype Guild()` (the block ending ~line 400) adds the
+    membership set — `members`, `member_title`, `member_basicscript`,
+    `max_members` — plus `spawn_2`, `Spawn_Type`, `hero_lvl_upgrade`,
+    `SpecialScript`, `SpecialList`, `num_resources`. **Still no combat
+    fields, and no `basicscript`/`backscript`/`activescript` trio.**
+  - `prototype Dwarven_Settlement()` (from line ~442) declares the
+    membership set **and**, over and above `Guild`: `agent Target`,
+    `integer Strength`, `HtoH`, `Ranged`, `AttackType`,
+    `string attack_action`, `string EnemyType`, and the
+    `basicscript`/`backscript`/`activescript` trio. That combat set is
+    the same field family `prototype monster()` carries, not anything a
+    guild has.
+- **Primary source confirming those extra fields are actually used, not
+  vestigial** — `Majesty_Files/SDK/OriginalQuests/GPL/Building_Data.dat`
+  lines 324-346, the `[Dwarven_Settlement]` block, opens with
+  `{Dwarven_Settlement` and populates exactly the combat-only fields:
+  `(EnemyType Monster)`, `(Attack_Action Ballista_Bolt)`,
+  `(strength 30)`, `(attacktype 5)`, `(ranged 90)`, and
+  `(ActiveScript/BasicScript/BackScript Tower_scan)` — alongside the
+  ordinary guild fields `(member_title Dwarf)`,
+  `(member_basicscript dwarf_tree)`, `(max_members 1)`.
+- **The comparison cases, read from their own source rather than assumed**
+  (this doc's evidence standard forbids inferring one building's `.dat`
+  shape from another's): `[Elven_Bungalow]` (`Building_Data.dat` line
+  348) opens `{Guild` and sets only membership + `spawn_1`/`spawn_2`
+  timers; `[Gnome_Hovel]` (line 395) opens `{Guild` and sets
+  `(Max_Members 3)`, `(member_title Gnome)`. **Neither sets any combat
+  field, because `{Guild}` gives them nowhere to put one.**
+
+**Two independent runtime corroborations from the newer material**, each
+grouping `Dwarven_Settlement` with defensive structures rather than with
+guilds:
+
+1. `GPL_QUEST_RULES_REFERENCE.md` §20.4 / its `epic_quest_scripts.gpl`
+   function table — `setup_rescue_buildings` (`epic_quest_scripts.gpl`
+   line 2858) sets `bldg's "type" = "unknown"` on every `#NotMyTeam`
+   building **and additionally `"enemytype" = "nothing"` for exactly
+   three titles: `Dwarven_settlement`, `ballista_tower`, and
+   `guardhouse`** — the buildings that would otherwise shoot the
+   player's heroes while still nominally hostile. A guild needs no such
+   exception; `Dwarven_Settlement` does, because it has an `EnemyType`.
+2. `GPL_QUEST_RULES_REFERENCE.md` §16.1's per-title placement table —
+   the `ballista_tower` rule (commented out, `construction_rules.gpl`
+   lines 38-50) would have required a nearby `ballista_tower` **or
+   `dwarven_settlement`**, with an unused
+   `#chat_out_range_ball_dsettle` (41) string still shipping. The
+   original designers treated the two as interchangeable defensive
+   anchors.
+
+**What this changes for a modder building a new recruiting building.**
+Pick the prototype by whether the building fights, not by its race or
+theme: `{Guild}` for a pure recruiter, `{Dwarven_Settlement}` (or a new
+prototype of that shape) if it also needs to attack. Copying `{Guild}`
+and then adding `(Attack_Action …)`/`(EnemyType …)` lines to the `.dat`
+would be writing fields the prototype does not declare — the same class
+of undeclared-field question this doc's §3 raises for `Hero_Guarded`,
+and still unresolved (see §9's UNCHANGED list).
+
+**What remains open:** only the *design-intent* reading of "why" — i.e.
+whether the developers deliberately chose a fighting racial guild for
+dwarves or arrived at it incrementally. That is not a source-answerable
+question and should not be carried as a research gap. The
+*mechanical* why is now answered.
+
+---
+
+### NARROWED
+
+#### 9.3 Is `member_title` cross-validated against a real hero `title`? — NARROWED
+
+**The open item** (§8, raised in §7 citing §3): "*Whether a `.dat`/GPL
+compile step cross-validates a `{Guild}` building's `member_title` string
+against a real, existing hero `title`* — same open
+compiler-validation-strictness question as the `Hero_Guarded` case."
+
+**Outcome: NARROWED — moved from "unknown mechanism" to "known
+mechanism, unknown internal detail."** What is now confirmed is *where
+the string is consumed*: `member_title` is read at runtime as a plain
+string and handed straight to `$SpawnUnit`'s unit-type parameter. So
+whatever validation exists is a **runtime unit-type-table lookup inside
+`$SpawnUnit`**, not a `.dat`/GPL compile-time cross-check against
+`M_Characters.xml`. This is not a guess from one site — there are two
+independent shipped call sites in different files and different building
+families.
+
+**Citations, both layers.**
+
+- **Reference-doc subsections:** `GPL_QUEST_RULES_REFERENCE.md` §20.6b
+  (the `$Hero_Generator` body, presented as "the guild-membership field
+  set") and `GPL_QUEST_RULES_REFERENCE.md` §21.6/§21.6a (the AI
+  kingdom's gold-budgeted recruit loop).
+- **Primary sources, both named precisely enough to re-check, and both
+  re-checked:**
+  - `GPLMx/TaskModules/Buildings/mx_Lair.gpl` lines 183-195, base twin
+    `GPL/TaskModules/Buildings/Lair.gpl` line 157 —
+    `thisspawn = $SpawnUnit (ThisAgent, ThisAgent's "Member_Title");`
+    gated on
+    `$ListSize (ThisAgent's "Members") < $getattribute(thisagent, #ATTRIB_MaxGuildMembers)`.
+  - `GPLMx/Rules/Quests_3.gpl`, `Enemy_Guild_Spawn` — `Type = Guild's
+    "Member_Title";` then `enemy_hero = $SpawnUnit (Guild, Type,
+    $LocationOf (guild));`. Note this one assigns the field into a local
+    `string Type` first, which is the clearest possible demonstration
+    that the value is **just a string at runtime** with no special
+    type-checked status.
+- **Independent confirmation that the surrounding cap is not
+  engine-enforced either:** `GPL_QUEST_RULES_REFERENCE.md` §20.6b states
+  `#ATTRIB_MaxGuildMembers` is a cap **GPL must check itself** —
+  "convention, not enforcement," the same property §19.7 found for
+  `#Monster_Spawn_Cap`. Both shipped sites above do the `$ListSize <
+  cap` comparison in GPL by hand rather than relying on `$SpawnUnit` to
+  refuse. That is consistent with `$SpawnUnit` being a thin,
+  unvalidating primitive generally.
+
+**What specifically remains open.**
+
+1. **What `$SpawnUnit` does with a type string that matches no loaded
+   unit type** — returns a null/invalid agent, silently no-ops, or
+   crashes. No shipped call site passes a bad string, so there is no
+   worked example anywhere to read. **This is now a clean in-game test,
+   not a source question:** set a new `{Guild}` building's
+   `(member_title …)` to a deliberate nonsense string, trigger a spawn,
+   observe. Suggest routing to `TODO-GameTests.md`.
+2. **Whether the `.dat` loader *additionally* performs a compile/load-time
+   cross-check** — the runtime finding above does not rule this out, it
+   only shows a compile-time check would be redundant to the runtime
+   path. Still unresolved, and still the same open question as
+   `Hero_Guarded` (§9's UNCHANGED list, item on compiler strictness).
+
+**Deliberately NOT claimed:** that `Hero_Guarded`'s undeclared-`.dat`-
+field tolerance and `member_title`'s string-ness are the same mechanism.
+They are different fields consumed by different code paths, and this
+doc's evidence standard forbids inferring one from the other. Each still
+needs its own confirmation.
+
+---
+
+#### 9.4 Unused SMNU recruit-button slots on guilds other than `Warriors_Guild` (Case C) — NARROWED
+
+**The open item** (§8, raised in §7, cited from
+`TODO-New-Hero-Requirements.md` §5): "*Whether any guild besides
+`Warriors_Guild` has pre-defined-but-unused SMNU recruit button slots
+(Case C)* — only Warriors_Guild's panel was confirmed to have this
+pattern."
+
+**Outcome: NARROWED on two axes. Still open for guild panels
+specifically.**
+
+**(a) The phenomenon is confirmed to exist in shipped SMNU data — it is
+not a Warriors_Guild-only oddity.** There is a second, independent
+shipped panel containing widget slots that are not backed by real string
+data: `textdata.cam`'s `GDB4` panel has two type-0 button widgets
+(widget[29] and widget[30], at `(409,570,81,24)` and `(490,570,81,24)`,
+action codes 2016/2017) whose tag-7 references point at STRT string
+indices 28 and 29, while that panel's own paired STRT contains only 28
+strings (valid indices 0-27). **Dormant/over-declared widget slots are
+therefore a real pattern in shipped panel binaries.**
+
+**(b) The question is now answerable offline with tooling that already
+exists and is already validated** — it moved from "needs investigation of
+unknown difficulty" to "run the existing panel dumper across every guild
+panel." `smnu_format.py`/`smnu_analysis.load_panels()` +
+`smnu_compiler.py` parse and round-trip real panels and have been
+verified byte-perfect against **168 of 169 real panels** (the one
+exception being `GDB4` above).
+
+**Citations, both layers.**
+- **Reference-doc subsection:** `GPL_QUEST_RULES_REFERENCE.md` §17.3's
+  self-correction (the "Why this upgrades §17.3's verdict" passage),
+  which is what points at the panel/`STRT` data layer as overridable
+  rather than exe-locked, and cites this project's own SMNU research by
+  name.
+- **Primary source it rests on, re-read directly:**
+  `SMNUResearch/FUTURE_TODO.md` — "Quest CAM Override Capability
+  (CORRECTED July 2026)" for the override behaviour, the "Known Data
+  Quirk: GDB4" passage for the dormant-widget example and the 168/169
+  verification figure, and its Ghidra address table
+  (`0x0064d330` panel factory, `0x006d34d0` STRT loader,
+  `0x0051b150` "Creates building panel handler from DialogID").
+
+**Honest scoping — what is NOT claimed here.** `GDB4` is the GPL
+debugger's panel, not a guild panel. **It does not show that any guild
+panel has a spare recruit slot**, and treating it as if it did would be
+exactly the two-similar-systems analogy this doc's evidence standard
+forbids. What it establishes is only that the *phenomenon* is real in
+shipped data, so the Warriors_Guild observation is no longer a
+single-instance curiosity.
+
+**What specifically remains open / the concrete next step.** Nobody has
+dumped the other guild panels' widget lists. The named guild `DialogID`s
+are already known from primary XML (confirmed in §9.1's read of
+`M_Buildings.xml`): `AP52` Warriors_Guild, `AP47` Rangers_Guild, plus
+`AP01`/`AP05`/`AP10`/`AP19`/`AP24`/`AP25`/`AP28` for the seven temples.
+Load each panel and compare its widget count and action codes against the
+number of hero types the building's `Produces` list actually declares.
+**This is offline work on this machine, not a Ghidra or in-game task** —
+suggest it be routed to `TODO.md`, not `TODO-Ghidra.md`. Note the
+separate, still-unconfirmed gate flagged in `SMNUResearch/FUTURE_TODO.md`
+("Open question: click dispatch may gate this"): finding a spare slot
+would not by itself prove a new hero can be recruited from it.
+
+---
+
+#### 9.5 Confidence downgrade on §8's "exe patch required for a new panel" verdict — NARROWED (a caveat, not a contradiction)
+
+**The claim being narrowed** is not one of §8's bullet-list gaps but its
+closing **Overall assessment**: "*The confirmed blocker — a genuinely
+new, dedicated recruit/research panel tied to a brand-new `DialogID` —
+requires an exe patch to the panel-factory vtable.*"
+
+**Outcome: NARROWED. The verdict is not contradicted, but the word
+"confirmed" is doing more work than the evidence supports, because this
+project has already had one verdict of exactly this shape overturned.**
+
+**The precedent, cited from the newer material.**
+`GPL_QUEST_RULES_REFERENCE.md` §17.3 originally concluded that adding a
+new Freestyle special event "*needs an exe/UI change*." The quest-rules
+pass then reversed its own conclusion in the "Why this upgrades §17.3's
+verdict" passage: the special-event registry turned out to be **CAM
+`STRT` data** (`EVSC` for function names, `ENTX`/`EDTX` for label and
+description), overridable from a quest `<CAM>` tag with last-loaded-wins
+semantics — so a genuinely new special event is quest-distributable with
+**no exe patch**, by repointing a row. Its own words: "*That is now
+wrong, and the correction matters.*"
+
+- **Primary source that reversal rests on, re-checked:**
+  `SMNUResearch/FUTURE_TODO.md`, "Quest CAM Override Capability
+  (CORRECTED July 2026)" — SMNU and STRT overrides work, last-loaded
+  wins, "*confirmed by another modder replacing 'Market Day' text*," and
+  an explicit retraction of the earlier first-loaded-wins finding (the
+  PanelTest crash was a malformed custom SMNU binary, not a failed
+  override).
+
+**Why this is a caveat and not a refutation.** The two mechanisms are
+genuinely different and must not be conflated: the special-event registry
+is a *string/function-name table*, whereas a building panel is
+instantiated by a `DialogID`→handler lookup, and this project's own
+Ghidra notes locate that as real exe code (`0x0051b150`, "Creates
+building panel handler from DialogID"; `0x0064d330` panel factory).
+`SMNUResearch/FUTURE_TODO.md` still states plainly that a "*Patched exe
+= still needed for sub-panel NAVIGATION (new action code)*" and that a
+mod "*can override existing panels, but cannot navigate between
+sub-panels*." **So §8's practical guidance — reuse an existing
+`DialogID`, don't invent one — stands unchanged and is still the right
+advice.**
+
+**What specifically should change in how §8's assessment is read:** treat
+"requires an exe patch" as *not yet ruled out* rather than *proven*, on
+the grounds that it rests on absence-of-GPL/XML-evidence plus a partial
+Ghidra map, which is the same evidence shape that produced the §17.3
+error. The unresolved sub-question is narrow and nameable: **is the
+`DialogID`→panel-handler association itself table-driven from data the
+way the `EVSC` registry turned out to be, or is it a compiled vtable?**
+That is a Ghidra question and a good one — suggest adding it to
+`TODO-Ghidra.md` as a scoped item next to the existing panel-factory
+entries, phrased as "confirm whether the `DialogID`→handler mapping at
+`0x0051b150` reads a data table (patchable/overridable) or a compiled
+switch/vtable."
+
+---
+
+### UNCHANGED
+
+Listed on purpose: the newer material has **nothing** to say about these,
+so the next session should not spend a pass re-searching §16-§22 or
+§12-§15 for them. Each names where it lives and what would actually
+settle it. Nothing "loosely related" is padded in here.
+
+1. **Whether Palace's `Minimap` ImageSet and its lack of a `Build` set
+   are engine-required or coincidental** (§8, from §1). §16-§22 is
+   entirely GPL-level and never resolves ImageSets; §12-§15 does not
+   either. Settled only by checking a second birthScript-less building
+   type, or in-game.
+2. **Whether the numbered `Build`-family setIDs (80-82) hold distinct
+   construction-progress art or are aliased placeholders** (§8, from §1).
+   Same reason as above — no GPL/XML selection logic exists to trace, so
+   no amount of GPL reading will close it. This is a sprite-extraction
+   task on this machine, not a research-doc task.
+3. **What the XML `<Multiplier>` field's real engine consumer is** (§8,
+   from §2). Still no GPL reader anywhere; §12-§15 and §16-§22 add no
+   consumer. **One new negative data point recorded so it needn't be
+   re-derived:** across the nine `IsGuild` buildings read in full for
+   §9.1 (`M_Buildings.xml` lines 453-711), `Multiplier` varies
+   independently of both `Cost` and `IncomeAmount` — `Multiplier="1.5"`
+   occurs with `IncomeAmount` 50 (`Temple_Agrela1`) and 40
+   (`Temple_Krolm`), while `Multiplier="2.0"` occurs with 35/40/45; and
+   `Temple_Krolm` and `Temple_Fervus1` share `Cost="900"` but differ
+   (1.5 vs 2.0). So it is **not** a derived value of either neighbour
+   field. Its consumer is still exe-side and unknown.
+4. **Why `Graveyard`/`Sewer` deviate from the Monster→`Menu="2"` pattern,
+   and whether a wrong-but-nonzero `Menu` value misfiles or breaks a
+   building** (§8, from §2). These are the two halves of the `Menu` item
+   that §9.1 did *not* close — §9.1 only settled the
+   `Menu`-vs-`IsGuild` question. Needs an exe trace or an in-game test.
+5. **Whether two unrelated building types sharing one `DialogID`
+   (the Case A workaround) causes cross-talk beyond the shared panel**
+   (§8, from §2). Nothing in §16-§22 or §12-§15 discusses panel sharing.
+   Note this is *not* the same question as §9.5's — that one is about
+   whether new `DialogID`s can be created at all. In-game test.
+6. **What data source the engine reads for building placement/overlap
+   collision sizing** (§8, from §1/§4). **This one is authoritatively
+   UNCHANGED rather than merely unfound**, because the newer material
+   says so itself: `GPL_QUEST_RULES_REFERENCE.md` §16.1's own
+   cross-reference flag states that its `CanIBuildThisBuilding` finding
+   "*reads agent proximity only, never terrain data*" and that "*the
+   footprint/overlap question is untouched by it*." The related framing
+   correction it asked for has already landed in this doc (§4 line ~1373
+   and §6 line ~1701). **Do not re-search this against the quest-rules
+   layer.**
+7. **Whether a `Hero_Guarded`-style `.dat` field with no live prototype
+   declaration is tolerated by the real compiler** (§8, from §3).
+   **Deliberately recorded as UNCHANGED despite two tempting near-misses,
+   which are explicitly NOT treated as evidence:**
+   `GPL_QUEST_RULES_REFERENCE.md` §17-era notes that shipped GPL uses
+   `=` where `==` was meant and that both lines "*compiled and
+   shipped*" (with what the compiler actually does left UNVERIFIED), and
+   a note that a float literal `.5` "*which the compiler accepted*" ships
+   without a leading zero. Both are about **GPL expression syntax**, a
+   different compiler path from `.dat` prototype-field validation.
+   Inferring one from the other is exactly the assumed-analogy move this
+   doc's evidence standard forbids. Real settlement needs a deliberate
+   compile of a `.dat` with an undeclared field.
+8. **The literal recruit-button click-to-spawn mechanism for ordinary
+   (non-Embassy) guilds** (§8, from §7, citing
+   `TODO-New-Hero-Requirements.md` §5/§6). Unchanged as an *answer*. Note
+   the hero doc's own already-landed update (its line ~1159) upgraded the
+   surrounding negative result from "not found" to "confirmed absent from
+   a fully-read corpus," which is a change in the strength of the
+   negative, not a change in the answer. Still needs a Ghidra trace of
+   the recruit button's click handler.
+
+---
+
+**§9 tally:** 2 CLOSED (§9.1, §9.2), 3 NARROWED (§9.3, §9.4, §9.5),
+8 UNCHANGED, plus the §9.0 note that the five most-nominated leads were
+already spent by the earlier pass. One retraction issued (§9.1, against
+§2's `IsGuild`→`Menu="1"` claim), with the original text left in place
+per the project's visible-correction convention.
+
+---
 
 ## Process Notes for Sub-Agent Dispatches (write in SMALL portions)
 

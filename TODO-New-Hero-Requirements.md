@@ -306,6 +306,59 @@ anything that guide left as UNVERIFIED and is now blocking this checklist)
   that tree) that would misbehave under reuse — not tested in-game, and
   a quick read of `Adept.gpl`'s tree body shows no such title check, but
   this wasn't checked for every tree function.
+
+  **Update (quest-rules cross-reference pass): the "hardcoded title check
+  inside a tree" half of this is now CLOSED as a confirmed negative,
+  across all 32 shipped tree files, base and expansion. One separate
+  reuse hazard that is NOT a title check is documented instead.**
+  - `GPL_MODDING_GUIDE.md` §15 is a comparative pass over every base-game
+    class tree and states they are all a single flat cascade with "no
+    loop, an `else` branch, or any control flow beyond the cascade,"
+    which would imply no room for a title check — but that is a claim
+    about *shape*, so it was verified directly rather than relied on.
+  - **Direct verification: grepped `"title"|"Title"` across every file in
+    `GPL/DecisionTrees/*.gpl` (16 files: `Adept`, `Barbarian`, `Cultist`,
+    `Discord`, `Dwarf`, `Elf`, `Gnome`, `Healer`, `Monk`, `Paladin`,
+    `Priestess`, `ranger`, `Rogue`, `Solarus`, `warrior`, `Wizard` —
+    confirmed by `list_directory`) and across every file in
+    `GPLMx/DecisionTrees/*.gpl` (the 16 `mx_`-prefixed twins, also
+    confirmed by `list_directory`). Zero matches in either directory.**
+    A second sweep for every `==` in the base 16 returns only
+    `$module(thisagent, …) == False`/`FALSE` cascade tests — the sole
+    string literals passed anywhere in these files are building names
+    (`"Rangers_guild"`, `"Temple_Fervus"`, `"Blacksmith"`,
+    `"Gambling_hall"`, `"Brothel"`, `"Royal_gardens"`, `"Inn"`,
+    `"Marketplace"`, `"Trading_Post"`, `"Animal_Den"`) and `check_library`
+    Intention strings (`"Train_magic_resist"`, `"Learn_generic_spell"`,
+    `"Wizard_Spell"`, `"Wizard_train_intel"`). **So no shipped tree
+    function branches on the calling hero's title or class name, and
+    pointing a new `Hero_Data.dat` entry at an existing `*_tree` cannot
+    trip a title check, because none exists.** This is scoped precisely:
+    it covers the tree files themselves, which is exactly what this item
+    flagged. It does not cover the shared modules under
+    `DecisionTrees/Modules/`, which were not swept here.
+  - **The real reuse hazard is behavioural, not a title check, and it is
+    worth stating because it is easy to miss:** the trees hardcode
+    *building* names as literal module arguments, so reuse inherits the
+    donor class's loyalties. Reusing `barbarian_tree` gives your hero
+    `$defend_building(thisagent,"Rangers_guild")`
+    (`GPL/DecisionTrees/Barbarian.gpl` line 23); reusing `Discord.gpl`'s
+    tree gives it `"Temple_Fervus"` (line 23); `Dwarf.gpl` gives
+    `"Blacksmith"` (line 23); `Elf.gpl` gives both `"Gambling_hall"` and
+    `"Brothel"` (lines 23 and 25). That is a correctness issue for the
+    mod's design, not a crash risk, and it is fixed by writing your own
+    tree file (a copy-and-edit of the donor) rather than by pointing at
+    the donor's function.
+  - Separately confirmed harmless for reuse: the per-class threat
+    evaluator is **not** in the tree file. `check_nearby` calls
+    `(thisagent's "evaluationscript")(thisagent)`, and `evaluationScript`
+    is a plain per-entry `Hero_Data.dat` field (`GPL_MODDING_GUIDE.md`
+    §15's confirmed mapping table, read from `Hero_Data.dat` directly by
+    that pass), so a reusing hero picks its own evaluator independently of
+    whose tree it borrows.
+  - Still **UNVERIFIED**, unchanged: whether the *engine* has any
+    title↔tree assumption outside GPL. Nothing in a source read can rule
+    that out; it needs an in-game test.
 - [x] `prototype hero()` fields — **full list read directly from
   `prototype.gpl`'s `hero()` block (lines ~103–150):** `type`, `subtype`,
   `title`, `Original_type` (strings); `percentageHPretreat` (integer),
@@ -485,6 +538,54 @@ specifically (see below), so don't overstate this correction either.
    functionality... For instance, in Magic Ring, it runs
    Hero_Generator" — implying other quests could leave it unset).
 
+   **Update (quest-rules cross-reference pass): the two `Hero_Generator`
+   bodies are NOT twins — the mx version calls
+   `$Generate_Character_Attributes` and the base version does not. If you
+   wire `Hero_Generator` in base-game mode you get heroes with no
+   randomized attributes.** Both read in full and quoted exactly:
+   - Base, `GPL/TaskModules/Buildings/Lair.gpl` lines 157-165 (the
+     function header is at 157, not 156):
+     ```gpl
+     Function Hero_Generator (agent ThisAgent)
+     Declare
+     Begin
+     	If ($ListSize (ThisAgent's "Members") < ThisAgent's "Max_Members")
+     		$SpawnUnit (ThisAgent, ThisAgent's "Member_Title");
+     End
+     ```
+   - Expansion, `GPLMx/TaskModules/Buildings/mx_Lair.gpl` lines 183-195:
+     ```gpl
+     If ($ListSize (ThisAgent's "Members") < $getattribute(thisagent,#ATTRIB_MaxGuildMembers))
+     	begin
+     		thisspawn = $SpawnUnit (ThisAgent, ThisAgent's "Member_Title");
+     		$Generate_Character_Attributes(thisspawn);
+     	end
+     ```
+   Two real differences, not one: the capacity source diverges
+   (`"Max_Members"` field vs. `#ATTRIB_MaxGuildMembers` attribute — the
+   same base/expansion divergence this doc's item 2 already flags for
+   `GuildHasOpenSlots`, confirmed again here on a second function), **and
+   the base version never captures the spawned agent at all, so it cannot
+   and does not call `$Generate_Character_Attributes`.**
+   `GPL_QUEST_RULES_REFERENCE.md` §21.6(d) treats this as resolving §20.6b
+   — its argument is that `Enemy_Guild_Spawn` is a second independent
+   explicit call site carrying the shipped comment "This is necessary for
+   heroes that are not generated via an interface call"
+   (`GPLMx/Rules/Quests_3.gpl` lines 1503-1504, verified directly), so the
+   explicit call is necessary rather than belt-and-braces. **Taking that
+   at its own strength: it is a strong reading of a first-party comment,
+   not a traced call graph, and it does not resolve this doc's actual gap
+   (see §6), which is whether the *engine's* UI-recruit path calls
+   `$Generate_Character_Attributes` — the comment implies it does, but
+   implication from a comment is exactly the kind of inference this doc's
+   evidence standard says to label.** What IS now confirmed and directly
+   usable: **if you wire `Hero_Generator` (or any other scripted spawn)
+   yourself, call `$Generate_Character_Attributes` on the returned agent
+   — the shipped base-game `Hero_Generator` does not, which makes it a bad
+   template to copy verbatim in base-game mode.** The original framing
+   above stood because it quoted the base body and treated the mx line
+   range as the same function.
+
 **Neither mechanism is confirmed to be what the user actually did.**
 Directly asked, the user clarified their Ratman-kingdom result came from
 redefining the **Warrior** unit itself (sprites/stats/naming — the same
@@ -631,6 +732,70 @@ couldn't.
     it unconditionally (only the AI-spawn functions call it explicitly,
     which is exactly the case the comment says needs the explicit call).
     This is a genuine gap, not an assumption either way.
+
+    **Update (quest-rules cross-reference pass): NARROWED from three
+    candidates to one by eliminating two of them as confirmed negatives.
+    Not closed.** Grepped `Generate_Character_Attributes` across every
+    `.gpl` in `Majesty_Files`. The complete corpus-wide result is **two
+    definitions** (`GPL/Hero_Births.gpl` line 8, `GPLMx/mx_Hero_Births.gpl`
+    line 8) and **exactly two call sites**
+    (`GPLMx/Rules/Quests_3.gpl` line 1502 in `Enemy_Guild_Spawn`,
+    `GPLMx/TaskModules/Buildings/mx_Lair.gpl` line 191 in
+    `Hero_Generator`) — both of them the AI/script-spawn cases already
+    known. **So `hero_birth` does not call it (neither base
+    `Hero_Births.gpl` nor `GPLMx/mx_Hero_Births.gpl` contains a call
+    anywhere in the file, only the definition), and `NewUnitInit` does not
+    call it either (no call site exists in `LowLevel.gpl` or anywhere
+    else).** Two of the three named candidates are therefore ruled out,
+    leaving only "some other engine-side step" — which is what the
+    function's own header comment asserts: "this function is called by the
+    in-game code when a vehicle is generated" (`GPLMx/mx_Hero_Births.gpl`
+    line 7, base twin identical at `GPL/Hero_Births.gpl` line 7), the same
+    engine-entry-point comment style `GPL_MODDING_GUIDE.md` documents for
+    other confirmed engine-invoked functions. **Still UNVERIFIED whether
+    the engine actually invokes it on the UI-recruit path specifically** —
+    a header comment plus `Enemy_Guild_Spawn`'s "not generated via an
+    interface call" comment are two first-party statements pointing the
+    same way, but neither is a traced call. `GPL_QUEST_RULES_REFERENCE.md`
+    §21.6(d) calls this RESOLVED for a narrower question (whether
+    `$SpawnUnit` itself runs it — it does not); that is a different
+    question from this one and does not close it. The original framing
+    stood because it had not enumerated the call sites exhaustively enough
+    to eliminate `hero_birth`/`NewUnitInit` by name.
+
+    **Also new, and the closest thing this pass found to positive evidence
+    that GPL gets control on the UI-recruit path: `hero_birth` contains
+    quest-keyed starting-level logic that a shipped comment describes as
+    applying to *recruited* heroes.** `GPLMx/mx_Hero_Births.gpl`'s
+    `hero_birth` (function at line 125) sets
+    `#ATTRIB_experiencelevel` to 1 when it is below 1 and
+    `#ATTRIB_experience` to 0 (lines 142-146), then applies
+    `$advance_to_level(thisagent, 4 + $randomnumber(3))` for
+    `#QNumber_Day_Reckoning`, `$advance_to_level(thisAgent, 10 +
+    $RandomNumber(10))` for `#QNumber_Legendary_Heroes` (lines 166-170),
+    and `$advance_to_level(thisAgent, 8 + $RandomNumber(5))` when
+    `AIRootAgent's "Spawn_High_Level_Heroes"` is set (lines 173-185,
+    guarded by `$HasAttribute` first). That flag's only writer is
+    `Veteran_Heroes` (`GPLMx/Rules/Special_Events.gpl` lines 900-916),
+    whose own header comment is "This function just sets a flag on the
+    AIRootAgent that makes it so all heroes **subsequently recruited** are
+    very high level." **A shipped quest event therefore expects
+    `hero_birth` to run for heroes the player recruits, which is
+    first-party evidence that `birthScript` is on the UI-recruit path.**
+    Stated at its real strength: this is a developer comment about intent,
+    plus a mechanism that only works if the premise is true, not a traced
+    dispatch — it does not identify what the recruit button calls, and it
+    does not tell us whether `Generate_Character_Attributes` runs. What it
+    does give a modder is a **confirmed, data-driven hook for changing
+    recruited heroes' starting level without touching the recruit click at
+    all**: set a boolean on the `GPLAIRoot` agent and read it in your own
+    `birthScript`. Note the whole `Spawn_High_Level_Heroes` path is
+    expansion-only, and checked rather than assumed: base
+    `GPL/Hero_Births.gpl` has the same `#ATTRIB_experienceLevel < 1 → 1`
+    and `#ATTRIB_experience = 0` lines (143-147) and the same
+    `#QNumber_Day_Reckoning` branch (line 168), but **no
+    `#QNumber_Legendary_Heroes` branch and no `Spawn_High_Level_Heroes`
+    check at all** — so the flag hook itself is an expansion addition.
 - [x] Is recruitment building-specific (different mechanism per guild
   type) or does it funnel through one shared recruit function? **Mixed —
   more unified than `Visited_Script`, but not fully unified, and the
@@ -732,6 +897,68 @@ couldn't.
     wired to that building's DialogID) needs no change, since it doesn't
     reference the hero title at all, only the building's own recruit
     action code.
+
+    **Update (quest-rules cross-reference pass): Case A is now
+    INDEPENDENTLY CORROBORATED from six runtime call sites in systems
+    this doc's original pass never read, and one real CAVEAT is added
+    (expansion-only) that was previously missing.**
+    `GPL_QUEST_RULES_REFERENCE.md` §20.6b and §21.6(d) both flagged
+    `Guild's "Member_Title"` as the data-driven "what does this guild
+    produce" field; followed back to source, the complete set of runtime
+    consumers in shipped GPL is (grepped `Member_Title` across every
+    `.gpl`, then each hit read in context):
+    1. `GPL/TaskModules/Buildings/Lair.gpl` line 163 (`Hero_Generator`) —
+       `$SpawnUnit (ThisAgent, ThisAgent's "Member_Title")`.
+    2. `GPLMx/TaskModules/Buildings/mx_Lair.gpl` line 190
+       (`Hero_Generator`, mx twin) — same, plus a
+       `$Generate_Character_Attributes` call the base version lacks (see
+       item 1's update).
+    3. `GPLMx/Rules/Quests_3.gpl` line 1499 (`Enemy_Guild_Spawn`) —
+       `Type = Guild's "Member_Title"` then `$SpawnUnit(Guild, Type, …)`.
+    4. `GPLMx/TaskModules/Buildings/Embassy.gpl` line 164
+       (`Embassy_Spawn`) — same read, as the fallback for a
+       non-Warriors_Guild guild.
+    5. `GPL/Building_Births.gpl` lines 415 and 419 (`guild_birth`) —
+       `$check_strays(thisagent, thisagent's "member_title", #MyPlayer)`
+       / `#NotMyPlayer`.
+    6. `GPLMx/mx_Building_Births.gpl` lines 550-551 — the mx twin of
+       the same two calls.
+    **Four independent spawn paths and two independent adopt paths, in
+    four different files across base and expansion, all treat the
+    guild's `member_title` as the hero type to produce, and not one of
+    them hardcodes a hero title alongside it.** That is genuine
+    independent corroboration of Case A rather than a restatement: the
+    original claim was argued structurally from `Building_Data.dat`'s
+    field declaration, and this is the runtime-consumer side of the same
+    claim, from systems (guild `SpecialScript` generators, the AI
+    kingdom, the Embassy) the hero pass had not read.
+    **CAVEAT, new and expansion-only — one shipped recruit path does NOT
+    go through `member_title` and would therefore never produce a new
+    hero title.** `Embassy_Spawn` only falls back to `Guild's
+    "Member_Title"` in its final `Else` branch (line 164). For an
+    Embassy or an Outpost it instead calls `$Random_Hero_Type(Guild)`
+    (lines 135 and 144), and for a Warriors_Guild it calls
+    `$Random_Warriors_Guild_Hero_Type(Guild)` (line 157). Both of those
+    are ordinary GPL functions in the same file with the hero titles
+    written out as literals — `Random_Warriors_Guild_Hero_Type` (lines
+    208-223) returns one of `"Warrior"`/`"Paladin"`/
+    `"Warrior_of_Discord"` off a `$RandomNumber(3)+1`, and
+    `Random_Hero_Type` (lines 226-266) is a hardcoded 16-way ladder over
+    the entire base roster (`"Adept"`, `"Barbarian"`, `"Cultist"`,
+    `"Healer"`, `"Monk"`, `"Priestess"`, `"Ranger"`, `"Rogue"`,
+    `"Solarus"`, `"Warrior"`, `"Wizard"`, `"Paladin"`,
+    `"Warrior_of_Discord"`, `"Dwarf"`, `"Elf"`, `"Gnome"`). **So in
+    expansion mode, a new hero title reached via a repointed
+    `member_title` will be recruited by that guild's own path and by
+    `Hero_Generator`, but will never be produced by an Embassy or
+    Outpost, and a Warriors_Guild Embassy spawn will keep rolling the
+    three stock warrior titles regardless of what its `member_title`
+    says.** Fixing that means overriding those two functions in your own
+    mod's GPL, which is an ordinary GPL edit, not an exe problem. Also
+    worth noting for Case C below: `Random_Warriors_Guild_Hero_Type` is a
+    real, cited, GPL-side confirmation that Warriors_Guild's three-type
+    roster is three literal titles, i.e. the multi-type-ness is hardcoded
+    in at least this one place rather than being data-driven.
   - **Case B — new hero needs its OWN new guild building (a new
     DialogID) to be recruited from: blocked by the same limitation
     `TODO-New-Building-Requirements.md` already documents, cite don't
@@ -808,6 +1035,48 @@ couldn't.
     hero-spawn code paths found in this research, and none of them
     reads the hero's own `Cost` XML field** — that field's real consumer
     remains unconfirmed.
+
+    **Update (quest-rules cross-reference pass): the hardcoded 600 is
+    NARROWED to a corpus-wide exhaustive count of exactly ONE, and the
+    "is there a second independent 600?" question is answered NO. The
+    `Cost` gap itself STAYS UNVERIFIED.** `GPL_QUEST_RULES_REFERENCE.md`
+    §21.6(d) presents the same four-line recruit loop
+    (`$AdjustPlayerData(Guild,"gold",-600)` → `Type = Guild's
+    "Member_Title"` → `$SpawnUnit` → `$Generate_Character_Attributes`,
+    with an 800-gold floor and gold re-read inside the `foreach`) as a
+    finding about an AI opponent kingdom, which raised the possibility
+    that it was a *second*, independent hardcoded 600 in an unrelated
+    file — which would have been much stronger evidence against the
+    `Cost` field. **Followed back to source and it is the same single
+    function**: §21.6(d) names `Enemy_Guild_Spawn` (`GPLMx/Rules/
+    Quests_3.gpl`) explicitly and cites lines 1473-1510, i.e. the
+    identical function this item already cites. Read directly, the
+    function header is at line 1473 and the charge is at **line 1498**
+    (`$AdjustPlayerData ( Guild, "gold", -600 ); // Charge 600 per hero
+    spawned.`) — one instance, not two. What genuinely improves is the
+    *scope of the negative*: grepping `-600` across every `.gpl` file in
+    both repos returns exactly one hit, in `Quests_3.gpl`, and the
+    `Rules/` corpus that hit lives in has now been read in full (all 15
+    files, per `GPL_QUEST_RULES_REFERENCE.md`'s own coverage claim).
+    **So "the one confirmed AI-facing recruit-cost function" is now
+    confirmed to be literally the only one, not an artifact of a partial
+    search.** Two further re-checks, both negative: (a) grepping `'s
+    "cost"` across every shipped `.gpl` in `Majesty_Files` returns
+    **zero** hits — no shipped GPL reads a `"cost"` agent field on
+    anything, so the original claim holds unchanged; (b) neither
+    `GPL/prototype.gpl` nor `GPLMx/mx_prototype.gpl` declares a `cost`
+    field at all (grepped `\bcost\b`, zero hits in both), so the
+    workspace's own `PanelTest_Quest/MyAI/GPL/custom_rules.gpl` line 258
+    (`$AdjustPlayerData ( Guild, "gold", -enemy_hero's "cost" )` — note
+    our mod replaced the shipped flat 600 with this, it is not an
+    identical duplicate as stated above) is reading a field that is
+    either engine-provided-but-undeclared or nonexistent. **That is our
+    own unshipped mod code and cannot be used as evidence either way** —
+    it is a lead for an in-game test (spawn a hero via that path, log
+    `enemy_hero's "cost"`, compare to the XML `Cost`), not a closure.
+    The original framing above stood because the earlier pass had not
+    read the `Rules/` corpus and so could not claim its negative was
+    exhaustive.
   - **Guild capacity gating IS confirmed and cited from item 2 above —
     not re-derived here.** `GuildHasOpenSlots` (`max_members`/
     `#ATTRIB_MaxGuildMembers` vs. current `members` list size, gated
@@ -816,6 +1085,59 @@ couldn't.
     beyond its boolean return contract) is the one real, confirmed,
     shared prerequisite gate for whether a guild can produce a new hero
     at all, regardless of gold.
+
+    **Update (quest-rules cross-reference pass): `$BuildingIsRecruiting`
+    gains NO new call sites, but its contract is NARROWED from two
+    shipped sources, and a separate, more important finding is that the
+    engine keeps its OWN authoritative guild-occupancy count that GPL's
+    check can disagree with.**
+    - **Call-site count re-confirmed exhaustive: still exactly two, both
+      inside `GuildHasOpenSlots`** (`GPL/Building_Births.gpl` line 991,
+      `GPLMx/mx_Building_Births.gpl` line 1211). Nothing in §16-§22's
+      now-fully-read `Rules/` corpus calls it. So the "no explanation in
+      GPL source" status is unchanged and this should not be re-searched.
+    - **Contract narrowed from the function's own shipped comment and
+      logic, read in full** (`GPL/Building_Births.gpl` lines 978-994):
+      `// either has an 2 or more open slots, or isn't recruiting` above
+      `return ((( list_size < list_capacity ) && ($BuildingIsRecruiting
+      (guild) == FALSE)) || ( list_size < (list_capacity - 1)));`. **So
+      the shipped meaning is "a recruit is currently in flight at this
+      building": one slot is reserved while it is TRUE, and a guild with
+      exactly one free slot reports FULL until the in-flight recruit
+      lands.** That is a real behavioral contract, not just "returns a
+      boolean" — but it is read off the caller's comment and arithmetic,
+      **not** off the primitive's own implementation, which is still
+      engine-side with no GPL definition. What sets it TRUE/FALSE and
+      when is still **UNVERIFIED**.
+    - **New, and material to any capacity claim: `$SpawnUnit` into a
+      guild can silently fail because the engine's occupancy count is
+      independent of GPL's `"members"` list, and the engine wins.**
+      Verbatim shipped comment, `GPLMx/TaskModules/Buildings/Embassy.gpl`
+      lines 179-185, immediately after `Embassy_Spawn`'s `$SpawnUnit`:
+      "Make sure it was created. There is case where it does not. I
+      believe it is caused by the GPL function GuildHasOpenSlots
+      returning true when the C++ side thinks the guild is full. It is
+      probably because the GPL side has its own list of members. If you
+      dismiss a unit from the Embassy, the GPL side thinks the guild has
+      space, but the C++ side does not until the dismissed unit leaves
+      the game. Rather than changing the dismiss, which would effect lots
+      of operations, we'll just quietly fail. It will try again shortly."
+      The shipped code acts on it — line 186 guards the whole
+      post-spawn block with `if ( $IsValidGamePiece(Spawn_Unit) )`.
+      **Two consequences for this doc: (a) `GuildHasOpenSlots` is
+      advisory, not authoritative — passing it does not guarantee a spawn,
+      so any new-hero spawn path must check `$IsValidGamePiece` on the
+      returned agent; (b) this is a first-party statement that guild
+      capacity is enforced twice, once in GPL and once in the exe, which
+      is consistent with (and the likely reason for) `#ATTRIB_
+      MaxGuildMembers` being an engine attribute that
+      `GPL_QUEST_RULES_REFERENCE.md` §20.6b describes as a cap "GPL must
+      check itself".** Note this is a developer's own hedged attribution
+      ("I believe… It is probably because…") for the *cause*; what is
+      not hedged is that the failure happens and that the code ships a
+      guard for it. Whether the same divergence can occur on a plain
+      (non-Embassy) guild is **UNVERIFIED** — the comment is specifically
+      about dismissing from an Embassy.
   - **Per-hero `RecruitDelay` (XML field, universal across every
     sampled hero — 4000ms Rogue-class-speed heroes up to 20000ms tank
     heroes per the raw values already catalogued in this doc's §2) is a
@@ -833,6 +1155,28 @@ couldn't.
     with, but not proof of, the pattern already established for the
     gold-check/spawn step in item 1. **UNVERIFIED**, explicitly, not
     assumed either way.
+
+    **Update (quest-rules cross-reference pass): the "likely exe-side"
+    reading is now a CONFIRMED NEGATIVE RESULT rather than a guess,
+    because the corpus it was searched against is now fully read.**
+    Re-grepped `RecruitDelay|DelayRecruitCheckPeriod|Recruit` across
+    every `.gpl` under `Majesty_Files/SDK/`. Results, in full:
+    `#DelayRecruitCheckPeriod` appears **only** in its own two
+    declarations (`GPL/globals.gpl` line 74, `GPLMx/mx_Globals.gpl` line
+    76) — zero call sites, including zero in any of the 15 `Rules/` files
+    that `GPL_QUEST_RULES_REFERENCE.md` §16-§22 has now read in full. The
+    literal string `RecruitDelay` appears **nowhere** in GPL at all. The
+    only other `Recruit`-stemmed identifiers in the whole corpus are
+    `#ATTRIB_EmbassyRecruitCost` (Embassy-only, `GPLMx/TaskModules/
+    Buildings/Embassy.gpl` lines 17/31/57/63) and `$BuildingIsRecruiting`
+    (see the capacity item above). **So the claim upgrades from "no call
+    site found in the files searched" to "no call site exists anywhere in
+    the shipped GPL corpus" — `RecruitDelay` timing cannot be
+    GPL-enforced, which leaves exe-enforced or not-enforced as the only
+    remaining options.** Which of those two it is remains UNVERIFIED and
+    still needs the in-game test / Ghidra work already scoped. The
+    original framing above stood because the `Rules/` files had not been
+    read at the time, so an exhaustive negative could not be claimed.
   - **No prerequisite/tech-tree gate (e.g. "guild must be a certain
     level," "player must have N other buildings") was found anywhere in
     GPL source for recruitment specifically** — contrast with the
@@ -900,6 +1244,352 @@ of every UNVERIFIED item raised above, so they don't get lost:**
   reads as a genuine absence rather than a search gap, but it wasn't
   exhaustively ruled out against every guild's own birth/upgrade
   functions individually (item 4).
+
+### 7. Reconciliation Pass Against the Quest-Rules Research (§16-§22)
+
+**What this section is.** A cross-reference-only pass, the twin of
+`TODO-New-Building-Requirements.md` §9. It reads no new GPL source of its
+own; its evidence base is `GPL_QUEST_RULES_REFERENCE.md` (quest-scripting
+layer, **§16-§22**) and `GPL_MODDING_GUIDE.md` **§12-§15**, plus targeted
+confirmation reads of the primary GPL/XML/`.dat` files those subsections
+cite.
+
+**Numbering convention, written out so no reader has to know it:** a bare
+`§1`-`§15` means **`GPL_MODDING_GUIDE.md`**; a bare `§16`-`§22` means
+**`GPL_QUEST_RULES_REFERENCE.md`**. Within *this* file, `§1`-`§7` mean
+this document's own coverage areas.
+
+**Evidence rule:** a citation inside a reference doc is **not** a primary
+source. Every CLOSED/NARROWED claim cites both the reference-doc
+subsection and the primary file+line it rests on. Where a subsection does
+not name a re-checkable primary source, the item is **NARROWED, not
+CLOSED**.
+
+**Labels:** **CLOSED** / **NARROWED** / **UNCHANGED** (the last listed on
+purpose, to stop the next session re-searching).
+
+---
+
+#### 7.0 Most of this doc's headline gaps were already reconciled — check before dispatching
+
+An earlier cross-reference pass already landed inline updates in this
+file, marked with the literal string
+**`Update (quest-rules cross-reference pass)`**, at approximately lines
+**310** (hardcoded title-checks inside decision trees — closed as a
+confirmed negative across all 32 shipped tree files), **541** (the two
+`Hero_Generator` bodies are *not* twins), **736**
+(`Generate_Character_Attributes` — narrowed from three candidates to
+one), **901** (recruit-panel Case A corroborated from six runtime call
+sites), **1039** (the hardcoded 600), **1089**
+(`$BuildingIsRecruiting`), and **1159** (the absent
+prerequisite/tech gate, upgraded to a confirmed negative).
+
+**Specifically spent: the `Cost` / hardcoded-600 lead.** It is a natural
+guess that `GPL_QUEST_RULES_REFERENCE.md` §21.6/§21.6a's AI-kingdom
+recruit loop (`$AdjustPlayerData(Guild,"gold",-600)` →
+`$SpawnUnit(Guild, Guild's "Member_Title")`, 800-gold floor, gold re-read
+inside the loop) is a **second, independent** hardcoded-600 site, which
+would be materially stronger evidence against the `Cost` field. **It is
+not a second site.** The earlier pass followed it back to source: §21.6(d)
+names `Enemy_Guild_Spawn` in `GPLMx/Rules/Quests_3.gpl` explicitly, the
+same function this doc already cited, with the charge at line 1498 — and
+a corpus-wide grep for `-600` returns exactly one hit. That is recorded
+in full at line ~1039. **Do not re-open it.** What it does establish is
+recorded there too: the negative is now exhaustive rather than partial,
+because the `Rules/` corpus has since been read in full.
+
+§7.1 onward covers only what that pass did not touch.
+
+---
+
+### CLOSED
+
+#### 7.1 Do other guild families deviate from generic `guild_birth`? — CLOSED, and it retracts a §5 claim
+
+**The open item** (§6, raised in §5 item 2): "*Whether guild families
+besides `Warriors_Guild`/`Rogues_Guild1` (i.e. `Temple_Krolm`,
+`Temple_Helia`, `Temple_Lunord`, `Dwarven_Foundry`, `Elven_Bungalow`,
+`Gnome_Hovel`) also deviate from the generic `guild_birth`
+birth-completion function — not individually checked in this pass.*"
+
+**Outcome: CLOSED. All 14 base-game Guild-subtype tier-1 entries have now
+been read individually. Six use plain `guild_Birth`; eight have their own
+dedicated function.** And checking them turned up a factual error in §5's
+supporting sentence.
+
+**Full table, read directly from
+`Majesty_Files/SDK/OriginalQuests/GPL/Building_Data.dat`** — every row
+confirmed from its own `[...]` block, none inferred from a neighbour
+(this doc's evidence standard forbids that):
+
+| Building | block line | `birthScript2` | line | plain `guild_birth`? |
+|---|---|---|---|---|
+| `Dwarven_Settlement` | 324 | `Guild_Birth` | 343 | **yes** |
+| `Elven_Bungalow` | 348 | `bungalow_Birth` | 361 | no |
+| `Gnome_Hovel` | 395 | `gnome_camp_Birth` | 407 | no |
+| `Warriors_Guild` | 422 | `warriors_Guild_Birth` | 433 | no |
+| `Rangers_Guild` | 438 | `Guild_Birth` | 449 | **yes** |
+| `Rogues_Guild1` | 454 | `Rogues_Guild_Birth` | 467 | no (extends) |
+| `Wizards_Guild1` | 491 | `Guild_Birth` | 504 | **yes** |
+| `Temple_Agrela1` | 545 | `agrela_Birth` | 557 | no |
+| `Temple_Dauros1` | 596 | `dauros_Birth` | 608 | no |
+| `Temple_Fervus1` | 647 | `fervus_Birth` | 660 | no |
+| `Temple_Helia1` | 701 | `guild_Birth` | 713 | **yes** |
+| `Temple_Krolm` | 735 | `guild_Birth` | 746 | **yes** |
+| `Temple_Krypta1` | 751 | `krypta_Birth` | 763 | no |
+| `Temple_Lunord1` | 802 | `guild_Birth` | 814 | **yes** |
+
+**Answering the item's own list directly:** `Temple_Krolm`,
+`Temple_Helia`, `Temple_Lunord` and the dwarven building do **not**
+deviate — all four are plain `guild_Birth`. `Elven_Bungalow` and
+`Gnome_Hovel` **do** deviate. So the guess embedded in the item (that the
+unchecked ones might behave like Warriors/Rogues) is half right, and not
+along racial or temple lines.
+
+>>> **RETRACTION (§7 reconciliation pass) — §5's text is left in place on
+purpose, per this project's visible-correction convention
+(`GPL_MODDING_GUIDE.md`, "Retracted Claims"). <<<**
+>
+> **WRONG (§5 item 2):** "*most guilds/temples (`Rangers_Guild`,
+> `Temple_Dauros`, `Temple_Agrela`, `Temple_Krypta`, `Temple_Fervus`)
+> point `birthScript2` at the generic `guild_birth`*."
+>
+> **Correction: four of those five named buildings do not.** Read in
+> full from their own blocks: `Temple_Agrela1` →
+> `(birthScript2 agrela_Birth)` (`Building_Data.dat` line 557),
+> `Temple_Dauros1` → `dauros_Birth` (608), `Temple_Fervus1` →
+> `fervus_Birth` (660), `Temple_Krypta1` → `krypta_Birth` (763). Only
+> `Rangers_Guild` → `Guild_Birth` (449) is correct as stated.
+>
+> **And "most" is wrong in aggregate too** — 8 of 14 deviate, 6 are
+> plain. The buildings that actually use plain `guild_Birth` are a
+> *different set* from the ones §5 named: `Dwarven_Settlement`,
+> `Rangers_Guild`, `Wizards_Guild1`, `Temple_Helia1`, `Temple_Krolm`,
+> `Temple_Lunord1`.
+>
+> **What survives unchanged:** §5's *structural* conclusion is not just
+> intact but strengthened — `birthScript2` is per-family, guilds are not
+> a unified special case, and the three shapes it identified (plain
+> shared function / full replacement à la `warriors_guild_birth` /
+> extension that tail-calls `$guild_birth` à la `rogues_guild_birth`)
+> are the right taxonomy. Only the population counts and the example
+> list were wrong. §5's line-level reads of `warriors_guild_birth`
+> (`Building_Births.gpl` 430-454) and `rogues_guild_birth` (608-628)
+> were not re-checked here and are not disturbed.
+
+**A second, smaller correction: `Dwarven_Foundry` does not exist.** The
+item's own list names it, but a workspace-wide grep for
+`Dwarven_Foundry` returns hits **only in this file** (its §5 line ~838
+and its §6 line ~1220) — zero in any game data, GPL, `.dat` or XML in
+either repo. The real building is **`Dwarven_Settlement`**
+(`Building_Data.dat` line 324, `M_Buildings.xml` ID `ABb1` line 812).
+Anyone re-reading the old item should substitute the correct name.
+
+**Citations, both layers.**
+- **Reference-doc subsection:** `GPL_QUEST_RULES_REFERENCE.md` §18.2's
+  prototype-field table, which distinguishes `prototype Guild()` from
+  `prototype Dwarven_Settlement()` and is what prompted reading the
+  dwarven `.dat` block in full rather than assuming it matched the other
+  racial guilds. Full detail of that finding is written up in
+  `TODO-New-Building-Requirements.md` §9.2.
+- **Primary source:** `Majesty_Files/SDK/OriginalQuests/GPL/Building_Data.dat`,
+  the 14 blocks tabulated above, plus
+  `Majesty_Files/SDK/OriginalQuests/GPL/prototype.gpl` for the
+  `Guild` vs. `Dwarven_Settlement` prototype distinction.
+
+**Incidental observation, consistent with the newer material:** the field
+value is spelled `Guild_Birth` in some blocks and `guild_Birth` in others
+(compare lines 343/449/504 against 713/746/814). Both ship working, which
+matches `GPL_QUEST_RULES_REFERENCE.md` §17.5's independently-confirmed
+finding that GPL function-name resolution is **case-insensitive**
+(established there from `EVSC` registry mismatches, a different mechanism
+— cited as a consistent parallel, **not** as proof for this one).
+
+**What remains open:** nothing for this item. Note the tier-2/tier-3
+entries were not tabulated — only tier-1/base entries, which is what the
+item asked about. If a future task needs upgrade-tier birth behaviour,
+that is a separate, unstarted question.
+
+---
+
+### NARROWED
+
+#### 7.2 `RecruitDelay` — NARROWED again, on a different axis than the earlier update
+
+**The open item** (§6): "*Whether `RecruitDelay` (universal per-hero XML
+field) is enforced exe-side, GPL-side, or not enforced as a real cooldown
+at all.*"
+
+**Already covered, do not redo:** this doc's §5 item 4 (line ~1159)
+carries an `Update (quest-rules cross-reference pass)` that upgraded the
+GPL half to a **confirmed negative** — `#DelayRecruitCheckPeriod` has
+zero call sites (only its two declarations, `GPL/globals.gpl` line 74 and
+`GPLMx/mx_Globals.gpl` line 76), the literal string `RecruitDelay`
+appears nowhere in GPL at all, and the `Rules/` corpus is now fully read.
+That leaves exe-enforced or not-enforced.
+
+**What is new here: the field is not hero-specific, so the question's
+framing ("universal per-hero XML field") is too narrow.**
+
+**Outcome: NARROWED.** `RecruitDelay` is confirmed to appear on
+`subType="Character"` entries that are **not heroes, not recruitable, and
+have no `Cost` field at all** — which rules out "hero recruitment
+cooldown" as the field's definition and makes it a generic per-unit-type
+delay whose meaning depends on the entry's `Menu` category.
+
+**Primary source, read directly:**
+`Majesty_Files/SDK/OriginalQuests/Data/M_Characters.xml` line 1943 —
+`Resource_Healplant` (`ID="AVk1"`, Description "Healing Herbs"),
+`subType="Character"`, `<Menu value="8"/>`, `Info value="Static"` +
+`Directionless` + `NotVisibleInOverheadView`. Its entire `<Game>` block
+is four fields: `DialogID value="APa8"`, `MaxHP value="10"`,
+**`RecruitDelay value="10000"`**, `HelpID value="h082"`. There is no
+`Cost`, no stat block, no `AllowedSpells` — this is a static prop/service
+entity, not a hero. Three further `Menu value="8"` Character entries
+exist in the same file (`AVk2` line ~2128, `AVk3` line ~2203, `AVk4`
+line ~2264).
+
+**The lead this came from, and its status.** This project's own
+`.kiro/steering/quest-and-mod-creation.md` states as a "Key insight" that
+`subType="Character"` + `Menu value="8"` is a **research/service slot**
+and that **`RecruitDelay` = research time**, with `birthScript` as the
+on-purchase callback. The primary read above is consistent with that. But
+**the steering file's claim carries no primary citation of its own, and
+this pass did not verify the "= research time" semantics** — no GPL reads
+the field, so the timing meaning is exe-side exactly as for heroes.
+Treat the semantic half as **UNVERIFIED**; only the *presence on a
+non-hero entity* is confirmed here.
+
+**What specifically remains open.**
+1. Whether the exe applies one shared delay mechanism across `Menu`
+   categories or a per-category one. Unknown.
+2. Whether hero `RecruitDelay` is enforced at all. Unchanged from the
+   line ~1159 update — still exe-enforced-or-not-enforced.
+3. **Suggested re-routing:** `TODO-Ghidra.md` §6.2 already scopes this
+   correctly ("determine whether a per-guild recruit cooldown timer
+   exists exe-side at all, and if so what field it reads"). It should be
+   **widened** to note the field is shared with `Menu="8"` service
+   entries, so a Ghidra trace should check whether the read site is
+   hero-specific or generic. That is an edit to `TODO-Ghidra.md`, which
+   this pass does not make — flagged for the main session.
+
+---
+
+#### 7.3 Unused SMNU recruit-button slots on other guilds — NARROWED (full write-up lives in the building doc)
+
+**The open item** (§6): "*Whether any guild's SMNU panel has
+pre-defined-but-currently-unused recruit button slots (the
+`Warriors_Guild` '3 buttons, exe toggles visibility' pattern) that a new
+hero could occupy without an exe patch — only confirmed for
+Warriors_Guild itself.*"
+
+**Outcome: NARROWED. Not duplicated here** — the reconciliation is
+written up once, in
+**`TODO-New-Building-Requirements.md` §9.4**, because it is the same
+finding for both docs. Summary of what changed, so this doc is readable
+standalone:
+
+- **The phenomenon is confirmed to exist in shipped SMNU data beyond
+  Warriors_Guild.** `textdata.cam`'s `GDB4` panel has two type-0 button
+  widgets (action codes 2016/2017) whose tag-7 references point at STRT
+  string indices 28/29 while that panel's STRT holds only 28 strings
+  (indices 0-27) — a real dormant/over-declared widget slot in shipped
+  data.
+- **The question is now answerable offline with validated tooling**
+  (`smnu_format.py`/`smnu_analysis.load_panels()`/`smnu_compiler.py`,
+  verified byte-perfect against 168 of 169 real panels).
+- **Explicitly NOT claimed:** `GDB4` is the GPL debugger's panel, not a
+  guild panel, so this does **not** show any guild has a spare recruit
+  slot. Treating it as if it did would be the assumed-analogy error this
+  doc's evidence standard forbids.
+
+**Citations:** `GPL_QUEST_RULES_REFERENCE.md` §17.3's self-correction
+passage (reference-doc layer) resting on
+`SMNUResearch/FUTURE_TODO.md`'s "Quest CAM Override Capability
+(CORRECTED July 2026)" and "Known Data Quirk: GDB4" sections (primary
+layer). Full citation detail in
+`TODO-New-Building-Requirements.md` §9.4.
+
+**Concrete next step, with the inputs already gathered.** The guild
+`DialogID`s needed are confirmed from primary XML
+(`Majesty_Files/SDK/OriginalQuests/Data/M_Buildings.xml`, read in full
+for `TODO-New-Building-Requirements.md` §9.1): `AP52` Warriors_Guild
+(line 655), `AP47` Rangers_Guild (685), and the seven temples — `AP01`
+Agrela (453), `AP05` Dauros (482), `AP10` Fervus (511), `AP19` Helia
+(540), `AP24` Krolm (569), `AP25` Krypta (597), `AP28` Lunord (626).
+Dump each panel's widget list and compare against the count of hero types
+in that building's `Produces` list. **This is offline work on this
+machine — route to `TODO.md`, not `TODO-Ghidra.md`.** This doc's §7.0-era
+note at its line ~65 already says as much ("`smnu_analysis.py`, no Ghidra
+needed"); §9.4 now supplies the specific `DialogID` inputs.
+
+---
+
+### UNCHANGED
+
+Listed deliberately so the next session does not spend a pass
+re-searching §16-§22 or §12-§15 for them. Nothing loosely-related is
+padded in.
+
+1. **The single biggest gap — no GPL/exe source for the literal "player
+   clicks Recruit on an ordinary (non-Embassy) guild panel"
+   gold-check-and-`$SpawnUnit` step** (§6 item 1). **Unchanged as an
+   answer.** The strength of the surrounding *negative* did improve, and
+   that is already recorded inline at this doc's line ~1159 (the corpus
+   it was searched against is now fully read), but no positive mechanism
+   was found. Still needs a Ghidra trace of the recruit button's click
+   handler — `TODO-Ghidra.md` Priority 3.4's class of work, aimed at the
+   recruit action code rather than research purchases. **Note the
+   §7.3/§9.5 caveat:** this project has already had one
+   "needs-an-exe-change" verdict overturned by finding a data registry,
+   so the exe-side conclusion here should be read as *not yet ruled out*
+   rather than proven.
+2. **The exact exe-side function / control_id range for the Recruit
+   button specifically** (§6 item 3). Nothing in the newer material
+   identifies it. Same Ghidra item as above; distinct from, but the same
+   class as, the research-button control_id ranges already flagged
+   UNCONFIRMED in `SMNUResearch/findings/exe_disassembly_results.md`.
+3. **Whether `Generate_Character_Attributes` is called automatically for
+   a UI-recruited hero** (§6 item 2). **Already reconciled inline** at
+   this doc's line ~736 — NARROWED from three candidates to one by
+   eliminating two as confirmed negatives, not closed. Do not re-run that
+   search; read the existing update instead. Listed here only so it is
+   not mistaken for an untouched gap.
+4. **What `$BuildingIsRecruiting` actually checks** (§6 item 5).
+   **Already reconciled inline** at this doc's line ~1089 — call-site
+   count re-confirmed exhaustive at exactly two, both inside
+   `GuildHasOpenSlots` (`GPL/Building_Births.gpl` line 991,
+   `GPLMx/mx_Building_Births.gpl` line 1211), contract narrowed from the
+   function's own shipped comment. Its boolean contract is still
+   unexplained in GPL source. Nothing further in §16-§22.
+5. **The hero `Cost` field's real consumer** (§6 item 4). Spent — see
+   §7.0. The `-600` lead resolves to a single function, not a second
+   independent site. Settleable by an in-game test (change `Cost` on a
+   shipped hero, observe the recruit price) or Ghidra;
+   `TODO-Ghidra.md` Priority 6 already carries it.
+6. **No prerequisite/tech-tree gate for recruitment anywhere in GPL**
+   (§6 item 6). **Already reconciled inline** at this doc's line ~1159 —
+   upgraded from "reads as a genuine absence" to a confirmed negative
+   against a fully-read corpus. Unchanged as a finding.
+7. **Everything in §1 (sprites) and §4 (sound)** — including the
+   missing-animation-frame fallback and the missing-voice-phase failure
+   mode. §16-§22 is entirely GPL-level and never discusses CAM/ImageSet
+   or WAVE resolution; §12-§15 does not either. This mirrors the same
+   conclusion already recorded for the building doc's `Crumble` item.
+   **Do not re-search these against the quest-rules layer** — they need
+   in-game tests or a Ghidra trace of the sprite/sound loader.
+
+---
+
+**§7 tally:** 1 CLOSED (§7.1), 2 NARROWED (§7.2, §7.3), 7 UNCHANGED,
+plus the §7.0 note that seven of this doc's items were already
+reconciled by the earlier pass and that the `Cost`/hardcoded-600 lead is
+spent. Two corrections issued in §7.1 — the `birthScript2` population
+claim in §5, and the non-existent `Dwarven_Foundry` — both with the
+original text left in place per the project's visible-correction
+convention.
+
+---
 
 ## Process Notes for Sub-Agent Dispatches (write in SMALL portions)
 
