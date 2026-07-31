@@ -3578,6 +3578,33 @@ alone does not gate tier-2 content.**
 >   `$basic_upgrade(building)` and let workers plus
 >   `BuildingReachedMaxHP` finish it, which also gets the advisor sound,
 >   chat message and Guardhouse guard-thread restart for free.
+> - **Confirmed never attempted, and there is a precedent for it working.**
+>   Checked directly: `$basic_upgrade` has **zero** call sites anywhere in
+>   the mod, and `buildings_waiting` appears only as the stock prototype
+>   field declaration in `mx_prototype.gpl`, never read or written by mod
+>   code. So the approach is genuinely untried rather than tried-and-
+>   rejected. **However — the same mod already delegates to the stock
+>   labor path on the BIRTH side and it works:** `playerOneAI` (the
+>   `AI_Takeover` building's `birthscript`) does its AI setup and then ends
+>   with `$basic_birth( thisagent )`, handing construction back to the
+>   engine. That is the construction-side twin of the proposed upgrade
+>   fix, in the same file, already in service. **Treat this as
+>   encouragement, not evidence** — birth and upgrade are different code
+>   paths and this project's standard forbids concluding one from the
+>   other. It does mean the pattern is familiar to the mod's author and
+>   the mechanical shape is proven at least once.
+> - **SUPERSEDED — read `GPL_MODDING_GUIDE.md` §2's "construction labor
+>   system" subsection before acting on the bullet above.** Tracing the
+>   worker side showed `$basic_upgrade` **alone is not sufficient**: it only
+>   performs the queue push, and a queued building is abandoned on the same
+>   tick unless `#ATTRIB_CurrentStageBuilt` is also cleared and
+>   `HP < MaxHP`. The guide carries the full three-gate contract.
+>   Additionally, whether a GPL-only upgrade updates the building's
+>   **sprite** is now explicitly UNVERIFIED and filed as a Ghidra
+>   Verification Task — tiers are distinct unit types with their own
+>   `ImageIDBase`, the swap is exe-side, and it is unknown whether
+>   `$UpgradeAgentAttributes` performs it or merely refreshes attributes
+>   alongside a separate engine step.
 
 ---
 
