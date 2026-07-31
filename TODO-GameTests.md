@@ -16,6 +16,59 @@ Tasks that require loading the game to verify. Run on the game machine.
 
 ---
 
+## MOD vs QUEST CAM loading — does a texture CAM work in a `.mmxml` at all?
+
+**Priority: high, and unusually cheap — we already have both variants
+built.** Another modder reports that **CAMs containing unit textures do not
+take effect when attached to a MOD (`.mmxml`)**, while the same CAM
+attached to a QUEST (`.mqxml`) works fine. His case was a "shrine of light"
+building. He separately reports **freestyle resources load differently**,
+possibly load-order, and that the freestyle route "won't work for mods."
+
+**Why this matters:** `CAM_MODDING_GUIDE.md`'s Quest CAM Loading table
+claimed `.mqxml` and `.mmxml` behave identically. That claim is now flagged
+as doubtful for `.mmxml`. **And our own `IceSpell` mod may be silently
+affected** — `IceSpell/IceSpell.mmxml` ships
+`<CAM>Data\Quest_maindata.cam</CAM>` carrying the `freeze_effector` overlay
+sprite, so that overlay may never have rendered.
+
+- [ ] **A/B the two IceSpell variants.** Load `IceSpell/` (the `.mmxml`
+  mod) and confirm whether the freeze overlay sprite renders. Then load
+  `IceSpell_Quest/` (the `.mqxml` quest) and check the same thing.
+  - If the overlay appears in the quest but NOT the mod → **report
+    confirmed**, and the failure is isolated to the mod CAM path.
+  - If it appears in both → the report doesn't reproduce for overlay
+    sprites; find out what's different about his building CAM (building
+    IMAG vs overlay IMAG?).
+  - If it appears in neither → the problem is our CAM, not the mod path.
+    Check IMAG format first.
+- [ ] **Narrow what "doesn't stick" means** if confirmed: does the game
+  crash, log anything, silently fall back to the base sprite, or render
+  nothing? That distinguishes a load failure from a lookup/override
+  failure.
+- [ ] **Test whether it's textures specifically.** Put a WAVE-only or
+  STRT-only CAM in an `.mmxml` and see whether *those* override. The
+  report says "cam files that contain unit textures", which implies other
+  resource classes may be fine — that would point at IMAG/TILE resolution
+  rather than at CAM loading generally.
+- [ ] **Freestyle test (his suggestion, verbatim):** add a `<CAM>` under
+  `<Load>` in `Quests/Freestyle.mqxml` and see whether it applies.
+  **Context we confirmed offline:** Freestyle IS a normal shipped quest
+  (`Quests/Freestyle.mqxml`, `<Quest id="{30455246-…}">`), and its `<Load>`
+  block currently contains **only** `<Template>Freestyle.q</Template>` — no
+  CAM, GPL or Descriptions at all. So this test adds a `<Load>` entry that
+  isn't normally present.
+- [ ] **If mod CAMs are genuinely broken, document the workaround** in
+  `CAM_MODDING_GUIDE.md`: ship sprite-bearing content as a quest, or
+  replace a base/expansion CAM directly. Note that XML `<Descriptions>`
+  loading in mods is unaffected either way.
+
+**Record results in:** `CAM_MODDING_GUIDE.md` ("MOD vs QUEST CAM loading"
+section — replace the "not yet verified by us" framing with what you find)
+and tick here.
+
+---
+
 ## IceSpell Quest — Full Test
 
 **Prerequisite:** Run `cmd /c MakeGPL.bat` in `IceSpell_Quest/` first.

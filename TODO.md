@@ -272,6 +272,20 @@ See also:
   `build_krolm`. The wider codebase implies case-insensitive matching
   (`$disableunittype`, `#CheckTitles`), but it is not actually confirmed
   and this is a cheap compile/runtime test.
+- [ ] **HIGH: verify the reported MOD-vs-QUEST CAM asymmetry** — routed to
+  `TODO-GameTests.md`. Another modder reports **texture-bearing CAMs do not
+  take effect when attached to a MOD (`.mmxml`)** but work fine on a QUEST
+  (`.mqxml`), plus that **freestyle resources load differently**.
+  `CAM_MODDING_GUIDE.md` had claimed the two file types behave identically
+  — now flagged as doubtful and rewritten. **Our own `IceSpell` mod ships
+  `<CAM>Data\Quest_maindata.cam</CAM>` in its `.mmxml`, so its
+  `freeze_effector` overlay may never have rendered.** Cheap to settle: we
+  already have both an `IceSpell/` mod and an `IceSpell_Quest/` quest
+  shipping the same spell, so it's a straight A/B.
+  **Confirmed offline while investigating:** Freestyle is a normal shipped
+  quest (`Quests/Freestyle.mqxml`, `QuestsMX/mx_Freestyle.mqxml`), not a
+  separate mode — and its `<Load>` block contains only
+  `<Template>Freestyle.q</Template>`, no CAM/GPL/Descriptions at all.
 - [ ] **Minor cleanup in `TODO-New-Building-Requirements.md` §3** — the
   `birthScript` passage has an unfinished self-correcting sentence that
   reads like a mid-edit artifact ("**Confirmed real exception in the

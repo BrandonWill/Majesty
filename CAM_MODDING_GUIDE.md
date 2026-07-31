@@ -20,7 +20,14 @@ Only sprites/audio need to go into a CAM file.
 
 ### Quest CAM Loading
 
-Quest CAMs loaded via `<CAM>` in `.mqxml`/`.mmxml` files ARE loaded into the resource system
+> ⚠️ **READ THIS FIRST — the table below is verified for QUESTS (`.mqxml`)
+> and is reported NOT to hold for MODS (`.mmxml`) when the CAM contains
+> unit textures.** See "MOD vs QUEST CAM loading" immediately below. The
+> heading and table originally said "`.mqxml`/`.mmxml`" as though the two
+> behaved identically; that is now in doubt and the `.mmxml` half should
+> not be relied on.
+
+Quest CAMs loaded via `<CAM>` in `.mqxml` files ARE loaded into the resource system
 and **override** base/expansion entries with the same name (last-loaded wins):
 
 | Resource Type | Quest CAM Override? | Notes |
@@ -36,6 +43,79 @@ and **override** base/expansion entries with the same name (last-loaded wins):
 with proper terminators and matching STRT string counts). A malformed SMNU will crash the
 panel parser at runtime. See `SMNUResearch/findings/smnu_parser_decompilation.md` for the
 exact format specification.
+
+### MOD vs QUEST CAM loading — a reported asymmetry, and it affects our own IceSpell mod
+
+**Evidence class: a report from another modder in a modding group chat,
+relayed by the project owner. NOT yet verified by us.** Recorded because it
+contradicts a claim this guide was making, and because it has an immediate
+consequence for a mod in this repo. Treat as a strong lead, not a finding.
+
+**The two reported problems, in the modder's own framing:**
+
+1. **CAMs containing unit textures do not "stick" when attached to a MOD.**
+   His example: he tried to ship a "shrine of light" building via a `<CAM>`
+   in his `.mmxml` and it did not take effect. **Attaching the same CAM to
+   a QUEST worked fine.**
+2. **Freestyle resources are handled differently from other quests**,
+   possibly a resource load-order difference. His suggested test: add a
+   `<CAM>` to `Freestyle.mqxml` and see whether it applies. He notes this
+   route **"won't work for mods"** — consistent with (1).
+
+**What we can confirm ourselves right now, without the game:**
+
+✅ **Freestyle is a shipped QUEST, not a separate game mode.** Verified
+directly: `Quests/Freestyle.mqxml` and `QuestsMX/mx_Freestyle.mqxml` exist,
+each a normal `<Quest id="…">` with a `<DataConfiguration>`. The base one
+is minimal:
+
+```xml
+<Quest id="{30455246-0000-0000-0000-000000000000}">
+    <Name>FREESTYLE</Name>
+    <DataConfiguration>
+        <Dataset base="Majesty">
+            <Load><Template>Freestyle.q</Template></Load>
+            <Unload><CAM></CAM><GPL></GPL><Constants></Constants></Unload>
+        </Dataset>
+    </DataConfiguration>
+</Quest>
+```
+
+Two things follow. **Its `<Load>` block contains only a `<Template>`** — no
+`<CAM>`, `<GPL>` or `<Descriptions>` at all — so the modder's "add a CAM to
+`Freestyle.mqxml`" is exactly the right shape of test: you'd be adding a
+`<Load>` entry that isn't normally there. And **its `<Unload>` block lists
+empty `<CAM>`/`<GPL>`/`<Constants>` tags**, which is the SDK template shape
+and hints that unloading those resource classes is a supported operation.
+
+❓ **Why freestyle would differ is unexplained.** Since it *is* a quest,
+there is no obvious separate code path. Candidate explanations, none
+verified: it loads the fewest resources so ordering effects are more
+visible; something about `base="Majesty"` with no other `<Load>` entries;
+or the difference is really about *when* the template loads relative to
+resources.
+
+⚠️ **Direct consequence: our own `IceSpell` mod ships a texture CAM via
+`.mmxml` and therefore probably hits problem (1).**
+`IceSpell/IceSpell.mmxml` contains `<CAM>Data\Quest_maindata.cam</CAM>`,
+and that CAM carries the `freeze_effector` overlay sprite — a unit texture.
+If the report is right, **that overlay has likely never rendered**, and the
+mod has only ever demonstrated its GPL logic. `IceSpell/README.md` and
+`TESTING.md` both tell the reader to remove the `<CAM>` line to isolate
+crashes and warn the overlay "won't be visible without the CAM" — written
+on the assumption the CAM path worked.
+
+**This is unusually cheap to test, because we already have both variants:**
+`IceSpell/` is the `.mmxml` mod and `IceSpell_Quest/` is the `.mqxml`
+quest, shipping the same spell. If the overlay appears in the quest but not
+the mod, the report is confirmed and the mechanism is isolated to the
+mod-CAM path. Queued in `TODO-GameTests.md`.
+
+**Practical guidance until tested:** if your mod needs new sprites, ship it
+as a **quest** (`.mqxml`), or expect to distribute the CAM by replacing a
+base/expansion file directly. XML `<Descriptions>` loading in mods is
+unaffected by this — it is specifically the CAM/texture path that is
+reported broken.
 
 ---
 
