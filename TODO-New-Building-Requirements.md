@@ -3747,9 +3747,10 @@ The mod models this as three mutually exclusive `build_gnomes` /
 when palace level == 1** (its level-2+ branch randomises between elves
 and dwarves only), consistent with gnomes being the early-game choice.
 
-**Deity exclusivity — two tiers of choice:**
+**Deity exclusivity — read the correction block below before using the
+"pick one group" framing, which is misleading.**
 
-At **palace level 2**, pick one group:
+At **palace level 2**, the groups are:
 1. **Agrela + Dauros**
 2. **Krypta + Fervus**
 3. **Krolm** (alone)
@@ -3766,15 +3767,44 @@ The mod implements exactly this: `build_agrela`/`build_krypta`/
 its range from 1-3 to 1-2 (excluding Krolm) when Helia or Lunord is
 already present — the same rule read from the other direction.
 
-**A structural hint worth recording, offered as a HYPOTHESIS.** When the
-AI finds itself starting with temples from more than one group
-(pre-placed by the quest), it picks one and calls
-`$destroyBuildingsInList()` on the losers — it demolishes them. That it
-*has* to suggests **the exclusivity is enforced at build time, not
-retroactively**: a quest can pre-place temples that violate the rule and
-the engine tolerates them. **Unconfirmed** — the demolition may equally
-be the AI keeping its own strategy coherent. Worth knowing if you are
-authoring a quest that pre-places temples.
+> **CORRECTED by the owner immediately after the above was written — the
+> mechanism is a MUTUAL LOCKOUT, not a forced choice.** The hypothesis
+> this replaces guessed that exclusivity was "enforced at build time" and
+> that the AI's demolition might just be strategy tidiness. Both halves
+> were wrong in an important way. Kept visible per convention.
+>
+> **The engine does not disallow owning conflicting temples at all.** A
+> freestyle setup option can hand a player two conflicting factions
+> outright, and nothing rejects it.
+>
+> **What actually happens: conflicting temples lock each other out.** With
+> both an Agrela temple and a Fervus temple standing, the player **cannot
+> build any further buildings of *either* faction from the palace.** Not
+> one side winning — both branches deadlocked.
+>
+> **So "pick one of three groups" is the wrong mental model.** There is no
+> prompt and no forced election. Building into one group locks out the
+> opposing group, and ending up with both locks out both. The observable
+> outcome resembles a choice only because a player who wants to keep
+> progressing has to avoid the deadlock.
+>
+> **This also explains the AI's demolition as purposeful and correct.**
+> `$destroyBuildingsInList()` on the losing group is not housekeeping —
+> **it is how the AI un-deadlocks itself.** Tearing down the conflicting
+> temples is the only way to restore its own faction's build options.
+> That is a real, reusable technique for any GPL author whose quest
+> pre-places conflicting temples.
+>
+> ❓ **Still open:** whether the lockout keys on the temple *existing* or
+> on it being *completed*/alive, and whether a partially-built or
+> disabled conflicting temple still deadlocks. Also unknown whether the
+> Krolm-vs-Helia/Lunord rule at palace 3 works by the same lockout
+> mechanism or is a separate gate. Both are in-game tests.
+>
+> **Note the freestyle angle for anyone working on setup-menu research:**
+> that a freestyle option can produce conflicting factions means the
+> setup menu can put the player into the deadlock state deliberately, so
+> this is a configurable starting condition and not merely an edge case.
 
 **Why this matters for a NEW building.** It confirms an exe-side
 prerequisite system exists and is rich (building level, completion state,

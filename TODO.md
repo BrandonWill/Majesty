@@ -186,7 +186,20 @@ See also:
   Krypta+Fervus / Krolm; at palace L3 Helia **or** Lunord, and neither if
   Krolm was taken. Explains why source reading never found it and why
   shipped GPL keeps special-casing Dwarven_settlement alongside
-  ballista_tower.
+  ballista_tower. **Owner correction applied on top:** deity exclusivity
+  is a **mutual lockout, not a forced choice** — the engine happily lets
+  you own conflicting temples (freestyle can even hand you two
+  conflicting factions), but owning e.g. both Agrela and Fervus temples
+  means you can build **no further buildings of either faction**. Both
+  branches deadlock. Demolishing the conflicting temples is the way out,
+  which is why the AI calls `$destroyBuildingsInList()` on the losers —
+  purposeful un-deadlocking, not housekeeping.
+- [ ] **In-game tests for the deity lockout** (from §10.8's correction):
+  does the lockout key on the conflicting temple merely existing, or on
+  it being completed/alive? Does a partially-built or `$disableunittype`d
+  conflicting temple still deadlock? And is the palace-3
+  Krolm-vs-Helia/Lunord rule the same lockout mechanism or a separate
+  gate? Route to `TODO-GameTests.md`.
 - [ ] **Ghidra (now well-specified): find the exe prerequisite table.**
   Target the rule gating `Ballista_Tower` on `Dwarven_Settlement` — the
   simplest single-dependency case in the tree — then check whether the

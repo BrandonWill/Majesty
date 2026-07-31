@@ -728,10 +728,21 @@ owner and cross-checked against his AI mod's `canBuild()`:
 | `Elven_Bungalow` | completed **Inn** + completed **Marketplace** + palace level ≥ 2 |
 | `Ballista_Tower` | at least one completed **`Dwarven_Settlement`** |
 
-Plus mutual-exclusion groups the data layer says nothing about: **one race
-only** (gnomes / dwarves / elves); **one deity group at palace 2**
-(Agrela+Dauros, Krypta+Fervus, or Krolm alone); and at **palace 3**,
-Helia *or* Lunord — but neither if you took Krolm. See §10.8 of
+Plus exclusivity rules the data layer says nothing about: **one race only**
+(gnomes / dwarves / elves); deity groups at palace 2 of **Agrela+Dauros**,
+**Krypta+Fervus**, or **Krolm alone**; and at palace 3, Helia *or* Lunord —
+neither if you took Krolm.
+
+⚠️ **Deity exclusivity is a mutual LOCKOUT, not a forced choice — this
+matters if you script it.** The engine does not prevent owning
+conflicting temples; a freestyle option can hand a player two conflicting
+factions outright. But with, say, an Agrela temple *and* a Fervus temple
+standing, the player **cannot build further buildings of either faction
+from the palace** — both branches deadlock. There is no prompt and no
+election; it only looks like a choice because a player who wants to keep
+progressing must avoid the deadlock. **The way out is to demolish the
+conflicting temples**, which is exactly what the `Dwarfeh_AI` mod does to
+un-deadlock itself. Confirmed by the project owner from play; see §10.8 of
 `TODO-New-Building-Requirements.md`.
 
 For historical context on why source reading missed this: `ABB1`'s XML has
