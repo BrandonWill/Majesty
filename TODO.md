@@ -205,6 +205,22 @@ See also:
   simplest single-dependency case in the tree — then check whether the
   table is data-addressable at all. If it is, new buildings could join
   the prerequisite system. Route to `TODO-Ghidra.md`.
+- [x] **Minimap question RESOLVED for authoring purposes** (§10.10).
+  Minimap markers are engine-drawn generically from faction/team colour,
+  **not** from a per-unit `Minimap` ImageSet: only **28 of 380** IMAG
+  records have setID 300 (18 heroes, 4 `MV*`, 3 `AR*`, and among buildings
+  only the 3 Palace tiers), yet everything else still appears on the
+  minimap, and the owner reports non-distinctive faction-coloured blips
+  for heroes and buildings alike. Kills the "downscaled ImageSet"
+  hypothesis. **A new building should author no minimap art.**
+- [ ] **Open remainder of §10.10: what do the 28 `Minimap`-set records use
+  it for?** Dumping the Palace's and several heroes' setID-300 descriptors
+  was inconclusive — all report `width: 0, height: 0` with an implausible
+  `frame_count`, but that was read with
+  `parse_directional_frame_descriptor()` and `Minimap` is presumably
+  non-directional, so **the parse is untrusted and must not be cited as
+  evidence of empty art**. Needs a non-directional descriptor reader (this
+  machine) or an in-game A/B check on the Palace marker.
 - [ ] **Confirm GPL field-name case sensitivity.** The mod has a live
   example: it reads `palace's "build_Krolm"` while declaring
   `build_krolm`. The wider codebase implies case-insensitive matching

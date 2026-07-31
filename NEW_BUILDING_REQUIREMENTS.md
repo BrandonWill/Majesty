@@ -36,16 +36,20 @@ state. This is a real building-vs-hero difference, not an extraction
 gap; re-checked by dumping both sets' frame descriptors and confirming
 real hotspot/size/tile-index data.
 
-⚠️ **`Minimap` (setID 300) is NOT a general building requirement** — a
-full scan of all 91 `AB*`/`BB*` IMAG records found it only on the three
-Palace tiers (`ABJ1`/`ABJ2`/`ABJ3`). Every other building, guild,
-temple, shop and lair has none, so **don't author one**. ❓ What actually
-draws an ordinary building on the minimap is unresolved: an
-engine-computed dot, or a downscaled existing ImageSet. What IS settled
-is that ordinary buildings *do* appear — `Flags value="NotInMiniMap"` is
-a real shipped opt-out flag whose entire population (11 in
-`M_Buildings.xml`, 1 in `MX_Buildings.xml`) is decorative props, which
-only makes sense if everything else appears by default.
+✅ **Author NO `Minimap` art (setID 300) — the engine draws the marker for
+you.** Minimap markers are generated generically by the engine from the
+agent's faction/team colour, not from a per-unit ImageSet. Two independent
+lines confirm it: only **28 of 380** IMAG records carry a `Minimap` set at
+all (18 heroes, 4 `MV*`, 3 `AR*`, and among buildings **only the three
+Palace tiers**), yet every guild, temple, shop and monster lair appears on
+the minimap regardless; and the project owner reports from play that
+heroes and buildings alike render as **non-distinctive faction-coloured
+blips**. `Flags value="NotInMiniMap"` is an opt-*out* whose entire
+population is decorative props (11 in `M_Buildings.xml`, 1 in
+`MX_Buildings.xml`), which only makes sense if appearing is the default.
+❓ What the 28 records that *do* carry a `Minimap` set use it for is
+unresolved — see §10.10 of `TODO-New-Building-Requirements.md` — but it
+does not affect authoring a new building.
 
 ✅ **Buildings visibly change appearance as they are constructed** —
 confirmed by the project owner from play, closing what was previously an

@@ -3831,6 +3831,62 @@ the owner, not fixed here, and irrelevant to the findings above):
 
 ---
 
+#### 10.10 Minimap markers are engine-drawn — the `Minimap` ImageSet is NOT the general mechanism
+
+**Owner's recollection (offered with explicit low confidence, recorded at
+that strength):** both heroes and buildings show up on the minimap, they
+are **not distinctive**, and his honest best guess is "a square based on
+the colour of the faction." He does **not** recall whether the Palace
+looks different, and said so rather than guessing.
+
+**Paired with a direct scan of `Data/maindata.cam`, that is enough to
+settle the general question.** Counting IMAG records carrying a `Minimap`
+set (setID 300): **28 out of 380 total.** By ID prefix:
+
+| Prefix | Count | What they are |
+|---|---|---|
+| `AV*` | 18 | all playable heroes, plus `Res Crystal`/`Res Item` |
+| `MV*` | 4 | — |
+| `AR*` | 3 | — |
+| `AB*` | **3** | **the three Palace tiers only** |
+
+**Every guild, temple, shop, ordinary building and monster lair has no
+`Minimap` set whatsoever — and all of them appear on the minimap anyway.**
+
+**CONCLUSION (confirmed at the level that matters for authoring): the
+minimap marker is drawn by the engine, generically, from the agent's
+faction/team colour. It is not sourced from a per-unit `Minimap`
+ImageSet.** Two independent lines agree: the owner sees undifferentiated
+faction-coloured blips, and 352 of 380 records have no minimap art to
+draw from in the first place.
+
+**This resolves §9's UNCHANGED item on what represents an ordinary
+building on the minimap**, and it kills the "downscaled existing
+ImageSet" hypothesis — a downscaler would not need the flag population
+evidence, and would produce *distinctive* shapes, which is the opposite of
+what is observed.
+
+**Consequence for a new building — now a clean answer:** author **no**
+`Minimap` art. You will get the standard engine marker for free. This also
+retro-justifies §1's advice ("don't author one"), which had been reasoned
+purely from the absence of shipped examples.
+
+❓ **What remains open is narrower and no longer blocking: what the 28
+records that DO have a `Minimap` set use it for.** An attempt to dump the
+Palace's and several heroes' setID-300 frame descriptors was
+**inconclusive** — every one reports `width: 0, height: 0`, zero hotspots
+and an implausible `frame_count` of 8177, read via
+`parse_directional_frame_descriptor()`. Two readings, not distinguished:
+either these sets carry **no real pixel data** (they are stubs, which
+would fit the owner's "not distinctive" observation perfectly), or
+`Minimap` is a **non-directional set whose descriptor layout that parser
+cannot read** (it is built for directional unit sets). **Do not cite the
+0×0 dimensions as evidence of empty art — the parse is untrusted.**
+Settling it needs either a non-directional descriptor reader or an
+in-game A/B check on the Palace's marker.
+
+---
+
 #### 10.9 Two smaller confirmations
 
 **Guardhouse really does cost less to upgrade than to build.** Owner
