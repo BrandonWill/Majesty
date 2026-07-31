@@ -18,9 +18,12 @@ See also:
   to add a new hero, step by step, with confidence markers per item
 - `TODO-New-Hero-Requirements.md` — the research/citations behind the
   checklist above (sprites, XML, GPL, sound, recruitment)
-- `TODO-New-Building-Requirements.md` — research/citations behind a
-  future "how to add a new building" checklist deliverable — all 8
-  sections now complete
+- `NEW_BUILDING_REQUIREMENTS.md` — **the actual checklist deliverable**:
+  how to add a new building, step by step, with confidence markers per
+  item (mirrors `NEW_HERO_REQUIREMENTS.md`'s format)
+- `TODO-New-Building-Requirements.md` — the research/citations behind the
+  checklist above — all 9 sections complete (§9 is the reconciliation
+  pass against the quest-rules research)
 - `IceSpell/TODO.md` — IceSpell mod-specific tasks
 - `SMNUResearch/FUTURE_TODO.md` — Panel system research + tooling
 
@@ -78,11 +81,35 @@ See also:
   minimap representation) and Priority 6 (hero `Cost` field's real
   consumer, `RecruitDelay` enforcement, `$BuildingIsRecruiting`
   contract). See `TODO-Ghidra.md` for the full writeups.
-- [ ] **Distill `TODO-New-Building-Requirements.md` into a
-  `NEW_BUILDING_REQUIREMENTS.md` deliverable** — the literal checklist,
-  mirroring `NEW_HERO_REQUIREMENTS.md`'s ✅/⚠️/❓ confidence-marker
-  format. All underlying research (§1-§8) is done; this is pure
-  synthesis, no new investigation needed.
+- [x] **`NEW_BUILDING_REQUIREMENTS.md` deliverable created** — the
+  literal checklist (958 lines), mirroring `NEW_HERO_REQUIREMENTS.md`'s
+  ✅/⚠️/❓ format: Step 1 sprites, 2 XML, 3 `.dat`/prototype/compilation,
+  4 sound, 5 construction menu + placement rules, 6 the `DialogID` panel
+  wall, 7 a building that recruits a hero (Cases A/B/C), plus a Bottom
+  Line. 75 ✅ / 15 ⚠️ / 27 ❓. Headline verdict: **a new building that
+  reuses an existing `DialogID` is fully achievable today** — the
+  build-menu list is data-driven (the expansion's own new buildings
+  prove it, same exe) — while **a new building needing its own brand-new
+  panel is blocked**, though §9.5's caveat means "not yet ruled out"
+  rather than proven impossible. Carries §9.1's retraction (`Menu` is
+  the build-menu categoriser; `Flags value="IsGuild"` is not — seven
+  temples ship `IsGuild` + `Menu="0"`).
+- [ ] **Fix two internal contradictions in
+  `TODO-New-Building-Requirements.md`** (found while distilling the
+  deliverable, not yet corrected in the research doc):
+  1. **§1 `Build`-family count** — an early bullet says "only ONE
+     `Build` set exists per building record, not a progressive
+     sequence," while a later, more detailed bullet confirms multiple
+     populated Build-family setIDs (80/81/82) at distinct blob offsets.
+     The later finding supersedes; the deliverable already reflects it.
+  2. **§2 `Menu` values for `Graveyard`/`Sewer`** — the same entries are
+     labelled both `Menu="2"` and `Menu="3"`, and both
+     `CanUse="HumanPlayer"` and Monster. §9 UNCHANGED item 4 already
+     carries the underlying question forward as open; this is a
+     write-up inconsistency on top of it.
+  Also minor: §3's `birthScript` passage has an unfinished
+  self-correcting sentence that reads like a mid-edit artifact (its
+  conclusion — presence universal, target varies — is clear).
 
 ### GPL / Gameplay Logic Deep Dive
 - [x] First consolidation done — `GPL_MODDING_GUIDE.md` created,
