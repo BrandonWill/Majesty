@@ -4302,6 +4302,65 @@ matches. So: the parameter exists in the signature, the engine presumably
 passes something, and **nothing in the shipped data or script layer
 confirms what.** Treat it as unusable until traced.
 
+> **Addendum from a later close re-read of the comment block (prompted by
+> the owner spotting the `buildRequirements` line). Three upgrades to the
+> above, one of which is a demonstration rather than an inference.**
+>
+> **1. The block is explicitly labelled a design sketch.** Its header
+> comment reads `// One possible idea for code structure in this
+> function:` — so this is a *proposal that was never built*, not working
+> code someone disabled. That distinction matters for how much weight it
+> carries: it tells you the developers' **intent**, not the engine's
+> behavior.
+>
+> **2. It demonstrably never compiled** — this is now proven, not inferred
+> from "zero live references." The sketch contains two errors that would
+> fail the compiler outright:
+> - It uses **`theBuilding`** throughout, but the function's actual
+>   parameter is **`thisBuilding`**. `theBuilding` is undeclared.
+> - It calls **`$IsValidFunction`**, but the real primitive — per the
+>   official SDK function list, see `GPL_LANGUAGE_REFERENCE.md` — is
+>   **`ValidFunction`**. `$IsValidFunction` does not exist.
+>
+> Together with `buildRequirements`, `maxBuildRange` and `$GetClosest`
+> appearing nowhere else in either repo (re-grepped: matches only inside
+> these comments, in both the base and mx copies), this is conclusive.
+>
+> **3. The intended design is recoverable, and it is a two-tier system.**
+> Worth recording because it is the clearest statement anywhere of what
+> the `dependencies` parameter was *for*:
+> - **Per-building override:** `theBuilding's "buildRequirements"` was to
+>   be a **`function`-typed agent field**. If present, call it and return
+>   its result — "Not all building need special-case requirements."
+> - **Generic fallback:** otherwise, treat `dependencies` as a list of
+>   buildings this one must be near, and refuse if the **closest** one is
+>   farther than the building's own `maxBuildRange`.
+> - **An empty `dependencies` list was an error condition**, not a
+>   pass-through: `$DebugOut( "Error: $CanIBuildThisBuilding() was passed
+>   an empty dependencies list" ); return 1;`. That is a real hint the
+>   engine was expected to *always* supply one — mild support for "the
+>   engine passes something" above, though it describes intent at design
+>   time, not shipped behavior.
+>
+> So the shipped function is the **hardcoded per-title fallback** for a
+> data-driven system that was designed and abandoned. A modder adding a
+> new per-title branch is working the way the shipped code works, not
+> against the grain.
+>
+> **4. Separately — an asymmetry in the LIVE branches worth knowing when
+> authoring one.** Only the `wizards_tower` branch filters its neighbour
+> search through `$listcompleted`. The `marketplace` and `trading_post`
+> branches do **not**. Consequences, both real:
+> - An **unfinished** wizards guild/tower does **not** satisfy the wizard
+>   tower's proximity requirement.
+> - An **unfinished** marketplace **does** still block a new one.
+>
+> Nothing in the source explains the inconsistency, and it may simply be
+> an oversight. Match whichever behavior you actually want rather than
+> copying a branch blindly. (Relatedly, the `marketplace` branch opens
+> with the stale comment `// should vheck for trazding posts too` — it
+> already does check trading posts, so the note outlived its fix.)
+
 **Every per-title branch, base version (`construction_rules.gpl`):**
 
 | Title | Search radius | Rule | Failure return |

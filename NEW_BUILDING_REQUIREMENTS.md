@@ -752,8 +752,17 @@ un-deadlock itself. Confirmed by the project owner from play; see §10.8 of
 For historical context on why source reading missed this: `ABB1`'s XML has
 no prerequisite field at all, and the `ballista_tower` branch of
 `CanIBuildThisBuilding` is **commented out** in both
-`construction_rules.gpl` and `mx_Construction_Rules.gpl` — the developers
-implemented it in GPL and then moved it into the exe.
+`construction_rules.gpl` and `mx_Construction_Rules.gpl`.
+
+⚠️ **Correction to an earlier version of this line, which claimed "the
+developers implemented it in GPL and then moved it into the exe."** That
+was an assumption and it does not hold. The commented branch is a
+**proximity** rule — build within `#ballista_tower_range` (800) of an
+existing Ballista Tower *or* a Dwarven Settlement, else fail with
+`#chat_out_range_ball_dsettle`. The live requirement the owner describes is
+an **ownership/tech gate** — you must *have* a completed Dwarven
+Settlement, anywhere on the map. Those are different mechanics, so this is
+an abandoned *different* rule, not the same rule relocated.
 
 ✅ **But there IS a real GPL-side placement prerequisite you can extend:
 `CanIBuildThisBuilding(agent thisBuilding, list dependencies)` in
