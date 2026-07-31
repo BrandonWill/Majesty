@@ -83,6 +83,44 @@ the existing IMAG/TILE docs)
   confirms this mechanism — not traced further here, out of this item's
   scope).
 
+  > **RETRACTED — this claim is false. Do not use it.** It is kept
+  > visible per this project's convention. The claim below ("only ONE
+  > `Build` set exists per building record ... there is no `Build-2`/
+  > `Build-3`-style numbered variant") is **directly contradicted by
+  > this same section's own later, more detailed finding** (see the
+  > "Visual side" bullet further down), and the later one is correct.
+  >
+  > **Re-verified from source** by enumerating every ImageSet in all 7
+  > sampled IMAG records out of `Data/maindata.cam` via
+  > `cam_reader.read_cam()` + `sprite_extractor.parse_anim_set()`.
+  > Build-family (setIDs 80-83) populated slots, with `relOff` proving
+  > they are separate descriptors rather than aliases:
+  >
+  > | Record | Building | Build setIDs | distinct `relOff` |
+  > |---|---|---|---|
+  > | `ABF1` | Inn | 80@0x168, 81@0x1DC | 2 of 2 |
+  > | `ABH1` | Marketplace1 | 80@0x25C, 81@0x2C8, 82@0x334 | 3 of 3 |
+  > | `ABH2` | Marketplace2 | 80@0x264, 81@0x2D0 | 2 of 2 |
+  > | `ABH3` | Marketplace3 | 80@0x274, 81@0x2E0 | 2 of 2 |
+  > | `ABE1` | Guardhouse1 | 80@0x170, 81@0x1E4, 82@0x258 | 3 of 3 |
+  > | `ABE2` | Guardhouse2 | 80@0x168 | 1 of 1 |
+  > | `ABJ1` | Palace1 | **none** | 0 |
+  >
+  > So numbered `Build` variants **do** exist (2-3 on most sampled
+  > buildings), the count varies per building and per tier, and only
+  > `ABE2` Guardhouse2 matches the retracted "exactly one" claim while
+  > `ABJ1` Palace1 has no `Build` set at all. **What survives from the
+  > original claim is only its final sentence's caution** — the later
+  > bullet independently found the numbered slots report identical
+  > dimensions/hotspot/first-6-tile-indices, so whether they hold
+  > genuinely progressive scaffolding art remains **UNVERIFIED**. The
+  > error was in the *count*, not in the doubt about their content.
+  >
+  > **Why the original pass got it wrong is worth recording:** it
+  > evidently matched on the set *name* `Build` (which only setID 80
+  > carries) rather than on the setID *range* 80-83, so setIDs 81/82
+  > were invisible to it. Count by numeric setID range, not by set name.
+
   **Construction stages: only ONE `Build` set exists per building record,
   not a progressive sequence of stage-specific sets.** All 7 records have
   exactly one `setID=80` (`Build`) entry — there is no `Build-2`/
@@ -106,6 +144,17 @@ the existing IMAG/TILE docs)
   their presence in the setID table was confirmed, not their frame
   content. Would need per-slot frame-descriptor dumps to confirm they
   hold real distinct pixel data — **UNVERIFIED** beyond presence.
+
+  **Refinement added by the same re-verification run that retracted the
+  `Build`-count claim above (setID-range enumeration of all 7 records):
+  the number of populated `Die`-family slots is NOT uniform across
+  buildings either.** `ABF1` Inn, `ABE1` Guardhouse1, `ABE2`
+  Guardhouse2 and `ABJ1` Palace1 populate the full `96-103` (8 slots),
+  while all three Marketplace tiers (`ABH1`/`ABH2`/`ABH3`) populate only
+  `96-101` (6 slots). So "buildings have setIDs 97-103" is true as a
+  family-level statement but must not be read as a fixed count per
+  building — same lesson as the `Build` family. The UNVERIFIED status of
+  what those slots actually *contain* is unchanged.
 
   **Level-tiers (Marketplace1/2/3, Guardhouse1/2) get their OWN separate
   full sprite set each — they do NOT share one set of building art.**
@@ -558,6 +607,32 @@ M_Buildings.xml`, plus their Level-2/3 tier siblings where present
   different value range from the hero doc's Character-subtype findings
   (Menu 4/5/6/7/12/13), confirming `Menu` is interpreted per-`subType`,
   not one global enum shared across `Character` and `Building` entities:**
+
+  > **CORRECTED — the "0/1/2/3" range and the disjoint-range argument
+  > built on it are both wrong.** Kept visible per convention. The same
+  > full census described in the `Graveyard`/`Sewers` correction below
+  > found **`Menu="12"` is used by 15 building `Description` entries**:
+  > 13 base-game `CanUse="Monster"` decorative props (`BBs1`
+  > `banner_wood`, `BBt1`-`BBt3` `treasure_chest1/2/3`, `BBs2`/`BBs3`
+  > goblin markers, and 7 more), plus 2 in the expansion (`ABA1`
+  > `Siege_Marker`, which is `CanUse="HumanPlayer"`, and `BBs7`
+  > `sign_fancy_iron`).
+  >
+  > So the real building range is **0/1/2/3 and 12**, and `12` is
+  > **shared with** the Character-subtype range rather than disjoint from
+  > it. **The conclusion "`Menu` is interpreted per-`subType`" may still
+  > be true, but the evidence offered for it — non-overlapping value
+  > ranges — does not hold and cannot be cited for it.** Treat the
+  > per-`subType` interpretation as **UNVERIFIED** until something other
+  > than range-disjointness supports it.
+  >
+  > **Practical impact is small but real:** `Menu="12"` looks like the
+  > decorative-prop bucket for buildings, which pairs with the
+  > already-confirmed prop flag trio (`NotInMiniMap` + `NoFlaggable` +
+  > `NotSpellTarget` + `NotBuildable`). A new decorative prop should
+  > probably use `Menu="12"`, not `Menu="2"` — **inferred from the flag
+  > correlation across those 15 entries, not confirmed by an engine
+  > trace.**
   `Menu="0"` = Temple-family buildings, `CanUse="HumanPlayer"`, directly
   buildable (all 7 temples — Agrela, Dauros, Fervus, Helia/Solarus,
   Krolm, Krypta, Lunord — confirmed zero exceptions, and their Level-2/3
@@ -593,7 +668,48 @@ M_Buildings.xml`, plus their Level-2/3 tier siblings where present
   found still using `Menu="3"` rather than `2` — **not fully resolved
   why these two specifically deviate from the otherwise-consistent
   Monster→Menu=2 pattern**, marking this specific sub-case
-  **UNVERIFIED** beyond the raw data observed. **For a new
+  **UNVERIFIED** beyond the raw data observed.
+
+  > **CORRECTED — the two sentences immediately above contain four
+  > factual errors.** Kept visible per this project's convention. The
+  > second sentence is self-contradictory on its face (it calls the
+  > entries "`Menu="2"` monster lairs" and then says they use
+  > `Menu="3"`), which is what prompted re-checking it.
+  >
+  > **Re-verified by parsing every `<Description subType="Building">` in
+  > both `M_Buildings.xml` (91 entries) and `MX_Buildings.xml` (26) and
+  > grouping by `(CanUse, Menu)`** — not by sampling. Ground truth:
+  >
+  > 1. **There is no entry named `Sewer`, and no entry whose ID is
+  >    `BBN1`.** The real entry is **`ABN1`, `Name="Sewers"`**. `BBN1` is
+  >    that entry's **`ImageIDBase`**, not its ID — the original pass
+  >    conflated the two fields.
+  > 2. **The "despite the `BB`-style ID prefix" surprise therefore
+  >    dissolves entirely.** `ABN1` is an ordinary `AB*` player-building
+  >    ID. There was never an anomaly to explain.
+  > 3. **`Sewers` is `CanUse="HumanPlayer"`, not `Monster`** — so it is
+  >    not a "monster lair" and cannot be a "Monster-`CanUse`
+  >    exception." Its placement in the `Menu="3"` HumanPlayer group in
+  >    the FIRST sentence is correct; the second sentence's reuse of it
+  >    is not.
+  > 4. **Neither entry is `Menu="2"`. Both are `Menu="3"`.**
+  >
+  > **The corrected finding:** `BBJ1` `Graveyard`
+  > (`CanUse="Monster"`, `Menu="3"`) is the **only** Monster-owned
+  > building in the entire base game that uses `Menu="3"` instead of the
+  > otherwise-universal `Menu="2"` — **one exception, not two** — and
+  > the expansion has **zero**. Full base-game census:
+  > HumanPlayer 0/1/2/3 = 17/10/23/4, Monster 2/3/12 = 23/**1**/13.
+  >
+  > **What remains genuinely open is narrower than originally stated:**
+  > why that single entry deviates. Note `Graveyard` also carries
+  > `NotBuildable` + `NoFlaggable` + `NotSpellTarget` and has no `Cost`
+  > — i.e. it is structurally a non-constructed prop-like building that
+  > happens to be Monster-owned, which is at least consistent with
+  > `Menu="3"` meaning "not built from any construction menu"
+  > regardless of owner. **That is a hypothesis from field correlation,
+  > not a confirmed mechanism — do not promote it without an exe trace
+  > or in-game test.** **For a new
   player-buildable building meant to appear in the normal construction
   menu, `Menu="2"` (ordinary) or `Menu="0"`/`Menu="1"` (if it's meant to
   be categorized as a temple or guild specifically) are the confirmed
@@ -2507,7 +2623,10 @@ cited from where each was first raised, not re-derived here:**
 - **Whether `Menu` value alone (vs. `Flags value="IsGuild"`) is what the
   engine actually keys off of for build-menu categorization**, and
   **why `Graveyard`/`Sewer` are the two Monster-`CanUse` exceptions still
-  using `Menu="3"` instead of the otherwise-consistent `Menu="2"`**, and
+  using `Menu="3"` instead of the otherwise-consistent `Menu="2"`**
+  (**CORRECTED: it is ONE exception, `BBJ1` `Graveyard`, not two — the
+  supposed second case "`Sewer` `BBN1`" does not exist as written; see
+  §2's correction block for the full `(CanUse, Menu)` census**), and
   **whether setting an ordinary building to a "wrong" but valid nonzero
   `Menu` value misfiles it or breaks it outright** — none resolved
   without an exe trace (§2).
@@ -3120,9 +3239,18 @@ settle it. Nothing "loosely related" is padded in here.
    `Temple_Krolm` and `Temple_Fervus1` share `Cost="900"` but differ
    (1.5 vs 2.0). So it is **not** a derived value of either neighbour
    field. Its consumer is still exe-side and unknown.
-4. **Why `Graveyard`/`Sewer` deviate from the Monster→`Menu="2"` pattern,
-   and whether a wrong-but-nonzero `Menu` value misfiles or breaks a
-   building** (§8, from §2). These are the two halves of the `Menu` item
+4. **Why `Graveyard` deviates from the Monster→`Menu="2"` pattern, and
+   whether a wrong-but-nonzero `Menu` value misfiles or breaks a
+   building** (§8, from §2). **Restated after a §2 correction:** this
+   was originally written as "`Graveyard`/`Sewer`," i.e. two entries.
+   A full `(CanUse, Menu)` census of both Buildings XMLs found it is
+   **one** entry — `BBJ1` `Graveyard` is the only Monster-owned
+   `Menu="3"` building in the base game, zero in the expansion — and
+   that the second supposed case, "`Sewer` `BBN1`," does not exist as
+   written (the real `ABN1` `Sewers` is `CanUse="HumanPlayer"`, and
+   `BBN1` is merely its `ImageIDBase`). See §2's correction block for
+   the full ground-truth census. The remaining question is genuinely
+   open but narrower than stated. These are the two halves of the `Menu` item
    that §9.1 did *not* close — §9.1 only settled the
    `Menu`-vs-`IsGuild` question. Needs an exe trace or an in-game test.
 5. **Whether two unrelated building types sharing one `DialogID`

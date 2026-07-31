@@ -94,22 +94,50 @@ See also:
   rather than proven impossible. Carries §9.1's retraction (`Menu` is
   the build-menu categoriser; `Flags value="IsGuild"` is not — seven
   temples ship `IsGuild` + `Menu="0"`).
-- [ ] **Fix two internal contradictions in
-  `TODO-New-Building-Requirements.md`** (found while distilling the
-  deliverable, not yet corrected in the research doc):
-  1. **§1 `Build`-family count** — an early bullet says "only ONE
-     `Build` set exists per building record, not a progressive
-     sequence," while a later, more detailed bullet confirms multiple
-     populated Build-family setIDs (80/81/82) at distinct blob offsets.
-     The later finding supersedes; the deliverable already reflects it.
-  2. **§2 `Menu` values for `Graveyard`/`Sewer`** — the same entries are
-     labelled both `Menu="2"` and `Menu="3"`, and both
-     `CanUse="HumanPlayer"` and Monster. §9 UNCHANGED item 4 already
-     carries the underlying question forward as open; this is a
-     write-up inconsistency on top of it.
-  Also minor: §3's `birthScript` passage has an unfinished
-  self-correcting sentence that reads like a mid-edit artifact (its
-  conclusion — presence universal, target varies — is clear).
+- [x] **Both internal contradictions in
+  `TODO-New-Building-Requirements.md` resolved from source** (not just
+  tidied — each was settled by going back to the shipped data, and both
+  turned out to be real factual errors, not wording slips). Corrections
+  are visible blocks with the original text left in place.
+  1. **§1 `Build`-family count — the early claim was FALSE.** It said
+     "only ONE `Build` set exists per building record ... no `Build-2`/
+     `Build-3`-style numbered variant." Enumerating every ImageSet in
+     all 7 sampled IMAG records (`cam_reader.read_cam()` +
+     `sprite_extractor.parse_anim_set()`) confirms the later bullet
+     instead: Inn 80/81, Marketplace1 80/81/82, Marketplace2 80/81,
+     Marketplace3 80/81, Guardhouse1 80/81/82, Guardhouse2 80 only,
+     Palace1 none — all at distinct `relOff`, so not aliases. **Root
+     cause recorded:** the original pass matched the set *name* `Build`
+     (only setID 80 carries it) instead of the setID *range* 80-83.
+     Bonus finding: the `Die` family count isn't uniform either (Inn/
+     both Guardhouses/Palace = 96-103, all Marketplace tiers = 96-101).
+  2. **§2 `Graveyard`/`Sewer` — four factual errors, now censused.** A
+     full `(CanUse, Menu)` grouping of all 91 base + 26 expansion
+     building `Description`s found: there is **no** entry named `Sewer`
+     and **none** whose ID is `BBN1` (the real entry is `ABN1`
+     `Name="Sewers"`; `BBN1` is its `ImageIDBase` — so the doc's
+     "surprising `BB` prefix on a HumanPlayer building" observation
+     dissolves entirely); `Sewers` is `CanUse="HumanPlayer"`, not
+     Monster; neither entry is `Menu="2"`, both are `Menu="3"`; and
+     therefore **`BBJ1` `Graveyard` is the ONLY Monster-owned
+     `Menu="3"` building in the base game — one exception, not two —
+     with zero in the expansion.**
+  3. **Third error found by the same census, not previously flagged:**
+     §2's claim that buildings use `Menu` values "0/1/2/3, a genuinely
+     different value range" from Characters' "4/5/6/7/12/13" is wrong —
+     **`Menu="12"` is used by 15 building entries** (13 base Monster
+     props, plus expansion `ABA1` `Siege_Marker` and `BBs7`
+     `sign_fancy_iron`). The ranges overlap, so the disjoint-range
+     argument for "`Menu` is interpreted per-`subType`" collapses; that
+     conclusion is now marked UNVERIFIED pending different evidence.
+     `Menu="12"` looks like the decorative-prop bucket.
+  `NEW_BUILDING_REQUIREMENTS.md` Step 1 and Step 2 updated to match.
+- [ ] **Minor cleanup in `TODO-New-Building-Requirements.md` §3** — the
+  `birthScript` passage has an unfinished self-correcting sentence that
+  reads like a mid-edit artifact ("**Confirmed real exception in the
+  shipped data:** `Palace3`, `Rogues_Guild2`… — actually every level-2/3
+  tier entry…"). Its conclusion (presence universal, target varies) is
+  clear and correct, so this is prose repair only, not a factual fix.
 
 ### GPL / Gameplay Logic Deep Dive
 - [x] First consolidation done — `GPL_MODDING_GUIDE.md` created,

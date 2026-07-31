@@ -71,7 +71,10 @@ source-reading one.
 across many `AB*` records (Ballista Tower, Blacksmith 1-3, Fairgrounds,
 Guardhouse 1-2, Inn, Library 1-2, Marketplace). This is a building-only
 feature: heroes have zero hits on 97-103 and use the single `Die`
-setID 96. ❓ Whether these numbered slots hold genuinely different
+setID 96. **The count is not uniform, so don't author to a fixed
+number:** Inn, both Guardhouse tiers and Palace1 populate the full
+96-103 (8 slots), while all three Marketplace tiers populate only 96-101
+(6). ❓ Whether these numbered slots hold genuinely different
 collapse-stage art or are reserved/placeholder slots was not verified —
 only their presence in the setID table was.
 
@@ -200,9 +203,7 @@ travels with `MaxGuildMembers` and a `Produces` list.
 > `MaxGuildMembers` pairing survives unchanged (the temples pair them
 > too, so they are extra confirming cases).
 
-✅ **Valid `Menu` values for buildings are 0/1/2/3** — a different range
-from the Character-subtype values (4/5/6/7/12/13), so `Menu` is
-interpreted per-`subType`, not as one global enum. `Menu="0"` = temple
+✅ **Valid `Menu` values for buildings are 0, 1, 2, 3 and 12.** `Menu="0"` = temple
 family (all 7 temples and their tiers). `Menu="1"` = guild/recruitment
 family (Warriors_Guild, Rangers_Guild, Rogues_Guild1, Wizards_Guild1,
 Dwarven_Settlement, Elven_Bungalow, Gnome_Hovel). `Menu="2"` = the
@@ -211,18 +212,37 @@ most monster lairs**, so `Menu` alone does not distinguish
 player-buildable from monster-only; `CanUse` carries that. `Menu="3"` =
 buildings that appear through other mechanics rather than the
 construction menu (`Brothel`, `Gambling_Hall`, `General_Housing`,
-`Sewer` — all four also carry `Flags value="NotBuildable"` and no
-`Cost`).
+`Sewers` — all four also carry `Flags value="NotBuildable"` and no
+`Cost`). `Menu="12"` = the decorative-prop bucket (banners, treasure
+chests, goblin markers, signs, `Siege_Marker`).
+
+Full base-game census, so you can see the shape rather than trust a
+summary: HumanPlayer 0/1/2/3 = 17/10/23/4; Monster 2/3/12 = 23/1/13.
+
+⚠️ **`Menu` is probably interpreted per-`subType` rather than as one
+global enum, but the usual argument for that is wrong.** Buildings and
+Characters do **not** occupy disjoint value ranges — `Menu="12"` is used
+by both. ❓ So treat per-`subType` interpretation as unverified; it may
+well be true, but range-disjointness is not evidence for it.
 
 ✅ **For a new player-buildable building in the normal construction
 menu, use `Menu="2"`** (or `0`/`1` if you specifically want it filed as
 a temple or guild).
 
+⚠️ **For a new decorative prop, `Menu="12"` is the likely correct
+value**, pairing with the prop flag set below. Inferred from the flag
+correlation across all 15 `Menu="12"` entries, not from an engine trace.
+
 ❓ **Whether a wrong-but-nonzero `Menu` value simply misfiles a building
 in the wrong tab or breaks/hides it outright** — untested, needs an exe
-trace or an in-game test. ❓ Also unresolved: why `Graveyard` and
-`Sewer` are the Monster-`CanUse` exceptions that deviate from the
-otherwise-consistent Monster→`Menu="2"` pattern.
+trace or an in-game test. ❓ Also unresolved: why `BBJ1` `Graveyard` is
+the single Monster-`CanUse` building using `Menu="3"` instead of the
+otherwise-universal `Menu="2"` (one exception in the base game, zero in
+the expansion). Its `NotBuildable`/`NoFlaggable`/`NotSpellTarget` flags
+and absent `Cost` make it structurally a non-constructed prop-like
+building that happens to be Monster-owned, which is at least consistent
+with `Menu="3"` meaning "not built from any menu, regardless of owner" —
+but that is field correlation, not a confirmed mechanism.
 
 ✅ **Multi-tier buildings are separate, complete `<Description>` entries
 — there is no single entry with a tier list.** `ABH1`/`ABH2`/`ABH3`,
@@ -264,7 +284,9 @@ value="NotSpellTarget"` are real, shipped, optional `<Game>` flags, but
 their entire shipped population is decorative props that also carry
 `NotBuildable` (e.g. `BBs1` `banner_wood`, `BBt1` `treasure_chest1`). A
 new ordinary building should set none of them; a new decorative prop
-should set all three plus `NotBuildable`.
+should set all three plus `NotBuildable`, and per the `Menu` discussion
+above should probably also use `Menu="12"` (that same prop population is
+exactly the 15 `Menu="12"` entries).
 
 `DialogID` is required here but is the one field with a real
 architectural limitation attached — see Step 6.
