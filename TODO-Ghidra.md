@@ -696,8 +696,30 @@ changes that section's framing.
 
 ## Low Priority: Investigate "Zoo" Building as a Possible EXE Expansion Point
 
+> **IMPORTANT SCOPE CORRECTION before starting — Zoo has NO `DialogID`.**
+> An earlier framing of this task called `ABn1`/`ABn2`/`ABn3`
+> "`DialogID`-shaped" and elsewhere referred to a Zoo "reserved DialogID
+> family." Both are wrong. `ABn1`-`ABn3` are **IMAG sprite record IDs**, a
+> different namespace from `DialogID`. `DialogID` is an XML `<Game>` field,
+> and **Zoo has no XML `<Description>` at all** — re-verified, a
+> case-insensitive search for `Zoo` across every SDK XML returns zero
+> matches. So Zoo has no `DialogID`, no `Menu`, no `Cost`.
+>
+> **What Zoo actually has:** sprites (`ABn1`/`ABn2`/`ABn3`), working GPL
+> (`Zoo.gpl`), and three `.dat` entries (`[Zoo1]`/`[Zoo2]`/`[Zoo3]`, the
+> first three in `mx_Building_Data.dat`, compiled via
+> `GPLMx/Path_Data.gplproj`).
+>
+> **This weakens but does not kill the task.** The original appeal was a
+> possible free *panel* slot; since Zoo never had a `DialogID`, there is no
+> such slot to inherit. Step 1 below should therefore search the exe for
+> **`"Zoo"` / `Zoo1`-`Zoo3` / `ABn1`-`ABn3` string or data references
+> generally**, not for a `DialogID` table entry — the question is whether
+> the exe has *any* awareness of Zoo, not whether it has a panel mapping.
+> If the answer is none, close this out as originally specified in step 4.
+
 **Background:** Confirmed via direct data inspection (not yet Ghidra) that
-"Zoo" is real but orphaned content: `DialogID`-shaped sprites `ABn1`/`ABn2`/
+"Zoo" is real but orphaned content: sprites `ABn1`/`ABn2`/
 `ABn3` ("Zoo Level 1/2/3") exist in `DataMX/mx_maindata.cam`, and
 `GPLMx/TaskModules/Buildings/Zoo.gpl` has a working `zoo_flag_check`
 mechanic (charms a nearby monster to the closest hero via a `RewardFlag`/

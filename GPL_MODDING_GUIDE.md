@@ -1236,8 +1236,40 @@ infrastructure (stubbed out generically in base `LowLevel.gpl`'s
 `RewardFlag_Birth`), each wrapping it with different payoff logic — not
 shared code between the two.
 
-See `TODO-Ghidra.md` for a low-priority idea: since Zoo already has a
-reserved DialogID family and sprites, it might be a lower-risk repurposing
+> **CORRECTED — Zoo has NO `DialogID`, and the sentence below overstated
+> it.** An earlier version said "Zoo already has a reserved DialogID
+> family," which is wrong and contradicts this very section's own finding
+> two bullets up. `DialogID` lives in the XML `<Game>` block, and **Zoo has
+> no XML `<Description>` at all** — so it has no `DialogID`, no
+> `ImageIDBase` declaration, no `Menu`, and no `Cost`. What Zoo actually
+> has is **sprites (`ABn1`/`ABn2`/`ABn3`) plus working GPL logic plus three
+> `.dat` entries** — and nothing else. Re-verified: a case-insensitive
+> search for `Zoo` across every XML file in the SDK returns **zero
+> matches**.
+>
+> The repurposing idea itself survives in weaker form — Zoo has unused
+> sprites and unused GPL, which is still a head start — but it offers **no
+> free panel slot**, which was the main thing that made it attractive. Any
+> new panel still faces the full `DialogID`→handler wall.
+
+**Zoo is also this project's only confirmed `.dat`-only building, which
+settles half of a separate open question.** `mx_Building_Data.dat` opens
+with `[Zoo1]`, `[Zoo2]`, `[Zoo3]` — the **first three entries in the
+file** — each a `{Building}` prototype with `(type building)`, and that
+file is compiled via `data="mx_Building_Data.dat"` in
+`GPLMx/Path_Data.gplproj`. So Zoo ships inside the expansion's compiled
+bytecode.
+
+**Therefore: `Gplbcc.exe` accepts a `.dat` building entry with no XML
+counterpart. Confirmed by shipping data, not inferred.** This corrects the
+claim recorded elsewhere in this project that "no known `.dat`-only
+building exists anywhere in the workspace to reason from" — Zoo is exactly
+that specimen. ❓ What remains open is only the *runtime* half: whether
+such a building could actually be **spawned** and function. Nothing ever
+spawns Zoo, so shipping data can't answer that.
+
+See `TODO-Ghidra.md` for a low-priority idea: since Zoo already has
+sprites and GPL logic, it might be a lower-risk repurposing
 target than carving out brand-new IDs for other exe-patch work — pending
 confirmation the exe itself has any dormant plumbing for it.
 

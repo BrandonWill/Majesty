@@ -2345,7 +2345,28 @@ recruitment, trace it fully)
     stays UNVERIFIED — but it should no longer be framed as "AI_Takeover
     spawns with no XML counterpart," because it has one.** There is now
     **no known `.dat`-only building anywhere in this workspace** to
-    reason from. Re-checked the spawn-heavy quest-rules material
+    reason from.
+
+    > **CORRECTED — there IS one, and it has been documented in this
+    > project the whole time: Zoo.** `mx_Building_Data.dat` opens with
+    > `[Zoo1]`/`[Zoo2]`/`[Zoo3]`, each a `{Building}` prototype with
+    > `(type building)`, and a case-insensitive search for `Zoo` across
+    > every SDK XML file returns **zero matches**. The connection was
+    > simply never made between §9's orphan write-up and this item.
+    >
+    > **This settles the COMPILE half outright:** that file is compiled via
+    > `data="mx_Building_Data.dat"` in `GPLMx/Path_Data.gplproj`, so Zoo
+    > ships inside the expansion bytecode. **`Gplbcc.exe` therefore accepts
+    > a `.dat` building entry with no XML counterpart** — confirmed by
+    > shipping data, not inferred. Note this is *adjacent to but not the
+    > same as* the `Hero_Guarded` question (a `.dat` **field** with no
+    > prototype declaration); this is a whole `.dat` **entry** with no XML
+    > definition.
+    >
+    > ❓ **The RUNTIME half stays open:** whether such a building could be
+    > spawned and function. Nothing ever spawns Zoo, so no shipped data can
+    > answer it — but Zoo is now the obvious specimen to test with, since
+    > it already has sprites and GPL logic. Re-checked the spawn-heavy quest-rules material
     (`GPL_QUEST_RULES_REFERENCE.md` §17.2/§19.x/§21.7, plus the shipped
     `$SpawnUnit` call sites themselves) for a counter-example and found
     none: every building-type string ever passed to `$SpawnUnit` in

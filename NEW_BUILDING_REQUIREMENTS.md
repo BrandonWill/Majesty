@@ -539,11 +539,18 @@ claimed `AI_Takeover` had no XML counterpart; that was retracted — the
 grep had only covered the two shipped SDK copies, not the mod's own
 overlay.**
 
-❓ **Whether a `.dat`-only building with no XML `Description` could
-spawn at all** stays unverified, and there is now no known `.dat`-only
-building anywhere in the workspace to reason from. Every building-type
-string passed to `$SpawnUnit` in shipped GPL resolves to both an XML
-`Description` and a `.dat` block. Settleable in-game only.
+✅ **A `.dat` building entry with NO XML `Description` does compile and
+ship.** `Zoo1`/`Zoo2`/`Zoo3` are the first three entries in
+`mx_Building_Data.dat` — `{Building}` prototypes with `(type building)` —
+and that file is compiled via `data="mx_Building_Data.dat"` in
+`GPLMx/Path_Data.gplproj`, yet a search for `Zoo` across every SDK XML
+returns zero matches. So `Gplbcc.exe` does not require an XML counterpart.
+
+❓ **Whether such a building could actually be SPAWNED and function stays
+unverified.** Nothing in shipped content ever spawns Zoo, and every
+building type passed to `$SpawnUnit` in shipped GPL resolves to both an XML
+`Description` and a `.dat` block. Settleable in-game only — and Zoo is the
+natural test subject, since it already has sprites and working GPL.
 
 ✅ **`$SpawnUnit` really does spawn buildings, and a `"MaxHP"` string
 flag makes them arrive pre-completed.** Shipped examples:
