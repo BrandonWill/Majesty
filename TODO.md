@@ -132,6 +132,40 @@ See also:
      conclusion is now marked UNVERIFIED pending different evidence.
      `Menu="12"` looks like the decorative-prop bucket.
   `NEW_BUILDING_REQUIREMENTS.md` Step 1 and Step 2 updated to match.
+- [x] **Owner play-knowledge Q&A pass** — 6 open items answered from
+  direct game experience, written up as `TODO-New-Building-Requirements.md`
+  §10 (3 CLOSED, 1 NARROWED, 2 REFRAMED/REFUTED, 1 new open item). Both
+  deliverables updated. Headlines: **the building price formula is
+  confirmed** (`Cost` × `Multiplier`^owned × 0.95 with a Blacksmith,
+  validated by the owner's own in-game logging tests — this also resolves
+  the long-open "what does `<Multiplier>` do" gap); **Palace is never
+  built**, which explains its missing `Build` art and missing
+  `birthScript2` in one stroke; **`RecruitDelay` is a real per-class
+  recruit cooldown**. Two corrections: the numbered `Die` slots are
+  **damage-state art, not collapse stages** (no visible collapse at 0 HP,
+  but art changes as HP drops), and **the build menu has no visible
+  categories**, so `Menu` is not a category field — observed ordering
+  matches XML document order filtered by availability.
+- [ ] **NEW (from §10.3): work out how to mimic a human building upgrade
+  in GPL.** A human-clicked upgrade is worker-gated — a
+  peasant/gnome/dwarf must build it, and only then does tier-2 content
+  unlock. `$ChangeUnitType` flips the type instantly, unlocking content
+  early (confirmed example: Rogues' Guild level-2 poison), and resetting
+  `#ATTRIB_currentstagebuilt` does not restore the gate. Hypothesis to
+  test: defer `$ChangeUnitType` until construction completes, driving it
+  off `BuildingReachedMaxHP`/`birthScript2` instead. Would fix a known
+  behavioral gap in the `Dwarfeh_AI` mod.
+- [ ] **NEW (from §10.5): render the numbered `Die`/damage slots to
+  confirm they hold progressive damage art.** Extract setIDs 96-103 for
+  Inn (`ABF1`, 8 slots) and a Marketplace tier (`ABH1`, 6 slots) as PNGs
+  and compare visually. Doable on this machine with `sprite_extractor.py`;
+  would upgrade §10.5's reframe from play observation to confirmed.
+- [ ] **NEW (from §10.7): find where Ballista Tower's build prerequisite
+  lives** — routed to `TODO-Ghidra.md`. Its XML has no prerequisite field
+  and its `CanIBuildThisBuilding` branch is commented out in shipped
+  source, yet it is gated in game. If the mechanism is general it may be
+  reusable for new buildings. **Ask the owner what the in-game
+  requirement actually is first** — that would narrow the search a lot.
 - [ ] **Minor cleanup in `TODO-New-Building-Requirements.md` §3** — the
   `birthScript` passage has an unfinished self-correcting sentence that
   reads like a mid-edit artifact ("**Confirmed real exception in the

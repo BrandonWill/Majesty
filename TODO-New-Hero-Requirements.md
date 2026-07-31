@@ -1416,6 +1416,24 @@ that is a separate, unstarted question.
 
 #### 7.2 `RecruitDelay` — NARROWED again, on a different axis than the earlier update
 
+> **UPDATE — the field's MEANING is now confirmed, by the project owner's
+> play knowledge (added after this subsection was written).** He reports
+> there is a real recruitment delay at guilds and that it "definitely
+> feels like they have different recruitment times" per class, which
+> matches the shipped per-class spread in shape (Gnome 4000 → Paladin
+> 20000). So `RecruitDelay` gates how soon a guild can produce another
+> hero, and it is per-hero-class rather than a global constant.
+>
+> ❓ **Still open:** the unit. Milliseconds fits well (≈4s for Gnome,
+> ≈20s for Paladin, both plausible in play) but was not timed with a
+> stopwatch, so it stays inferred. Enforcement is still exe-side — no GPL
+> function reads the field.
+>
+> **Negative worth recording:** the `Dwarfeh_AI` mod **never implemented
+> recruit delay** — its AI loops all guild buildings and recruits — so
+> that mod must not be cited as a reference implementation for this
+> mechanic. Full write-up in `TODO-New-Building-Requirements.md` §10.1.
+
 **The open item** (§6): "*Whether `RecruitDelay` (universal per-hero XML
 field) is enforced exe-side, GPL-side, or not enforced as a real cooldown
 at all.*"

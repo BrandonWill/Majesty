@@ -3447,6 +3447,250 @@ per the project's visible-correction convention.
 
 ---
 
+### 10. Owner Play-Knowledge Pass — answers from direct game experience
+
+**What this section is.** Answers supplied by the project owner from
+years of playing and from building the `Dwarfeh_AI` mod, in response to a
+targeted question set drawn from §8/§9's open items. **Evidence class:
+first-hand play observation and mod-author experience, not source or
+Ghidra.** That is weaker than a traced mechanism and stronger than
+source-absence reasoning, and each item below says which it is. The owner
+explicitly cautions that his mod's solutions were pragmatic, built
+without documentation, and may not reflect the engine's real approach —
+so nothing here is promoted past what he actually claimed.
+
+Two items in this pass **refute** existing conclusions. Those are marked
+and the superseded text is left in place at its original location.
+
+---
+
+#### 10.1 `RecruitDelay` is a real per-class recruit cooldown — NARROWED, not fully closed
+
+**Owner confirms:** there is a recruitment delay at guilds, and it
+"definitely feels like they have different recruitment times" per class.
+That matches the shipped per-class spread exactly in shape (Gnome 4000 →
+Paladin 20000).
+
+**So the field's meaning is confirmed:** `RecruitDelay` gates how soon a
+guild can produce another hero, and it is per-hero-class rather than a
+global constant. ❓ **Still unverified:** the unit. Milliseconds is
+strongly implied (4000 → ~4s for the cheapest/fastest class, 20000 →
+~20s for Paladin, both plausible in play) but was not measured with a
+timer. Nothing in GPL reads the field, so enforcement remains exe-side.
+
+**Also recorded, because it is a useful negative for anyone reading the
+`Dwarfeh_AI` mod as a reference implementation:** the owner never
+implemented recruit delay in the AI — it simply loops all guild buildings
+and recruits. **So that mod is not a model for this mechanic**, and its
+recruit loop should not be cited as evidence about how delay works.
+
+---
+
+#### 10.2 The building price formula is CONFIRMED, by the owner's own in-game logging tests
+
+**Owner confirms the formula outright**, and specifically that he "did a
+lot of tests with logging comparing values in game" while building the AI
+to pay the same prices a human pays. That is empirical validation against
+the running game, not inference:
+
+```
+price = basePrice(building)
+        × Multiplier ^ (number of that building you already own)
+        × 0.95   if you have a completed Blacksmith
+```
+
+**This resolves the `<Multiplier>` field, which §8 had listed as having
+no known consumer.** `Multiplier` is the per-additional-copy cost
+escalation factor. The hypothesis recorded earlier in §9's UNCHANGED
+item 3 is now confirmed at the behavioral level.
+
+**Confidence boundary, stated precisely:** the *observable pricing
+behavior* is confirmed by testing. The *exe's internal implementation* is
+still untraced, so if you need the exact rounding, order of operations,
+or overflow behavior, that remains a Ghidra question. The mod applies the
+Blacksmith discount as a flat boolean (any one completed Blacksmith),
+which the owner's testing did not contradict — so **non-stacking is
+supported but was not the specific thing under test.**
+
+**Practical consequence for a new building:** set `Cost` for the first
+copy and `Multiplier` to control how steeply further copies escalate.
+Both are honored. This is now a ✅ authoring answer, not a ❓.
+
+---
+
+#### 10.3 Construction art IS progressive — CLOSED, plus a significant NEW finding about upgrades
+
+**Owner confirms buildings visibly change as they are constructed.** That
+closes the visual half of §1's `Build`-slot question: the populated
+setIDs 80/81/82 are real progressive construction art, not reserved
+placeholders. (❓ Which slot maps to which progress threshold is still
+unknown — the owner confirmed the phenomenon, not the mapping.)
+
+**The genuinely new and more consequential part — the human upgrade path
+is worker-gated, and `$ChangeUnitType` bypasses that gate.** In the
+owner's words: when a human clicks upgrade, the building "had to be
+upgraded by peasant/gnome/dwarf and only then would anything from the
+upgrade be available." His AI upgrades with `$ChangeUnitType(building,
+"Blacksmith2")` instead, which makes tier-2 content live immediately —
+his example: **Rogues' Guild level-2 poison became available before the
+building was physically upgraded.** He could never mimic the real
+behavior.
+
+**Why this matters well beyond the AI mod:** it means **building tier and
+tier-gated content availability are not the same thing in the human
+path**. The engine defers the effective upgrade until a worker completes
+construction, whereas `$ChangeUnitType` flips the type instantly. Note
+the mod does try to compensate — it calls `$setAttribute(building,
+#ATTRIB_currentstagebuilt, 0)` right after the type change — and that is
+not sufficient, which is itself a data point: **`#ATTRIB_currentstagebuilt`
+alone does not gate tier-2 content.**
+
+**HYPOTHESIS, explicitly not confirmed:** the real path likely runs
+through the same two-stage birth chain §3 documents — upgrade puts the
+building into an under-construction state, workers raise its HP,
+`BuildingReachedMaxHP` fires (it checks `#ATTRIB_FirstStageBuilt`), and
+`upgradescript2`/`birthScript2` then enable tier features. If so, the
+correct way to mimic a human upgrade in GPL would be to **defer
+`$ChangeUnitType` until construction actually completes**, rather than
+changing type first and resetting a flag. **Untested.** Recorded as a new
+research item rather than as guidance.
+
+---
+
+#### 10.4 The Palace is never seen under construction — CLOSED
+
+**Owner confirms: yes**, the Palace always starts built. This closes
+§9's UNCHANGED item 1. Three independent facts now agree and explain each
+other: Palace has no `Build` ImageSet (§1, art side), Palace has no
+`birthScript2` at any tier (§3, `.dat` side), and the Palace is never
+constructed in play (owner, behavior side). **It is not an anomaly
+needing explanation — it is a building that is never built.**
+
+Consequence for modders, now safe to state: **a building that is
+pre-placed rather than player-constructed needs no `Build` art and no
+`birthScript2`.** Palace is the shipped precedent.
+
+---
+
+#### 10.5 There is NO visible collapse animation — this REFRAMES the numbered `Die` slots
+
+**Owner reports two things that together overturn the working
+assumption:**
+1. **At 0 HP there is no real visible collapse** — the building does not
+   play a multi-stage collapse sequence.
+2. **As a building LOSES HP, its art does change.**
+
+**So the numbered `Die`-family setIDs (96-103) are very likely
+progressive DAMAGE-STATE art, not collapse-stage art.** Every prior
+framing in this doc and in `NEW_BUILDING_REQUIREMENTS.md` called them
+"multi-stage collapse," which now looks wrong. The 6-vs-8 slot count
+split found in §1 (Marketplace tiers 96-101, Inn/Guardhouses/Palace
+96-103) reads naturally as "how many damage steps this building's art
+has," which is a much more plausible thing to vary per building than
+collapse stages.
+
+This also fits `Crumble` (setID 240) cleanly, and explains why it is
+unconditionally required: **`Die`/damage art covers the building while it
+is alive and hurt; `Crumble` is the rubble it becomes when it dies.** Two
+different jobs, not two stages of one.
+
+**Status: this is a REFRAME based on play observation, not a
+confirmation.** ❓ Nobody has rendered the slots to verify they contain
+progressive damage art, and the owner himself flagged it as "probably
+worth investigating." Added as a research item. **Do not restate the
+"multi-stage collapse" framing.**
+
+---
+
+#### 10.6 The build menu has NO visible categories — this REFUTES §9.1's framing
+
+**Owner reports:** he does not recall any categories when clicking the
+Palace or Outpost to build; it reads as one list, and **Blacksmith is
+always at the top at a level-1 Palace.**
+
+**This refutes the interpretation — though not the narrow finding — of
+§9.1.** §9.1 asked "is it `Menu` or `Flags value="IsGuild"` that the
+engine keys build-menu **categorisation** on," and concluded `Menu`. The
+`IsGuild` half still holds (it is definitely not `IsGuild`, and the seven
+`Menu="0"` temples still prove `IsGuild` can't be the key). **But the
+question presupposed that visible categorisation exists, and per the
+owner it does not.** So "`Menu` is the build-menu categoriser" is
+**UNSUPPORTED** — it was never observed, only inferred from `Menu`
+correlating with building kind.
+
+**What the observation IS consistent with — a single flat list in XML
+document order, filtered by availability.** Checked directly: listing
+player-buildable entries (`CanUse="HumanPlayer"`, has `Cost`, not
+`NotBuildable`) in `M_Buildings.xml` document order gives
+`Ballista_Tower`, **`Blacksmith1`**, `Fairgrounds`, `Guardhouse1`, `Inn`,
+`Library1`, `Marketplace1`, `Trading_Post`, `Wizards_Tower`, then the
+seven temples, then the guilds, then `Royal_Gardens` and `Statue`. The
+owner separately notes **Ballista_Tower is not available without meeting
+its requirements** — filter it out and **`Blacksmith1` is literally first
+in document order**, matching the report exactly.
+
+Note this also explains why `Menu` *appears* to categorise: the XML file
+happens to be authored in grouped order (general buildings, then temples,
+then guilds), so `Menu` correlates with position without necessarily
+causing it.
+
+❓ **Reopened: what does `Menu` actually do for buildings?** Candidates
+not distinguished: it gates *whether* an entry can appear at all (0/1/2
+appear, 3 and 12 never do — but `NotBuildable` already covers those, so
+it may be redundant); it selects which building's panel offers the entry
+(Palace vs Outpost both have build menus); it drives icon row/sorting in
+a way the flat list masks; or it is partly vestigial. **Do not restate
+the category interpretation as fact.**
+
+---
+
+#### 10.7 NEW open finding: an exe-side build-prerequisite system exists, and the docs currently deny it
+
+**Triggered by the owner's remark that Ballista Tower "is not always
+available unless you have the requirements."** That is a build-menu
+prerequisite, and it is not accounted for anywhere in this doc's model.
+
+**What source says, checked directly:**
+- `Ballista_Tower`'s XML entry (`ABB1`) has **no prerequisite field of
+  any kind** — no dependency, no required-building, nothing.
+- `construction_rules.gpl` and `mx_Construction_Rules.gpl` both contain a
+  `ballista_tower` branch that is **entirely commented out**, including
+  its failure code `#chat_out_range_ball_dsettle` ("out of range of
+  ballistas and dsettle") and a proximity test against
+  `ballista_tower`/`dwarven_settlement`. So the developers once
+  implemented a Ballista prerequisite in GPL **and then disabled it.**
+- The only live GPL gate on it is `$disableunittype("Ballista_Tower")`,
+  which `Demo.gpl`/`mx_Demo.gpl` do call — but that is one quest, not the
+  general case the owner describes.
+
+**Therefore §4's claim that "a new building has no default prerequisite
+of any kind unless a quest's GPL explicitly calls `$disableunittype`" is
+contradicted by observed behavior**, at least for Ballista Tower. There
+is an availability rule the data layer does not express.
+
+❓ **Open, and newly scoped:** where does Ballista Tower's requirement
+live, and is it a general per-building prerequisite mechanism or a
+hardcoded special case? The commented-out GPL is a strong hint the rule
+is "near a Dwarven Settlement / another Ballista" — and shipped
+`epic_quest_scripts.gpl` repeatedly special-cases
+`Dwarven_settlement` and `ballista_tower` together, which is consistent
+— **but that is adjacency, not evidence.** This is a Ghidra question, and
+a good one, because if the mechanism is general it may be reusable for a
+new building's prerequisites. **Worth asking the owner what Ballista
+Tower's in-game requirement actually is** — that would narrow the search
+considerably.
+
+---
+
+**§10 tally:** 3 CLOSED (10.2 pricing formula, 10.3 construction art
+visible, 10.4 Palace never built), 1 NARROWED (10.1 `RecruitDelay`
+meaning confirmed, unit still inferred), 2 REFRAMED/REFUTED (10.5 damage
+art vs collapse, 10.6 no build-menu categories), 1 NEW open item (10.7
+exe-side build prerequisites). Plus one new research item from 10.3 (how
+to mimic a human upgrade in GPL).
+
+---
+
 ## Process Notes for Sub-Agent Dispatches (write in SMALL portions)
 
 This has caused real problems before — a large single-edit research

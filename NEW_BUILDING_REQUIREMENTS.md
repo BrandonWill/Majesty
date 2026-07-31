@@ -47,6 +47,23 @@ a real shipped opt-out flag whose entire population (11 in
 `M_Buildings.xml`, 1 in `MX_Buildings.xml`) is decorative props, which
 only makes sense if everything else appears by default.
 
+✅ **Buildings visibly change appearance as they are constructed** —
+confirmed by the project owner from play, closing what was previously an
+inference from the art data alone. ❓ Which `Build` slot maps to which
+progress threshold is still unknown.
+
+⚠️ **Upgrades are worker-gated, and this bites anyone scripting one.**
+The owner reports that a human-clicked upgrade must be built by a
+peasant/gnome/dwarf, and **only once that finishes does the upgrade's
+content become available**. Upgrading via `$ChangeUnitType` instead makes
+tier-2 content live immediately (his example: Rogues' Guild level-2
+poison available before the building was physically upgraded), and
+resetting `#ATTRIB_currentstagebuilt` afterwards does **not** restore the
+gate. So building tier and tier-gated content availability are separate
+things in the real path. ❓ The correct way to mimic it is unconfirmed —
+likely defer `$ChangeUnitType` until construction completes rather than
+flipping type first. See §10.3 of `TODO-New-Building-Requirements.md`.
+
 ⚠️ **Construction art is real and multi-slot — construction is NOT
 invisible until completion.** The `Build` family occupies setIDs 80-83,
 and sampled buildings populate several as genuinely separate frame
@@ -65,6 +82,15 @@ selection — `basic_birth`/`magical_birth`/`BuildingReachedMaxHP` only
 reference `birthscript`/`birthscript2` function pointers, never an
 ImageSet. Settling this is a sprite-extraction/rendering job, not a
 source-reading one.
+
+⚠️ **The numbered `Die` variants are almost certainly progressive
+DAMAGE-state art, not collapse stages.** The project owner reports from
+play that there is **no visible collapse animation at 0 HP**, but that a
+building's art **does change as it loses HP**. So read these slots as
+"how damaged this building looks," and `Crumble` as the rubble it becomes
+when it dies — two different jobs, not two stages of one. ❓ Not yet
+verified by rendering the slots. An earlier version of this document
+called them "multi-stage collapse"; that framing is retracted.
 
 ⚠️ **The numbered `Die` variants (setIDs 97-103, "Die-2" through
 "Die-8") ARE present on buildings** — a broadened scan found 417 hits
@@ -182,11 +208,22 @@ rather than assumed:**
 - `Flags value="HasGoldToolTip"` — on Marketplace1/both guilds/Palace1
   but **absent on Guardhouse1**, consistent with its non-revenue role.
 
-✅ **`Menu` is the field the engine keys build-menu categorisation on,
-and `Flags value="IsGuild"` is NOT.** The two are orthogonal: `Menu`
-(`<Engine>` block) carries the menu category; `IsGuild` (`<Game>` block)
-means "this building houses/recruits heroes," which is why it always
-travels with `MaxGuildMembers` and a `Produces` list.
+✅ **Whatever `Menu` does, `Flags value="IsGuild"` is definitely NOT a
+build-menu categoriser.** The two are orthogonal: `IsGuild` (`<Game>`
+block) means "this building houses/recruits heroes," which is why it
+always travels with `MaxGuildMembers` and a `Produces` list.
+
+❓ **But do NOT read `Menu` as a visible menu category.** The project
+owner reports the build menu shows **no categories at all** — it reads as
+one flat list, with Blacksmith always at the top at a level-1 Palace.
+That matches **XML document order filtered by availability**, not `Menu`
+grouping: in `M_Buildings.xml`, once the requirement-gated
+`Ballista_Tower` is filtered out, `Blacksmith1` is literally the first
+player-buildable entry. `Menu` correlates with building kind only because
+the file is authored in grouped order. What `Menu` actually controls for
+buildings is **reopened** — see §10.6 of
+`TODO-New-Building-Requirements.md`. Set it to match comparable shipped
+buildings and don't rely on a category interpretation.
 
 > **Correction carried from the research doc's §9.1 — do not use the
 > earlier version of this claim.** An earlier pass asserted that every
@@ -677,10 +714,20 @@ player? hide the menu entry or refuse the placement?) are therefore
 unknowable from source — with zero call sites there is no usage example
 anywhere to infer a signature from.
 
-✅ **There is no `Researched_Item()`-style tech-tree gate for
-buildings.** Grepped for any building-specific analog and found none. A
-new building has no default prerequisite unless a quest's GPL explicitly
-disables and later enables it.
+⚠️ **No `Researched_Item()`-style tech-tree gate exists in GPL or XML —
+but an exe-side prerequisite system demonstrably DOES exist.** The
+project owner reports that **Ballista Tower is not available until you
+meet its requirements**, and nothing in the data layer expresses that:
+`ABB1`'s XML has no prerequisite field, and the `ballista_tower` branch of
+`CanIBuildThisBuilding` is **commented out** in both
+`construction_rules.gpl` and `mx_Construction_Rules.gpl` (along with its
+`#chat_out_range_ball_dsettle` failure code and a proximity test against
+`dwarven_settlement`) — so the developers implemented it in GPL and then
+moved or disabled it. ❓ Where that rule now lives, and whether it is a
+general reusable mechanism or a hardcoded special case, is unknown; see
+§10.7 of `TODO-New-Building-Requirements.md`. **Practical upshot: your new
+building will have no prerequisite, which is fine — but don't conclude
+the engine has no prerequisite mechanism, because it clearly does.**
 
 ✅ **But there IS a real GPL-side placement prerequisite you can extend:
 `CanIBuildThisBuilding(agent thisBuilding, list dependencies)` in
