@@ -163,11 +163,57 @@ See also:
   between crashing and unlocking early. Confirmed negative: resetting
   `#ATTRIB_currentstagebuilt` does NOT re-gate content. Written up in
   `GPL_MODDING_GUIDE.md` §2.
-- [ ] **Test the indicated upgrade fix in the `Dwarfeh_AI` mod** — drop
-  `$ChangeUnitType`, call `$basic_upgrade(building)` instead, and let
-  workers plus `BuildingReachedMaxHP` complete it. Follows from the
-  shipped call graph but is UNTESTED; would also pick up the advisor
-  sound, chat message and Guardhouse guard-thread restart for free.
+- [x] **Construction labor system fully traced** — answers "how do workers
+  decide what to build?" and explains two reported oddities. Written up in
+  `GPL_MODDING_GUIDE.md` §2 ("The construction labor system"). A worker
+  builds a building **iff** (1) it is on `buildings_waiting` /
+  `buildings_under_construction`, (2) `HP < MaxHP`, and (3) `offrepair()`
+  is false — meaning either not level-complete (`FirstStageBuilt` and
+  `CurrentStageBuilt` not both 1) or explicitly flagged
+  `#ATTRIB_isrepaired`/`#ATTRIB_QuickRepair`. Both gates are plain GPL in
+  `peasant.gpl`, not primitives. Selection is FIFO
+  (`$listmember(list, 1)`), with `$Closest_Peasant_Building()` only as a
+  tie-break. Construction is pure HP accretion via
+  `$performaction(...,"basic_build",...)`; no progress counter.
+  `reconstruct_lists()` re-checks gate (3) every tick, so a job can be
+  **abandoned mid-build**. Heroes build too, via `hero_build.gpl`, using
+  the same lists. **Explains the cheat-placed tier-2 Magic Bazaar being
+  ignored — and the cause is gate (1) alone, not HP.** The owner clarified
+  the cheat places the building at **1 HP**, so gate (2) is satisfied. It
+  is ignored because nothing ever enqueued it (only `basic_birth`/
+  `basic_upgrade` push onto `buildings_waiting`, and a cheat/`$SpawnUnit`
+  bypasses the birthScript), **and `reconstruct_lists()` cannot rescue it
+  by design** — its add-back branch is scoped to repairs of *finished*
+  buildings (`$listcompleted` + `building_level_complete` + a repair flag),
+  all of which a 1-HP never-built building fails. **So an incomplete
+  building not on `buildings_waiting` is orphaned permanently; no sweeper
+  notices.** Also explains why `$SpawnUnit` takes a `"MaxHP"` flag —
+  spawning pre-completed sidesteps the orphan state.
+- [ ] **Corrected experiment (supersedes "try `$basic_upgrade`")** — that
+  earlier suggestion was wrong on its own: `$basic_upgrade` only does the
+  queue push, so without also clearing `#ATTRIB_CurrentStageBuilt` and
+  making `HP < MaxHP` the job is abandoned on the same tick. Correction is
+  recorded in the guide. **The narrower question actually worth testing:**
+  does `#ATTRIB_CurrentStageBuilt = 0` + a `MaxHP` bump, *without*
+  `$ChangeUnitType`, let `BuildingReachedMaxHP`'s
+  `$UpgradeAgentAttributes` advance the tier by itself? If yes, that is
+  the clean human-equivalent upgrade and it avoids the crash-vs-early-
+  unlock bind entirely. **Sprite concern answered by elimination** (raised
+  by the owner: each tier is a distinct unit type with its own
+  `ImageIDBase`): shipped GPL **never** calls `$ChangeUnitType` on a
+  building — all 5 call sites are character transformations (Gnome →
+  GnomeChamp, hero → Dryad/Medusa/Minotaur, hero → Red_Bear) — and
+  `BuildingReachedMaxHP` calls only `$UpgradeAgentAttributes`, yet human
+  upgrades demonstrably change sprite and abilities. So
+  the tier/sprite swap is **exe-side and not GPL-driven**. **But an earlier
+  draft over-read this** into "`$UpgradeAgentAttributes` does the whole
+  transition" — corrected: the elimination argument only bounds the GPL
+  call graph, and the exe isn't confined to it. Either that primitive
+  applies the whole next-tier definition, or it only refreshes attributes
+  while the engine swaps type/sprite separately. **That distinction decides
+  whether a GPL-only upgrade can work at all** (under the second reading it
+  would update stats but keep the old sprite). Now filed as a Ghidra
+  Verification Task.
 - [ ] **NEW (from §10.5): render the numbered `Die`/damage slots to
   confirm they hold progressive damage art.** Extract setIDs 96-103 for
   Inn (`ABF1`, 8 slots) and a Marketplace tier (`ABH1`, 6 slots) as PNGs

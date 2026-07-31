@@ -200,6 +200,216 @@ starts `upgradescript2` (`palace_upgrade2`) on a 15-second poll —
 `palace_upgrade2` waits for construction to finish, then restarts the
 Palace's Guard/Tax/Peasant spawner threads to enforce new henchman limits.
 
+### The construction labor system: exactly what makes a building buildable
+
+**Added when the question "how do peasants decide what to build?" was
+raised, after a report that workers sometimes never upgrade a
+script-upgraded building and never touch a cheat-placed tier-2 one.**
+Both behaviors are fully explained by plain GPL — no engine mystery.
+
+**The queues.** The palace prototype holds two lists,
+`buildings_waiting` and `buildings_under_construction`, plus an
+`integer busy_peasants`. Producers: `basic_upgrade` and `basic_birth`
+push onto `buildings_waiting` (`Building_Births.gpl`);
+`make_attack.gpl` pushes onto `buildings_under_construction` when a
+building is attacked mid-build. Consumers: **peasants**
+(`TaskModules/Characters/Henchmen/peasant.gpl`) and **heroes**
+(`TaskModules/Characters/hero_build.gpl` — heroes really do build, using
+the same lists).
+
+**`peasant_basic` selection order:** take the first member of
+`buildings_waiting` if any; else go help on the first member of
+`buildings_under_construction`; else go home and `$hide` in the nearest
+city building. Selection is `$listmember(..., 1)` — **plain FIFO, no
+distance or priority scoring** — though `peasant_go_build` does consult
+`$Closest_Peasant_Building()` before switching to a new target, so
+proximity enters as a tie-break, not as the selection rule.
+
+**The two gate functions, both plain GPL in `peasant.gpl`:**
+
+```gpl
+function building_level_complete(agent thisagent) is boolean
+begin
+    if (($getattribute(thisagent,#ATTRIB_FirstStageBuilt) == 1) &&
+        ($getattribute(thisagent,#ATTRIB_CurrentStageBuilt) == 1))
+        return TRUE;
+    else return FALSE;
+end
+
+function offrepair(agent thisagent) is boolean
+begin
+    if ($building_level_complete(thisagent))
+        if (($getattribute(thisagent,#ATTRIB_isrepaired) == 0) &&
+            ($getattribute(thisagent,#ATTRIB_QuickRepair) == 0))
+            return TRUE;
+    return FALSE;
+end
+```
+
+**So the complete contract — a worker will build a building if and only
+if all three hold:**
+
+1. It is on `buildings_waiting` or `buildings_under_construction`.
+2. **`HP < MaxHP`.** `peasant_go_build` abandons immediately on
+   `HP == MaxHP` (resets tasks, decrements `busy_peasants`, drops it from
+   the list).
+3. **`offrepair()` is false** — i.e. either the building is *not*
+   level-complete (`FirstStageBuilt` and `CurrentStageBuilt` not both 1),
+   **or** it is explicitly flagged for repair (`#ATTRIB_isrepaired == 1`
+   or `#ATTRIB_QuickRepair == 1`).
+
+`reconstruct_lists(palace)`, called at the top of every `peasant_basic`
+tick, prunes `buildings_under_construction` using the same condition —
+so a job that stops satisfying (3) is **abandoned mid-build**, not just
+skipped at selection. It also *adds* damaged completed buildings back
+when they are flagged for repair, which is how the repair queue buttons
+work.
+
+**The build step itself** is `$performaction(thisagent,"basic_build",
+building)` followed by `HP += #basic_build_amount` (or
+`#Deathmatch_repair_amount` when Deathmatch rules are on *and* the
+building is already level-complete), clamped to `MaxHP`; on reaching
+`MaxHP` it calls `$BuildingReachedMaxHP(building)`. **Construction is
+purely HP accretion** — there is no separate progress counter.
+
+#### Consequences that explain real observed behavior
+
+**A cheat-placed building sits unbuilt forever because of gate (1) alone —
+queue membership — and the recovery path deliberately cannot rescue it.**
+Reported case: a cheat-placed level-2 Magic Bazaar, **placed at 1 HP**, is
+never worked on. Note 1 HP means `HP < MaxHP`, so **gate (2) is satisfied**
+— it is not an "already finished, nothing to do" situation. The reason is:
+
+- **Nothing ever put it on a queue.** Only `basic_birth`/`basic_upgrade`
+  push onto `buildings_waiting`, and those run as a building's
+  `birthScript`/`upgradescript`. A cheat or bare `$SpawnUnit` that
+  bypasses the birth script never enqueues the building.
+- **`reconstruct_lists` cannot add it back, by design.** Its add-back loop
+  is scoped to *repairs of finished buildings* and filters incomplete ones
+  out twice: it calls `buildings = $listcompleted(buildings)` before the
+  loop, then requires `$building_level_complete(bldg)` inside it, then
+  requires `#ATTRIB_isrepaired == 1` or `#ATTRIB_QuickRepair == 1`. A
+  1-HP never-built building fails the first two conditions.
+
+**So an incomplete building that is not on `buildings_waiting` is orphaned
+permanently — invisible to the entire labor system.** There is no sweeper
+that notices "this building is unfinished and nobody is coming."
+
+This also explains why `$SpawnUnit` accepts a `"MaxHP"` string flag
+(§3's spawn discussion, and `Housing_Boom`/`Hero_Births.gpl` use it):
+spawning a building **pre-completed** is the way to sidestep the orphan
+state entirely, because a completed building needs no labor.
+
+**Fix for anyone hitting this:** after spawning, push the building onto
+the palace's queue yourself — `$getpalace(bldg)`'s `"buildings_waiting"
+<< bldg`, which is precisely what `basic_upgrade`'s one meaningful line
+does — or give the building a real `birthScript` so the engine enqueues it
+through `NewUnitInit`. **UNTESTED**, but it follows directly from the
+producer/consumer relationship above.
+
+**A scripted upgrade must satisfy all THREE gates — queueing alone is not
+enough, and neither is state alone.** In practice that means:
+- **(1)** get it onto `buildings_waiting`, which in GPL means running the
+  building's `upgradescript` (`$building_upgraded(bldg)` does this) or
+  pushing onto the palace list directly.
+- **(3)** `$setattribute(building, #ATTRIB_CurrentStageBuilt, 0)` → makes
+  `building_level_complete` false, so `offrepair` is false.
+- **(2)** ensure `HP < MaxHP` — raising `MaxHP` (e.g.
+  `$adjustattribute(building, #ATTRIB_MaxHP, 50)`) achieves this without
+  visibly damaging the building.
+
+**Failure presentation differs by which gate is missed, which is useful
+for diagnosis:** miss (1) and no worker ever *starts* — the building sits
+untouched with nobody walking toward it. Miss (2) or (3) and a worker
+walks over, then abandons on the same tick, and `reconstruct_lists` prunes
+the job. Both present loosely as "workers just won't upgrade it," so the
+distinguishing observation is **whether anyone ever approaches the
+building.**
+
+The `Dwarfeh_AI` mod satisfies all three around its `$ChangeUnitType`
+call — `$setAttribute(..., #ATTRIB_currentstagebuilt, 0)`,
+`$adjustAttribute(..., #ATTRIB_MaxHP, 50)`, then
+`$building_upgraded(building)` — which is why its upgrades complete.
+**UNVERIFIED** which gate its earlier, abandoned attempt was missing; the
+author recalls only that workers never upgraded the building.
+
+> **CORRECTION to this guide's own earlier recommendation, kept visible.**
+> The `$UpgradeAgentAttributes` subsection below suggests replacing
+> `$ChangeUnitType` with a bare `$basic_upgrade(building)` call.
+> **`$basic_upgrade` alone is NOT sufficient** — it only performs step (1),
+> the queue push. Without also clearing `#ATTRIB_CurrentStageBuilt` and
+> ensuring `HP < MaxHP`, the queued building fails gates (2)/(3) and is
+> abandoned instantly. The `Dwarfeh_AI` mod already does both of those
+> things around its `$ChangeUnitType` call, which is why its upgrades
+> complete at all.
+
+#### Does the sprite change without `$ChangeUnitType`? Yes — by elimination
+
+**A fair objection to the advice above:** building tiers are genuinely
+distinct unit types. `ABH1`/`ABH2`/`ABH3` are three separate XML
+`<Description>` entries with **their own `ImageIDBase`** (so, their own
+sprites) and three separate `.dat` entries with their own script bindings.
+If a scripted upgrade skips `$ChangeUnitType`, what makes the building
+*become* tier 2 — art and scripts included?
+
+**Answer: `$UpgradeAgentAttributes` must perform the whole type
+transition, because nothing else in the human path could.** The argument
+is by elimination and it is tight:
+
+1. `BuildingReachedMaxHP`'s upgrade branch calls **only**
+   `$UpgradeAgentAttributes(theBuilding)`, plus advisor sound, chat
+   message, and the Palace/Guardhouse special cases. `magical_upgrade`'s
+   completion branch likewise calls only `$UpgradeAgentAttributes`.
+2. **Shipped GPL never calls `$ChangeUnitType` on a building at all.** All
+   five call sites across both repos are character transformations:
+   `Gnome` → `GnomeChamp` (`mx_give_exp.gpl`, under the comment "change
+   gnome art here!"), hero → `Dryad`/`Medusa`/`Minotaur`
+   (`mx_Spells.gpl`), and hero → `Red_Bear` for Change Shape
+   (`Spells.gpl` / `mx_Spells.gpl`).
+3. Human upgrades demonstrably do change both sprite and tier-gated
+   abilities.
+
+Given (1) and (2), the transition in (3) **is performed exe-side, not by
+GPL** — that much is solid. `$ChangeUnitType` is not how buildings change
+tier; it is the "become a different unit type entirely" tool for
+shape-shifting characters, and no shipped code points it at a building.
+
+> **Do NOT over-read this into "`$UpgradeAgentAttributes` does the whole
+> transition."** An earlier draft of this subsection concluded exactly
+> that, and it does not follow. The elimination argument only bounds the
+> **GPL** call graph; the exe is not confined to it. At least two readings
+> remain open:
+> - `$UpgradeAgentAttributes` resolves `UpgradeTo` and applies the new
+>   tier definition wholesale, sprite included; or
+> - `$UpgradeAgentAttributes` genuinely only touches attributes, and the
+>   engine performs the type/sprite swap in its own upgrade handling,
+>   before or after it calls `BuildingReachedMaxHP` — in which case a
+>   purely GPL-driven upgrade might update stats but leave the old sprite.
+>
+> Nothing in readable source distinguishes these. Filed as a Ghidra task.
+
+**Supporting detail that fits this reading:** the `Dwarfeh_AI` author's
+note that the game "will crash after a few seconds" if
+`$UpgradeAgentAttributes` is not run after `$ChangeUnitType` is exactly
+what you'd expect if `$UpgradeAgentAttributes` is the routine that
+reconciles an agent with its type definition — `$ChangeUnitType` swaps the
+type and leaves the agent unreconciled until it runs.
+
+**Honest bound:** what is established is that **the tier/sprite transition
+is exe-side and is not driven by any GPL call**. Which exe routine does it
+— and specifically whether `$UpgradeAgentAttributes` is that routine or
+merely an attribute refresh alongside it — is **UNVERIFIED**, and cannot
+be settled by reading GPL at all.
+
+❓ **The experiment worth running, now precisely scoped:** set
+`#ATTRIB_CurrentStageBuilt = 0`, bump `MaxHP`, queue the building, and
+call **no** `$ChangeUnitType`. If the tier, sprite and abilities all
+advance when `BuildingReachedMaxHP` fires, that is the clean
+human-equivalent upgrade and it removes the crash-versus-early-unlock bind
+entirely. If the sprite does *not* change, this deduction is wrong and
+`$ChangeUnitType` is required after all — in which case the correct
+sequencing is to defer it until construction completes.
+
 ### `$UpgradeAgentAttributes` is the moment an upgrade takes effect — and the reason scripted upgrades misbehave
 
 **Added after the above, prompted by a question about where
