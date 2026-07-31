@@ -251,6 +251,24 @@ but that is field correlation, not a confirmed mechanism.
 (pointing at the previous tier's `Name`) and `Flags value="NotBuildable"`
 so they can only be reached by upgrade.
 
+✅ **Tier 1's `Cost` is the build price; tier 2/3's `Cost` is the price
+to UPGRADE into that tier.** Confirmed by the `Dwarfeh_AI` mod's parallel
+`upgradeCost` field, whose value on tier N equals the XML `Cost` of tier
+N+1 across every family (Blacksmith1 `upgradeCost 600` → Blacksmith2
+`Cost 600`; Marketplace1 `upgradeCost 1000` → Marketplace2 `Cost 1000`;
+Wizards_Guild1 `2500` → WG2 `2500`; Palace2 `3750` → Palace3 `3750`). So
+Marketplace is 1500 to build then 1000 per upgrade — read that way it is
+perfectly monotonic. Guardhouse genuinely inverts it (600 to build, 500
+to upgrade), so cheaper-to-upgrade is real, not a data error.
+
+⚠️ **The price a player actually sees is computed exe-side from at least
+three inputs, so the XML `Cost` alone won't predict it.** The model the
+`Dwarfeh_AI` mod uses to match player pricing is `Cost` × `Multiplier`
+once per copy you already own, × 0.95 if you have a completed Blacksmith.
+See §2's corroboration block in `TODO-New-Building-Requirements.md`.
+❓ Whether that is exactly the exe's formula is unconfirmed — it is one
+experienced modder's working reverse-engineering, not a trace.
+
 ✅ **`Cost` is a plain per-tier integer, not computed from a
 multiplier — and it is not monotonic.** Marketplace1 is `Cost="1500"`
 while Marketplace2 and Marketplace3 are both `Cost="1000"`. Don't assume

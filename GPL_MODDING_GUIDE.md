@@ -1945,6 +1945,60 @@ resumption), and monster/lair respawn timers (`Building_Deaths.gpl`'s
 `$RunThread (ThisAgent's "ActiveScript", $RandomNumber (30000) +
 400000, ThisAgent)` lair respawn).
 
+### 6. Float arithmetic is unreliable, and the compiler's constant folding defeats the obvious workaround
+
+**This is a language/runtime-level gotcha, not a primitive, and it is the
+only entry in this section sourced from a modder's field experience
+rather than from shipped Majesty source.** Recorded because it silently
+produces wrong numbers rather than failing loudly, and because the
+workaround is non-obvious.
+
+**Source:** the `Dwarfeh_AI` mod's `custom_rules.gpl` (in this repo, e.g.
+`PanelTest_Quest/MyAI/GPL/custom_rules.gpl`), in the comment block above
+`getBuildingCostMultiplier`, plus the split-function structure that
+comment exists to explain. Reported directly by that mod's author.
+**Provenance caveat, stated because it matters:** the author notes this
+was a pragmatic solution arrived at without documentation or guidance —
+it is a reliable account of *what broke and what worked*, not a claim
+about the engine's internals, and a cleaner mechanism may exist.
+
+Three claims, in the order they bite:
+
+1. **Multiplying by a float literal does not work.** `100 * 1.5`
+   produces a wrong result. `100 * 3 / 2` produces the right one. The
+   author's phrasing: "you can't multiply by floats... `100 * 1.5` is
+   bad, but `100 * 3 / 2` is good."
+2. **The compiler constant-folds `3 / 2` into `1.5`.** So you cannot
+   move the ratio into a helper — `return 3 / 2;` from a `is float`
+   function compiles to `return 1.5;`, which lands you straight back in
+   problem 1.
+3. **Therefore the numerator and denominator must be kept separate all
+   the way to the call site**, as two operations. The mod does exactly
+   this with a `getBuildingCostMultiplier()` / `getBuildingCostDivisor()`
+   pair applied as `x * mult / div` inline, never as a single
+   pre-divided factor.
+
+**Worked example from that mod** (its per-copy building cost escalation,
+reproducing the XML `<Multiplier>` values as exact rationals): Magic
+Bazaar `3.0 / 2.0` = 1.5, Embassy `7.0 / 2.0` = 3.5, Guardhouse
+`2.5 / 2.0` = 1.25, Inn `5.5 / 5.0` = 1.1, Blacksmith/Library
+`1.0 / 1.0` = 1.0.
+
+**A second, unrelated hazard from the same function, worth its own
+line:** the mod guards every multiply against exceeding a hardcoded
+`400000.0` ceiling, with the comment "if we go above MAX_INT game
+crashes without error." So **integer/float overflow in GPL arithmetic is
+a silent-crash class, not an exception** — clamp before multiplying in
+any compounding loop.
+
+**UNVERIFIED, deliberately:** the precise rule behind claim 1 (whether
+it is a parser issue, a bytecode-emission issue, a `float`-vs-`integer`
+coercion issue, or specific to certain operand types) is not established
+— only the observed behavior and the working workaround. Do not
+generalise it into "GPL has no floats": `is float` return types,
+`float` declarations and float literals all clearly exist and the
+divisor functions return them.
+
 ### Candidates checked and discarded (fewer than 3 unrelated systems)
 
 - **`$FindFirstMatchOnly`** — real, but only 2 call sites, both in

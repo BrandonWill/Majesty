@@ -212,11 +212,34 @@ was. **You don't need this answered to complete 5a** — it only matters if
 you're trying to change the click-time behavior itself (cost, spawn
 conditions) rather than just what gets recruited.
 
-❓ **Cost**: the hero's own `Cost` XML field has no confirmed GPL
-consumer anywhere. The one confirmed AI-facing recruit-cost function uses
-an unrelated hardcoded flat value (600), not the hero's `Cost`. Whether
-the real UI click reads `Cost` from the XML-derived unit table directly
-(exe-side) is unverified.
+✅ **Cost**: the hero's `Cost` XML field **is** the price the game charges
+the player to recruit that hero. **Confirmed by the project owner from
+direct play experience** against the shipped values: Gnome 100, Rogue
+275, Healer 300, Barbarian/Ranger 350, Cultist/Priestess 400, Warrior
+450, Adept/Dwarf/Elf/Solarus/Wizard 500, Monk 550, Warrior_of_Discord
+900, Paladin 1000. So set `Cost` to whatever you want your hero to cost
+and it will be charged. **This supersedes an earlier ❓ on this item.**
+
+⚠️ **But no GPL-readable attribute exposes `Cost`, so your own scripts
+can't read it.** Two independent negatives: no GPL function anywhere
+reads the field, and the `Dwarfeh_AI` mod's author went looking for an
+attribute that would expose it, failed, and hand-declared his own
+`integer cost` prototype field plus a hand-transcribed `.dat` value per
+hero (all 16 matching the XML exactly) — his comment reads "unable to
+find correct #ATTRIB to pull cost." **Recorded at the strength the
+author himself gives it:** a pragmatic workaround built without
+documentation, so it is good evidence that no *obvious* attribute
+exists, **not** proof that none does. If you need cost in GPL today,
+mirror the value into your own field the same way.
+
+❓ **Still unverified (and no longer blocking anything practical):** the
+exe-side click handler that performs the charge. Knowing `Cost` drives
+the price is enough to author a hero; tracing the deduction is only
+needed to *change how charging works*. `TODO-Ghidra.md` still carries
+it. Note the shipped AI kingdom does NOT use `Cost` — `Quests_3.gpl`
+line 1498 charges a flat 600 per hero with the comment "Charge 600 per
+hero spawned," which is quest-authored AI behavior, not the player's
+pricing path. Don't read that 600 as evidence about `Cost`.
 
 ❓ **RecruitDelay**: universal per-hero XML field, plausible cooldown
 timer, but no GPL function reads the suggestive

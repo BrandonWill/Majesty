@@ -3316,6 +3316,76 @@ settle it. Nothing "loosely related" is padded in here.
    mechanism. Do not promote it to a finding without either an exe trace
    or a deliberate in-game check** (build two Inns and two Wizards'
    Guilds, compare the second price against the first × Multiplier).
+
+   > **CORROBORATED INDEPENDENTLY — upgraded from "hypothesis" to
+   > "hypothesis with a working implementation behind it," though still
+   > not an engine trace.** The `Dwarfeh_AI` mod
+   > (`PanelTest_Quest/MyAI/GPL/custom_rules.gpl`) implements exactly
+   > this model in `getBuildingCost()`, and its author states the goal
+   > was **to make the AI pay the same building prices the human player
+   > pays** — so the model encodes an experienced player's
+   > understanding of the real pricing rule, arrived at independently of
+   > this doc.
+   >
+   > The mod's algorithm, read directly from source:
+   >
+   > ```
+   > cost = basePrice(buildingName)
+   > for each existing building of that title owned by the player:
+   >     cost = cost * multiplier(name) / divisor(name)
+   > if a completed Blacksmith exists:
+   >     cost = cost * 0.95
+   > ```
+   >
+   > **1. The escalation is multiplicative, once per existing copy** —
+   > matching the hypothesis above.
+   >
+   > **2. `multiplier / divisor` reproduces the XML `<Multiplier>` value
+   > exactly**, as a rational pair rather than a float: Magic Bazaar
+   > `3.0/2.0` = 1.5, Embassy `7.0/2.0` = 3.5, Guardhouse `2.5/2.0` =
+   > 1.25, Inn `5.5/5.0` = 1.1, Blacksmith and Library `1.0/1.0` = 1.0.
+   > (The split into two functions is forced by a GPL float-arithmetic
+   > bug, documented separately in `GPL_MODDING_GUIDE.md` §14.6 — it is
+   > not meaningful to the pricing model.)
+   >
+   > **3. A Blacksmith gives a 5% discount on building costs** — applied
+   > in two places in the mod, `cost * 0.95` for new builds and
+   > `upgradeCost * 19 / 20` for upgrades. **This is a player-facing
+   > mechanic the XML/GPL layer does not express at all**, which is
+   > itself informative: it means the final price a player sees is
+   > computed exe-side from at least three inputs (base `Cost`,
+   > `Multiplier` raised to the owned-count, and a Blacksmith discount),
+   > so no amount of XML/GPL reading will ever produce the whole
+   > formula. ❓ Whether the 5% figure is exact, and whether it stacks
+   > per Blacksmith or is a flat one-shot for having any, is not
+   > established — the mod treats it as a flat boolean check
+   > (`hasBuiltBlacksmith`, true if any completed Blacksmith exists).
+   >
+   > **Honest bound on all of the above:** this is one experienced
+   > modder's reverse-engineered model, self-described as pragmatic
+   > rather than authoritative. It is much stronger than the raw number
+   > pattern alone, and it is still not a confirmed engine mechanism.
+   > The remaining `<Multiplier>` question is therefore narrowed from
+   > "what does this field even do?" to "**is the exe's formula exactly
+   > `Cost × Multiplier^owned × blacksmithDiscount`?**" — a far better
+   > question to hand to Ghidra or a controlled in-game price check.
+
+   **Related clarification this also settles — `Cost` on a tier-2/3
+   entry is an UPGRADE price, not a build price.** §2 records that
+   `Cost` "is not monotonic" and warns "don't assume upgrades cost more,"
+   citing Marketplace1 = 1500 against Marketplace2/3 = 1000. That is not
+   data weirdness. The same mod carries an `upgradeCost` field whose
+   value on tier N equals the XML `Cost` of tier N+1, with perfect
+   correspondence across every family checked: Blacksmith1
+   `upgradeCost 600` → Blacksmith2 `Cost 600`; Marketplace1
+   `upgradeCost 1000` → Marketplace2 `Cost 1000`; Wizards_Guild1
+   `upgradeCost 2500` → Wizards_Guild2 `Cost 2500`; Palace2
+   `upgradeCost 3750` → Palace3 `Cost 3750`. **So tier 1's `Cost` is
+   what you pay to build, and tier N>1's `Cost` is what you pay to
+   upgrade into it.** Marketplace costs 1500 to build, then 1000 per
+   upgrade, twice — perfectly monotonic once read correctly. Note
+   Guardhouse inverts it (`Cost 600` to build, `Cost 500` to upgrade to
+   tier 2), so cheaper-to-upgrade is real and shipped, not an error.
 4. **Why `Graveyard` deviates from the Monster→`Menu="2"` pattern, and
    whether a wrong-but-nonzero `Menu` value misfiles or breaks a
    building** (§8, from §2). **Restated after a §2 correction:** this

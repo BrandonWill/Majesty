@@ -1567,6 +1567,37 @@ padded in.
    independent site. Settleable by an in-game test (change `Cost` on a
    shipped hero, observe the recruit price) or Ghidra;
    `TODO-Ghidra.md` Priority 6 already carries it.
+
+   > **RESOLVED — moved off this list, answered by the project owner's
+   > own play knowledge rather than by source or Ghidra.** Kept in place
+   > (not deleted) so the reasoning trail stays intact.
+   >
+   > **`Cost` IS the price the game charges the player**, confirmed
+   > against the shipped per-class values (Gnome 100 … Paladin 1000).
+   > The half of the question that stays open is only the exe-side
+   > deduction mechanism, which no longer blocks authoring a hero.
+   >
+   > **Two supporting details worth keeping:**
+   > 1. **The `-600` is shipped, not mod code** — confirmed at
+   >    `Majesty_Files/SDK/OriginalQuests/GPLMx/Rules/Quests_3.gpl` line
+   >    1498, comment "Charge 600 per hero spawned," inside The Siege's
+   >    AI kingdom recruit loop. It is quest-authored AI pricing and says
+   >    nothing about the player's path. This resolves an ambiguity
+   >    raised when the owner asked whether that 600 was base game or his
+   >    own mod.
+   > 2. **The "no GPL consumer" negative gets a second, independent
+   >    source — but a weaker one than it first appears.** The
+   >    `Dwarfeh_AI` mod (`PanelTest_Quest/MyAI/`) needed the cost in
+   >    GPL, and its author declared his own `integer cost` field in
+   >    `mx_prototype.gpl` with the comment "unable to find correct
+   >    #ATTRIB to pull cost so just integrating it here," then
+   >    hand-transcribed all 16 values into `mx_Hero_Data.dat` (verified:
+   >    every one matches `M_Characters.xml`). **The author explicitly
+   >    characterises this as a pragmatic solution reached without
+   >    documentation or guidance, and cautions that a better or more
+   >    correct route may exist.** Record it that way: evidence that no
+   >    *obvious* attribute exists, not proof of absence. An earlier
+   >    draft of this note overstated it as strong proof; corrected here.
 6. **No prerequisite/tech-tree gate for recruitment anywhere in GPL**
    (§6 item 6). **Already reconciled inline** at this doc's line ~1159 —
    upgraded from "reads as a genuine absence" to a confirmed negative
